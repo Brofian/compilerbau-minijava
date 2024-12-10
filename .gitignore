@@ -1,0 +1,16 @@
+# generated antlr sources
+target
+
+
+
+
+# idea and environment files for users, that do not have them ignored in their global .gitignore file.
+# it's sad, that this has to be necessary at all. But better safe than sorry
+.idea
+~#
+*.bak
+*.swp
+*.swo
+*~
+*#
+.DS_Store
