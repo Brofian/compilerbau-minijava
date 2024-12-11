@@ -6,19 +6,18 @@ The contents of this repository are based on and extend the Antlr Code Template 
 provided by [...] DHBW-Stuttgart. 
 
 ## prerequisites
-- Scala compiler
-- Antlr4 generator
-- Maven
+- JDK (v21.x.x recommended)
+- Scala and sbt
 
 ## Usage
-- Antlr compilation: use maven to compile the grammar definition into java code by executing
-    `mvn antlr4:antlr4` in the project root (remember to mark the directory 
-    `target/generated-sources/antlr4` as generated sources in your IDE)
-- Execute the main method of `src/main/java/de/students/MiniJavaCompiler.scala`
+- Make sure you have the FULL Antler4 jar file (not just the generator and not just the runtime) in the lib directory
+- Run `sbt generateAntlrTask` to generate the parser code from the grammar file
+- Run `sbt "run secondinput.java"` to compile and execute the scala code once OR
+- Run `sbt "~run secondinput.java"` to compile and execute the scala code and rerun automatically on changes
 
 
 ## ToDo
-- [ ] Read in file(s)
+- [x] Read in file(s)
 - [ ] Implement Antlr grammar (-> lexer and parser)
 - [ ] Implement semantic check (generate typed ast)
 - [ ] Implement byte code generation
