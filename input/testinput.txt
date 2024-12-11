@@ -1,0 +1,2 @@
+This is my Test and should be contained
+in the input String after starting main()
