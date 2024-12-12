@@ -38,9 +38,9 @@ parameterList: parameter (',' parameter)*;
 parameter: type IDENTIFIER;
 
 // Method Body
-methodBody: '{' block* '}';
+methodBody:  '{' block* '}' ;
 
-block: statement | expression;
+block:  statement |  expression ;
 
 // Statements
 statement: variableDeclaration
@@ -57,7 +57,14 @@ statement: variableDeclaration
 variableDeclaration: type IDENTIFIER ('=' expression)? SC;
 expressionStatement: expression SC;
 returnStatement: RETURN expression? SC;
-ifStatement: 'if' '(' expression ')' block ('else' block)?;
+
+ifStatement: 'if' '(' expression ')' '{' block '}'
+              (elseifStatement)* // Allow multiple else-if blocks
+              (elseStatement)?;
+
+elseifStatement: 'else if' '{' '(' expression ')' block '}';
+elseStatement: 'else' '{' block '}';
+
 whileStatement: 'while' '(' expression ')' block;
 doWhileStatement: 'do' block 'while' '(' expression ')' SC;
 forStatement: 'for' '(' (variableDeclaration | expressionStatement | SC)
@@ -72,12 +79,18 @@ continueStatement: 'continue' SC;
 // Expressions
 expression: literal
           | methodCall
+          | thisAccess
           | IDENTIFIER
           | 'new' type ('(' argumentList? ')' | '[' expression ']') // Object or array creation
           | '(' expression ')'
           | expression operator expression;
 
-methodCall: IDENTIFIER '(' argumentList? ')';
+thisAccess: 'this' '.' IDENTIFIER;
+classAccess: IDENTIFIER '.' IDENTIFIER;
+
+// Method Calls
+methodCall: (IDENTIFIER | thisAccess | classAccess) '(' argumentList? ')';
+
 argumentList: expression (',' expression)*;
 
 // Operators
