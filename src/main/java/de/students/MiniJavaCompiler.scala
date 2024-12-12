@@ -2,6 +2,8 @@ package de.students
 
 import de.dhbw.horb.Compiler
 
+import Parser.Parser;
+
 import de.students.InputOutput
 
 object MiniJavaCompiler {
@@ -23,6 +25,8 @@ object MiniJavaCompiler {
       case None => println("No content could be loaded from the specified paths.")
     }
   }
+
+  Parser.main()
   // val ast = Compiler.generateAST(inputString)
 
   // TODO do something useful with the ast
