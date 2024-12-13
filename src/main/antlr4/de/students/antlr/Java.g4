@@ -89,7 +89,7 @@ thisAccess: 'this' '.' IDENTIFIER;
 classAccess: IDENTIFIER '.' IDENTIFIER;
 
 // Method Calls
-methodCall: (IDENTIFIER | thisAccess | classAccess) '(' argumentList? ')';
+methodCall: (IDENTIFIER | thisAccess | classAccess ) '(' argumentList? ')';
 
 argumentList: expression (',' expression)*;
 
@@ -121,7 +121,7 @@ PRIMITIVE_TYPE: 'int' | 'char' | 'boolean';
 // Literals
 INTEGER_LITERAL: [0-9]+;
 CHAR_LITERAL: '\'' . '\'';
-STRING_LITERAL: '"' .*? '"';
+STRING_LITERAL: '"' (~["\\\r\n] | '\\' .)* '"';
 BOOLEAN_LITERAL: 'true' | 'false';
 NULL_LITERAL: 'null';
 
