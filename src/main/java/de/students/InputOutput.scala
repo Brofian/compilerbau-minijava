@@ -37,4 +37,20 @@ class InputOutput {
 
     if (fileContents.nonEmpty) Some(fileContents.mkString("\n")) else None
   }
+
+  def getInput(args: Array[String]):String = {
+    // Check if arguments are provided
+    if (args.isEmpty) {
+      new Exception("No input folder or files were specified in the arguments.")
+    }
+
+    val io = new InputOutput
+    val input = loadFiles(args)
+
+    input match {
+      case Some(content) => content
+      case None => new Exception("No input folder or files were specified in the arguments."); ""
+
+    }
+  }
 }
