@@ -6,7 +6,7 @@ import de.students.antlr.*
 object Parser {
   def main(inputString : String): Unit = {
     // convert to CharStream
-    val input = CharStreams.fromString(inputString);
+    val input = CharStreams.fromString(inputString)
     // generate Lexer
     val lexer = new JavaLexer(input)
 

@@ -2,7 +2,7 @@ package de.students
 
 import de.dhbw.horb.Compiler
 
-import Parser.Parser;
+import Parser.Parser
 
 import de.students.InputOutput
 
