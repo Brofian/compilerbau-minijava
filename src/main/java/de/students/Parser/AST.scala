@@ -1,12 +1,12 @@
 package de.students.Parser
 
-// Basis-Node für alle AST-Knoten
+// basic node for all AST-trees
 sealed trait ASTNode
 
-// Programm-Knoten
+// Program-node
 case class Program(classes: List[ClassDecl]) extends ASTNode
 
-// Klassendeklaration
+// Class declaration
 case class ClassDecl(
                       name: String,
                       parent: Option[String],
@@ -14,7 +14,7 @@ case class ClassDecl(
                       fields: List[VarDecl]
                     ) extends ASTNode
 
-// Methodendeklaration
+// method declaration
 case class MethodDecl(
                        name: String,
                        returnType: Type,
@@ -22,23 +22,23 @@ case class MethodDecl(
                        body: List[Statement]
                      ) extends ASTNode
 
-// Variablendeklaration
+// variable declaration
 case class VarDecl(name: String, varType: Type) extends ASTNode
 
-// Typen
+// types
 sealed trait Type
 case object IntType extends Type
 case object VoidType extends Type
 case class ArrayType(baseType: Type) extends Type
 case class UserType(name: String) extends Type
 
-// Statements
+// statements
 sealed trait Statement extends ASTNode
 case class ReturnStatement(expr: Option[Expression]) extends Statement
 case class IfStatement(cond: Expression, thenBranch: Statement, elseBranch: Option[Statement]) extends Statement
 case class WhileStatement(cond: Expression, body: Statement) extends Statement
 
-// Ausdrücke
+// expressions
 sealed trait Expression extends ASTNode
 case class VarRef(name: String) extends Expression
 case class Literal(value: Any) extends Expression
