@@ -4,23 +4,22 @@ import org.antlr.v4.runtime.tree._
 import de.students.antlr.*
 
 object Parser {
-  def main(): Unit = {
-    // MiniJava-Quellcode einlesen
-    val input = CharStreams.fromFileName("input/secondinput.java")
-
-    // Lexer erzeugen
+  def main(inputString : String): Unit = {
+    // convert to CharStream
+    val input = CharStreams.fromString(inputString);
+    // generate Lexer
     val lexer = new JavaLexer(input)
 
-    // Tokenstream erstellen
+    // tokenize
     val tokens = new CommonTokenStream(lexer)
 
-    // Parser erzeugen
+    // generate parser
     val parser = new JavaParser(tokens)
 
-    // Parsetree erzeugen
+    // generate parsetree
     val tree = parser.package_()
 
-    // Parsetree debuggen 
+    // print parsetree
     println(tree.toStringTree(parser))
 
    
