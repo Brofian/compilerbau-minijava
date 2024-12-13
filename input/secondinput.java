@@ -18,6 +18,9 @@ public class MyProgram {
 
       public static void main(String[] args) {
             MyProgram prog = new MyProgram();
+            (new A()).getB().getNumber(); // this is valid
+
+
             int result = prog.calculate(5, 3);
       }
 }
