@@ -76,8 +76,21 @@ switchCase: 'case' literal ':' block
 breakStatement: 'break' SC;
 continueStatement: 'continue' SC;
 
+
+// A primary expression can be an identifier, 'this', a class access, or a method call
+primary: IDENTIFIER
+       | thisAccess
+       | classAccess
+       | '(' expression ')'
+       ;
+
+// Method calls, allowing chaining without left recursion
+methodCall: primary ('.' IDENTIFIER '(' argumentList? ')')*;
+
+
 // Expressions
 expression: literal
+          | primary
           | methodCall
           | thisAccess
           | IDENTIFIER
@@ -88,8 +101,6 @@ expression: literal
 thisAccess: 'this' '.' IDENTIFIER;
 classAccess: IDENTIFIER '.' IDENTIFIER;
 
-// Method Calls
-methodCall: (IDENTIFIER | thisAccess | classAccess ) '(' argumentList? ')';
 
 argumentList: expression (',' expression)*;
 
