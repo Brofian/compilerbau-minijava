@@ -7,7 +7,7 @@ package: PACKAGE id SC class ;
 class: PUBLIC? CLASS id classbody
      | PUBLIC? CLASS id EXTENDS id classbody ;
 
-classbody: '{' (method | attribute | constructor)* '}';
+classbody: '{' (method | attribute | constructor | class)* '}';
 
 // Methods
 defaultMethod: modifier returntype IDENTIFIER '(' parameterList? ')' methodBody;
