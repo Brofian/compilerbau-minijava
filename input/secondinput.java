@@ -1,9 +1,26 @@
-def int add(int x, int y)
-      {  return x + y;
+package mypackage;
+
+public class MyProgram {
+
+      private int count = 10;
+
+      public MyProgram() {
+            this.count = 0;
       }
-      def int main()
-      {
-      int a;
-      a = 3;
-      return add(a, 2);
+
+      public int calculate(int a, int b) {
+            if (a > b) {
+                  return a - b;
+            } else {
+                  return a + b;
+            }
       }
+
+      public static void main(String[] args) {
+            MyProgram prog = new MyProgram();
+            (new A()).getB().getNumber(); // this is valid
+
+
+            int result = prog.calculate(5, 3);
+      }
+}

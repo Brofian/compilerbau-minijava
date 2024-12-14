@@ -20,7 +20,7 @@ generateAntlrTask := {
   val antlrGeneratorLib = "lib/antlr-4.13.2-complete.jar"
   val outputDirectory = "src/main/java/de/students/antlr"
   val packageName = "de.students.antlr"
-  val inputGrammarFile = "src/main/antlr4/de/students/antlr/Decaf.g4"
+  val inputGrammarFile = "src/main/antlr4/de/students/antlr/Java.g4"
 
   val cmd = s"java -jar ${antlrGeneratorLib} -o ${outputDirectory} -package ${packageName} -listener -visitor -Xexact-output-dir ${inputGrammarFile}"
   println(s" > Executing\n > ${cmd}")
