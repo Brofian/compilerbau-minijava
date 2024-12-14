@@ -18,7 +18,8 @@ provided by [...] DHBW-Stuttgart.
 
 ## ToDo
 - [x] Read in file(s)
-- [ ] Implement Antlr grammar (-> lexer and parser)
+- [x] Implement Antlr grammar (-> lexer and parser)
+- [ ] Translate from ParseTree to AST
 - [ ] Implement semantic check (generate typed ast)
 - [ ] Implement byte code generation
 - [ ] Write output bytes into file
