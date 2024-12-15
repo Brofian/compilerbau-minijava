@@ -51,9 +51,6 @@ object SemanticCheck {
     val typedMethods: List[MethodDecl] = cls.methods.map((method: MethodDecl) => {
       val typedBody: TypedStatement = StatementChecks.checkStatement(method.body, typeAssumptions)
 
-      println(method.name)
-      println(method.returnType)
-      println(typedBody.stmtType)
       if (!UnionTypeFinder.isASubtypeOfB(typedBody.stmtType, method.returnType)) {
         throw new SemanticException(s"Method ${method.name} with return type ${method.returnType} cannot return value of type ${typedBody.stmtType}")
       }
