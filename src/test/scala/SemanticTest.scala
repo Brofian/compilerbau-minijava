@@ -1,3 +1,4 @@
+import munit.FunSuite
 import de.students.Parser.{BlockStatement, BoolType, ClassDecl, MethodDecl, Program, ReturnStatement, VoidType}
 import de.students.semantic.{SemanticCheck, SemanticException}
 
