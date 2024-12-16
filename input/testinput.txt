@@ -1,2 +1,18 @@
-This is my Test and should be contained
-in the input String after starting main()
+package mypackage;
+
+public class MyProgram {
+
+      private int count = 10;
+
+      public MyProgram() {
+            this.count = 10;
+      }
+
+      public int calculate(int a, int b) {
+            if (a > b) {
+                  return a - b;
+            } else {
+                  return a + b;
+            }
+      }
+}
