@@ -22,6 +22,8 @@ object Parser {
     // print parsetree
     println(tree.toStringTree(parser))
 
+    val astBuilder = new ASTGenerator.ASTBuilder()
+    val ast = astBuilder.generateAST(tree)
    
   }
 }

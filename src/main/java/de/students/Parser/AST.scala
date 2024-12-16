@@ -10,6 +10,7 @@ case class Program(classes: List[ClassDecl]) extends ASTNode
 case class ClassDecl(
                       name: String,
                       parent: Option[String],
+                      isAbstract : Boolean,
                       methods: List[MethodDecl],
                       fields: List[VarDecl]
                     ) extends ASTNode
@@ -17,6 +18,8 @@ case class ClassDecl(
 // method declaration
 case class MethodDecl(
                        name: String,
+                       static : Boolean,
+                       isAbstract : Boolean,
                        returnType: Type,
                        params: List[VarDecl],
                        body: List[Statement]

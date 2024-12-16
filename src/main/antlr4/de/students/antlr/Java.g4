@@ -5,15 +5,16 @@ package: PACKAGE id SC class ;
 
 // Class Definitions
 class: PUBLIC? CLASS id classbody
-     | PUBLIC? CLASS id EXTENDS id classbody ;
+     | PUBLIC? CLASS id EXTENDS id classbody
+     | PUBLIC? ABSTRACT class id classbody;
 
 classbody: '{' (method | attribute | constructor | class)* '}';
 
 // Methods
-defaultMethod: modifier returntype IDENTIFIER '(' parameterList? ')' methodBody;
-staticMethod : modifier STATIC returntype IDENTIFIER '(' parameterList? ')' methodBody;
+method: modifier STATIC? returntype IDENTIFIER '(' parameterList? ')' methodBody;
+//staticMethod : modifier STATIC returntype IDENTIFIER '(' parameterList? ')' methodBody;
 
-method: staticMethod | defaultMethod;
+//method: fullMethod;
 
 // Attributes
 attribute: optionalModifier type IDENTIFIER ('=' expression)? SC;
