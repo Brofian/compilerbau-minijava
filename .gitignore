@@ -1,6 +1,4 @@
 # generated files
-src/main/scala/de/students/antlr/*
-!src/main/scala/de/students/antlr/.gitkeep
 
 # macOS
 .DS_Store
