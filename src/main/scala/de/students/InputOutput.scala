@@ -1,10 +1,13 @@
 package de.students
 
-import java.io.File
+import java.io.{DataOutputStream, File, FileOutputStream}
+import java.nio.file.{Files, Paths}
 import scala.io.Source
 import scala.util.Using
 
 class InputOutput {
+  private val OUT_DIR = Paths.get(".", "out")
+
   /**
    * Load files from the specified paths. Supports multiple files and folders.
    *
@@ -52,5 +55,13 @@ class InputOutput {
       case None => new Exception("No input folder or files were specified in the arguments."); ""
 
     }
+  }
+
+  def writeToBinFile(bytecode: Array[Byte], filename: String): Unit = {
+    Files.createDirectory(OUT_DIR)
+    val fullFilepath = Paths.get(OUT_DIR.toString, filename).toString
+    val outStream = DataOutputStream(new FileOutputStream(fullFilepath))
+    bytecode.foreach(byte => outStream.writeByte(byte.asInstanceOf[Int]))
+    outStream.close()
   }
 }
