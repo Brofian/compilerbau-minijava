@@ -1,6 +1,6 @@
 # generated files
-src/main/java/de/students/antlr/*
-!src/main/java/de/students/antlr/.gitkeep
+src/main/scala/de/students/antlr/*
+!src/main/scala/de/students/antlr/.gitkeep
 
 # macOS
 .DS_Store

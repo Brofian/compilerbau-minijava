@@ -1,6 +1,5 @@
 package de.students
 
-import de.dhbw.horb.Compiler
 import Parser.{Parser, Program}
 import de.students.InputOutput
 import de.students.semantic.SemanticCheck
