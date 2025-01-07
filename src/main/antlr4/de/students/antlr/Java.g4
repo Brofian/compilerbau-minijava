@@ -22,7 +22,7 @@ attribute: optionalModifier type IDENTIFIER ('=' expression)? SC;
 constructor: PUBLIC? id '(' parameterList? ')' methodBody;
 
 // Modifiers
-modifier: PRIVATE | PUBLIC | PROTECTED | STATIC | FINAL | ABSTRACT;
+modifier: PRIVATE | PUBLIC | PROTECTED  | FINAL | ABSTRACT;
 optionalModifier: modifier?;
 
 // Return Types
@@ -40,7 +40,7 @@ parameter: type IDENTIFIER;
 // Method Body
 methodBody:  '{' block* '}' ;
 
-block:  statement |  expression ;
+block: (statement | expression)+;
 
 // Statements
 statement: variableDeclaration
@@ -82,6 +82,7 @@ primary: IDENTIFIER
        | thisAccess
        | classAccess
        | '(' expression ')'
+       | objectCreation // Allow `new ...` as a primary
        ;
 
 // Method calls, allowing chaining without left recursion
@@ -94,9 +95,16 @@ expression: literal
           | methodCall
           | thisAccess
           | IDENTIFIER
-          | 'new' type ('(' argumentList? ')' | '[' expression ']') // Object or array creation
-          | '(' expression ')'
+          | objectCreation // Added rule for clarity
+          | arrayCreation // Added rule for arrays          | '(' expression ')'
           | expression operator expression;
+
+// Object creation
+objectCreation: 'new' id '(' argumentList? ')';
+
+// Array creation
+arrayCreation: 'new' type '[' expression ']' ('[' expression ']')*;
+
 
 thisAccess: 'this' '.' IDENTIFIER;
 classAccess: IDENTIFIER '.' IDENTIFIER;
