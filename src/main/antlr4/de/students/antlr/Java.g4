@@ -1,12 +1,12 @@
 grammar Java;
 
 // Package Definition
-package: PACKAGE id SC class ;
+package: PACKAGE id SC class+ ;
 
 // Class Definitions
 class: PUBLIC? CLASS id classbody
      | PUBLIC? CLASS id EXTENDS id classbody
-     | PUBLIC? ABSTRACT class id classbody;
+     | PUBLIC? ABSTRACT id classbody; // should later be abstract-classbody?
 
 classbody: '{' (method | attribute | constructor | class)* '}';
 
