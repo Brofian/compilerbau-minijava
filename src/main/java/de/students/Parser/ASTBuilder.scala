@@ -111,12 +111,28 @@ object ASTBuilder {
         visitReturnStatement(ctx.returnStatement())
       } else if (ctx.ifStatement() != null) {
         visitIfStatement(ctx.ifStatement())
+      } // Handle while statements
+      else if (ctx.whileStatement() != null) {
+        visitWhileStatement(ctx.whileStatement())
       } else {
         // Handle other types of statements
         throw new UnsupportedOperationException(s"Unsupported statement: ${ctx.getText}")
       }
     }
 
+    override def visitWhileStatement(ctx: WhileStatementContext): Statement = {
+      // Get the condition (expression)
+      val condition = visitExpression(ctx.expression())
+
+      // Get the body (block of statements)
+      val body = visitmyBlock(ctx.block())
+
+      // Print the visited while statement
+      println(s"Visiting while statement with condition: $condition")
+
+      // Return the corresponding AST node for a while statement
+      WhileStatement(condition, Block(body))
+    }
     override def visitIfStatement(ctx: IfStatementContext): Statement = {
       val condition = visitExpression(ctx.expression())
       val thenBranch = visitmyBlock(ctx.block())
@@ -293,14 +309,26 @@ object ASTBuilder {
 
     override def visitLiteral(ctx: LiteralContext): Literal = {
       println(s"Visiting literal: ${ctx.getText}")
+
       if (ctx.INTEGER_LITERAL() != null) {
+        // Handle integer literals
         Literal(ctx.INTEGER_LITERAL().getText.toInt)
       } else if (ctx.STRING_LITERAL() != null) {
+        // Handle string literals
         Literal(ctx.STRING_LITERAL().getText)
+      } else if (ctx.BOOLEAN_LITERAL() != null) {
+        // Handle boolean literals (true/false)
+        ctx.BOOLEAN_LITERAL().getText match {
+          case "true" => Literal(true)
+          case "false" => Literal(false)
+          case _ => throw new UnsupportedOperationException(s"Unsupported boolean literal: ${ctx.getText}")
+        }
       } else {
+        // If literal is not recognized
         throw new UnsupportedOperationException(s"Unsupported literal: ${ctx.getText}")
       }
     }
+
 
     override def visitAttribute(ctx: AttributeContext): VarDecl = {
       println(s"Visiting attribute: ${ctx.IDENTIFIER().getText}")

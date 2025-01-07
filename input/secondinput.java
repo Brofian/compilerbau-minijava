@@ -22,5 +22,9 @@ public class MyProgram {
 
 
             int result = prog.calculate(5, 3);
+
+            while(true){
+                  this.count = this.count+1
+            }
       }
 }
