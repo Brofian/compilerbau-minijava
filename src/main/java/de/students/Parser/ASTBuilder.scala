@@ -12,7 +12,18 @@ object ASTGenerator {
 
   class ASTBuilder extends JavaBaseVisitor[ASTNode] {
     // Generate the AST from the parse tree root
-    def generateAST(tree: ParseTree): Program = tree.accept(this).asInstanceOf[Program]
+    def generateAST(tree: ParseTree): Package = tree.accept(this).asInstanceOf[Package]
+
+    override def visitPackage(ctx: PackageContext): Package = {
+      val packageName = ctx.id().getText // Assuming the package name is a single identifier
+      val classDecls = ctx.class_()
+        .asScala
+        .map(visitClass) // Call visitClass for each class in the package
+        .toList
+
+      println(s"Package: $packageName, Classes: ${classDecls.map(_.name).mkString(", ")}")
+      Package(packageName, classDecls)
+    }
 
     override def visitClass(ctx: ClassContext): ClassDecl = {
       val name = ctx.id(0).getText // Der Name der Klasse
@@ -22,11 +33,11 @@ object ASTGenerator {
 
       val isAbstract = ctx.ABSTRACT() != null // Überprüfung auf ABSTRACT
 
-      val methods = ctx.classbody().method().asScala.map(visitMethod).toList
-      val fields = ctx.classbody().attribute().asScala.map(visitAttribute).toList
+//      val methods = ctx.classbody().method().asScala.map(visitMethod).toList
+     // val fields = ctx.classbody().attribute().asScala.map(visitAttribute).toList
 
 
-      ClassDecl(name, parent, isAbstract, methods, fields)
+      ClassDecl(name, parent, isAbstract, null, null)
     }
 
 
@@ -128,6 +139,7 @@ object ASTGenerator {
         val right = visitExpression(ctx.expression(1))
         BinaryOp(left, op, right)
       } else {
+
         throw new RuntimeException("Unsupported expression")
       }
     }

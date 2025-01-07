@@ -4,7 +4,8 @@ package de.students.Parser
 sealed trait ASTNode
 
 // Program-node
-case class Program(classes: List[ClassDecl]) extends ASTNode
+case class Package( name : String,
+                    classes: List[ClassDecl]) extends ASTNode
 
 // Class declaration
 case class ClassDecl(
