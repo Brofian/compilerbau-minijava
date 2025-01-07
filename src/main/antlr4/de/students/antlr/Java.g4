@@ -1,19 +1,19 @@
 grammar Java;
 
 // Package Definition
-package: PACKAGE id SC class ;
+package: PACKAGE id SC class+ ;
 
 // Class Definitions
-class: PUBLIC? CLASS id classbody
-     | PUBLIC? CLASS id EXTENDS id classbody ;
+class: PUBLIC? CLASS id (EXTENDS id)? classbody
+     | PUBLIC? ABSTRACT id classbody; // should later be abstract-classbody?
 
-classbody: '{' (method | attribute | constructor)* '}';
+classbody: '{' (method | attribute | constructor | class)* '}';
 
 // Methods
-defaultMethod: modifier returntype IDENTIFIER '(' parameterList? ')' methodBody;
-staticMethod : modifier STATIC returntype IDENTIFIER '(' parameterList? ')' methodBody;
+method: modifier STATIC? returntype IDENTIFIER '(' parameterList? ')' methodBody;
+//staticMethod : modifier STATIC returntype IDENTIFIER '(' parameterList? ')' methodBody;
 
-method: staticMethod | defaultMethod;
+//method: fullMethod;
 
 // Attributes
 attribute: optionalModifier type IDENTIFIER ('=' expression)? SC;
@@ -22,7 +22,7 @@ attribute: optionalModifier type IDENTIFIER ('=' expression)? SC;
 constructor: PUBLIC? id '(' parameterList? ')' methodBody;
 
 // Modifiers
-modifier: PRIVATE | PUBLIC | PROTECTED | STATIC | FINAL | ABSTRACT;
+modifier: PRIVATE | PUBLIC | PROTECTED  | FINAL | ABSTRACT;
 optionalModifier: modifier?;
 
 // Return Types
@@ -40,7 +40,7 @@ parameter: type IDENTIFIER;
 // Method Body
 methodBody:  '{' block* '}' ;
 
-block:  statement |  expression ;
+block: (statement | expression)+;
 
 // Statements
 statement: variableDeclaration
@@ -82,6 +82,7 @@ primary: IDENTIFIER
        | thisAccess
        | classAccess
        | '(' expression ')'
+       | objectCreation // Allow `new ...` as a primary
        ;
 
 // Method calls, allowing chaining without left recursion
@@ -94,9 +95,16 @@ expression: literal
           | methodCall
           | thisAccess
           | IDENTIFIER
-          | 'new' type ('(' argumentList? ')' | '[' expression ']') // Object or array creation
-          | '(' expression ')'
+          | objectCreation // Added rule for clarity
+          | arrayCreation // Added rule for arrays          | '(' expression ')'
           | expression operator expression;
+
+// Object creation
+objectCreation: 'new' id '(' argumentList? ')';
+
+// Array creation
+arrayCreation: 'new' type '[' expression ']' ('[' expression ']')*;
+
 
 thisAccess: 'this' '.' IDENTIFIER;
 classAccess: IDENTIFIER '.' IDENTIFIER;
