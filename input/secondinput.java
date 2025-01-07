@@ -24,7 +24,13 @@ public class MyProgram {
             int result = prog.calculate(5, 3);
 
             while(true){
-                  this.count = this.count+1
+                  this.count = this.count + 1;
+                  int[] arr = new int[2];
+                  if(this.count < 2) {
+                        arr[0] = this.count;
+                  }else if(this.count > 10){
+                        arr[1] = this.count;
+                  }
             }
       }
 }

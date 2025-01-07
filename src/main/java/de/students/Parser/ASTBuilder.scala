@@ -42,8 +42,8 @@ object ASTBuilder {
 
       val methods = ctx.classbody().method().asScala.map(visitMethod).toList
       val fields = ctx.classbody().attribute().asScala.map(visitAttribute).toList
-
-      ClassDecl(name, parent, isAbstract, methods, fields)
+      val constructors = ctx.classbody().constructor().asScala.map(visitConstructor).toList
+      ClassDecl(name, parent, isAbstract, methods , fields, constructors)
     }
 
     override def visitMethod(ctx: MethodContext): MethodDecl = {
@@ -58,6 +58,30 @@ object ASTBuilder {
 
       MethodDecl(name, isStatic, isAbstract, returnType, params, body)
     }
+
+    override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
+      val name = ctx.id().getText // Get the constructor name
+
+      // Parse parameters
+      val params = if (ctx.parameterList() != null) {
+        ctx.parameterList().parameter().asScala.map(visitParameter).toList
+      } else {
+        List() // No parameters
+      }
+
+      // Parse the method body: Iterate over each block and collect statements
+      val body = if (ctx.methodBody() != null) {
+        ctx.methodBody().block().asScala.flatMap(visitmyBlock).toList
+      } else {
+        List() // Empty body
+      }
+
+      println(s"Visiting constructor: $name, Parameters: $params, Body: $body")
+
+      ConstructorDecl(name, params, body)
+    }
+
+
 
     override def visitReturntype(ctx: ReturntypeContext): Type = {
       println("Visiting return type")

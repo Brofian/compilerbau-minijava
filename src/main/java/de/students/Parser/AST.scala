@@ -12,7 +12,8 @@ case class ClassDecl(
                       parent: String,
                       isAbstract: Boolean,
                       methods: List[MethodDecl],
-                      fields: List[VarDecl]
+                      fields: List[VarDecl],
+                      constructors: List[ConstructorDecl]
                     ) extends ASTNode
 
 // method declaration
@@ -24,6 +25,13 @@ case class MethodDecl(
                        params: List[VarDecl],
                        body: List[Statement]
                      ) extends ASTNode
+
+// Constructor declaration
+case class ConstructorDecl(
+                            name: String,
+                            params: List[VarDecl],
+                            body: List[Statement]
+                          ) extends ASTNode
 
 // variable declaration
 case class VarDecl(name: String, varType: Type, initializer : Option[Expression]) extends Statement
