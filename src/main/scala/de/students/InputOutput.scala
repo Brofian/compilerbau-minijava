@@ -58,7 +58,9 @@ class InputOutput {
   }
 
   def writeToBinFile(bytecode: Array[Byte], filename: String): Unit = {
-    Files.createDirectory(OUT_DIR)
+    if (!Files.exists(OUT_DIR)) {
+      Files.createDirectory(OUT_DIR)
+    }
     val fullFilepath = Paths.get(OUT_DIR.toString, filename).toString
     val outStream = DataOutputStream(new FileOutputStream(fullFilepath))
     bytecode.foreach(byte => outStream.writeByte(byte.asInstanceOf[Int]))
