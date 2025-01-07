@@ -15,15 +15,20 @@ object ASTGenerator {
     def generateAST(tree: ParseTree): Program = tree.accept(this).asInstanceOf[Program]
 
     override def visitClass(ctx: ClassContext): ClassDecl = {
-      val name = ctx.CLASS().getText
-      val parent = Option(ctx.EXTENDS()).map(_ => ctx.id(1).getText)
-      val isAbstract = ctx.ABSTRACT() != null
+      val name = ctx.id(0).getText // Der Name der Klasse
+      val maybeParent = Option(ctx.EXTENDS()).flatMap(_ => Option(ctx.id(1)).map(_.getText)) // Überprüfung auf EXTENDS
+      // Setze den Standardwert "Object", wenn kein Parent angegeben ist
+      val parent = maybeParent.getOrElse("Object")
+
+      val isAbstract = ctx.ABSTRACT() != null // Überprüfung auf ABSTRACT
 
       val methods = ctx.classbody().method().asScala.map(visitMethod).toList
       val fields = ctx.classbody().attribute().asScala.map(visitAttribute).toList
 
+
       ClassDecl(name, parent, isAbstract, methods, fields)
     }
+
 
     override def visitMethod(ctx: MethodContext): MethodDecl = {
       val static = (ctx.STATIC() != null)

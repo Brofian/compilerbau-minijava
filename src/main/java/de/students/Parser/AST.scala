@@ -9,7 +9,7 @@ case class Program(classes: List[ClassDecl]) extends ASTNode
 // Class declaration
 case class ClassDecl(
                       name: String,
-                      parent: Option[String],
+                      parent: String,
                       isAbstract : Boolean,
                       methods: List[MethodDecl],
                       fields: List[VarDecl]
