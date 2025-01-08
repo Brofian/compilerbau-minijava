@@ -1,6 +1,6 @@
 package de.students
 
-import Parser.{Parser, Program}
+import de.students.Parser.{Parser, Package}
 import de.students.InputOutput
 import de.students.semantic.SemanticCheck
 

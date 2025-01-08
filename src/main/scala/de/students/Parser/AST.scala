@@ -60,7 +60,7 @@ case class WhileStatement(cond: Expression, body: Block) extends Statement
 case class ForStatement(init: Option[Statement], cond: Option[Expression], update: Option[Expression], body: Statement) extends Statement
 case class DoWhileStatement(cond: Expression, body: Statement) extends Statement
 case class SwitchStatement(expr: Expression, cases: List[SwitchCase]) extends Statement
-case class StatementExpressions(expr: Expression) extends Statement
+case class StatementExpression(expr: Expression) extends Statement
 case class BreakStatement() extends Statement
 case class ContinueStatement() extends Statement
 

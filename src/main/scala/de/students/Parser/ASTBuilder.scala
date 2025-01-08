@@ -1,6 +1,5 @@
 package de.students.Parser
 
-import de.dhbw.horb.ast.{Function, Program, Variable}
 import de.students.Parser._
 import de.students.antlr.JavaParser._
 import de.students.antlr.{JavaBaseVisitor, JavaParser}
@@ -122,7 +121,7 @@ object ASTBuilder {
       println("Visiting method body")
       ctx.block().asScala.flatMap { blockCtx =>
         blockCtx.statement().asScala.map(visitStatement) ++
-          blockCtx.expression().asScala.map(visitExpression).map(StatementExpressions)
+          blockCtx.expression().asScala.map(visitExpression).map(StatementExpression)
       }.toList
     }
 
@@ -180,7 +179,7 @@ object ASTBuilder {
         case statementCtx: StatementContext =>
           Some(visitStatement(statementCtx))
         case exprCtx: ExpressionContext =>
-          Some(StatementExpressions(visitExpression(exprCtx)))
+          Some(StatementExpression(visitExpression(exprCtx)))
         case _ =>
           None
       }.toList
@@ -329,7 +328,7 @@ object ASTBuilder {
     override def visitExpressionStatement(ctx: ExpressionStatementContext): Statement = {
       val expr = visitExpression(ctx.expression())
       println(s"Visiting expression statement: $expr")
-      StatementExpressions(expr)
+      StatementExpression(expr)
     }
 
     override def visitLiteral(ctx: LiteralContext): Literal = {

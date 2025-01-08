@@ -7,10 +7,15 @@ import de.students.Parser.*
 
 private def generateExpression(expression: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   expression match {
-    case variableReference: VariableReference => generateVariableReference(variableReference, methodVisitor, state)
-    case literal: Literal => generateLiteral(literal, methodVisitor, state)
-    case binaryOperation: BinaryOperation => generateBinaryOperation(binaryOperation, methodVisitor, state)
-    case typedExpression: TypedExpression => generateTypedExpression(typedExpression, methodVisitor, state)
+    case variableReference: VarRef =>
+      generateVariableReference(variableReference, methodVisitor, state)
+    case literal: Literal =>
+      generateLiteral(literal, methodVisitor, state)
+    case binaryOperation: BinaryOp =>
+      generateBinaryOperation(binaryOperation, methodVisitor, state)
+    case typedExpression: TypedExpression =>
+      generateTypedExpression(typedExpression, methodVisitor, state)
+
     // case assignment: Assignment => ???
     // case methodCall: MethodCall => ???
     case _ => throw NotImplementedError("this expression is not yet implemented")
@@ -18,7 +23,7 @@ private def generateExpression(expression: Expression, methodVisitor: MethodVisi
 }
 
 // VARIABLE REFERENCE
-private def generateVariableReference(varRef: VariableReference, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateVariableReference(varRef: VarRef, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   val field = state.fields.find(varDecl => varDecl.name == varRef.name)
   field match {
     case Some(varDecl) => {
@@ -37,7 +42,7 @@ private def generateLiteral(literal: Literal, methodVisitor: MethodVisitor, stat
 }
 
 // BINARY OPERATION
-private def generateBinaryOperation(operation: BinaryOperation, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateBinaryOperation(operation: BinaryOp, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   val expressionType = generateTypedExpression(operation.left.asInstanceOf[TypedExpression], methodVisitor, state)
   generateExpression(operation.right, methodVisitor, state) // should be same type, this is not our problem if not
 

@@ -13,7 +13,7 @@ private def generateStatement(statement: Statement, methodVisitor: MethodVisitor
   statement match {
     case block: BlockStatement => generateBlockStatement(block, methodVisitor, state)
     case returnStatement: ReturnStatement => generateReturnStatement(returnStatement, methodVisitor, state)
-    case expressionStatement: ExpressionStatement => generateExpressionStatement(expressionStatement, methodVisitor, state)
+    case expressionStatement: StatementExpression => generateExpressionStatement(expressionStatement, methodVisitor, state)
     case IfStatement(cond, thenBranch, elseBranch) => ???
     case WhileStatement(cond, body) => ???
     case TypedStatement(stmt, stmtType) => ???
@@ -50,6 +50,6 @@ private def generateTypedStatement(statement: TypedStatement, methodVisitor: Met
 
 }
 
-private def generateExpressionStatement(statement: ExpressionStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateExpressionStatement(statement: StatementExpression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   generateExpression(statement.expr, methodVisitor, state)
 }

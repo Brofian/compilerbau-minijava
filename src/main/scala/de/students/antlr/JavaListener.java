@@ -38,26 +38,6 @@ public interface JavaListener extends ParseTreeListener {
 	 */
 	void exitClassbody(JavaParser.ClassbodyContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JavaParser#defaultMethod}.
-	 * @param ctx the parse tree
-	 */
-	void enterDefaultMethod(JavaParser.DefaultMethodContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link JavaParser#defaultMethod}.
-	 * @param ctx the parse tree
-	 */
-	void exitDefaultMethod(JavaParser.DefaultMethodContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link JavaParser#staticMethod}.
-	 * @param ctx the parse tree
-	 */
-	void enterStaticMethod(JavaParser.StaticMethodContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link JavaParser#staticMethod}.
-	 * @param ctx the parse tree
-	 */
-	void exitStaticMethod(JavaParser.StaticMethodContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link JavaParser#method}.
 	 * @param ctx the parse tree
 	 */
@@ -337,6 +317,26 @@ public interface JavaListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExpression(JavaParser.ExpressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link JavaParser#objectCreation}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectCreation(JavaParser.ObjectCreationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#objectCreation}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectCreation(JavaParser.ObjectCreationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link JavaParser#arrayCreation}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayCreation(JavaParser.ArrayCreationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#arrayCreation}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayCreation(JavaParser.ArrayCreationContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaParser#thisAccess}.
 	 * @param ctx the parse tree

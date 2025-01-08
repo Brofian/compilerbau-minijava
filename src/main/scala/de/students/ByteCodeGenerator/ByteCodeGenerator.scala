@@ -20,7 +20,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     visibilityModifier(classDecl),
     classDecl.name,
     null, // signature
-    classDecl.parent.getOrElse("java/lang/Object"), // superName
+    classDecl.parent, // .getOrElse("java/lang/Object"), // superName
     null // interfaces
   )
 
