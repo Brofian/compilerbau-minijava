@@ -56,7 +56,7 @@ object ASTBuilder {
 
       println(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
 
-      MethodDecl(name, isStatic, isAbstract, returnType, params, body)
+      MethodDecl(name, isStatic, isAbstract, returnType, params, Block(body))
     }
 
     override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
@@ -136,14 +136,28 @@ object ASTBuilder {
       } else if (ctx.ifStatement() != null) {
         visitIfStatement(ctx.ifStatement())
       } // Handle while statements
+      else if (ctx.switchStatement() != null){
+        visitSwitchStatement(ctx.switchStatement())
+      }
       else if (ctx.whileStatement() != null) {
         visitWhileStatement(ctx.whileStatement())
-      } else {
+      } else if (ctx.breakStatement() != null) {
+        visitBreakStatement(ctx.breakStatement())
+              }
+
+      else {
         // Handle other types of statements
         throw new UnsupportedOperationException(s"Unsupported statement: ${ctx.getText}")
       }
     }
 
+    override def visitBreakStatement(ctx: BreakStatementContext): Statement =  {
+      if(ctx != null){
+        BreakStatement()
+      }else{
+        throw new RuntimeException("BreakStatementContext is null")
+      }
+    }
     override def visitWhileStatement(ctx: WhileStatementContext): Statement = {
       // Get the condition (expression)
       val condition = visitExpression(ctx.expression())
@@ -171,6 +185,32 @@ object ASTBuilder {
       }
 
       IfStatement(condition, Block(thenBranch), elseBranch)
+    }
+
+    override def visitSwitchStatement(ctx: SwitchStatementContext) : Statement = {
+
+        val expr = visitPrimary(ctx.primary())
+        println(s"Visiting Switch statement for primary : $expr")
+        val switchCases : List[SwitchCase] = ctx.switchCase().asScala.map(visitSwitchCase).toList
+        
+        val defaultCase : Option[DefaultCase] = visitMyDefaultCase(ctx.defaultCase())
+        SwitchStatement(expr, switchCases, defaultCase)
+    }
+    def visitMyDefaultCase(ctx : DefaultCaseContext) : Option[DefaultCase] =  {
+      if(ctx == null){
+        None
+      }else{
+        Option(DefaultCase(Block(visitmyBlock(ctx.block()))))
+      }
+        
+    }
+    override def visitSwitchCase(ctx : SwitchCaseContext): SwitchCase = {
+
+      val maybeLiteral = Option(visitLiteral(ctx.literal()))
+      println(s"Visiting Switch Case for literal : $maybeLiteral")
+
+      val block = visitmyBlock(ctx.block())
+      SwitchCase(maybeLiteral,Block(block))
     }
 
     def visitmyBlock(ctx: BlockContext): List[Statement] = {

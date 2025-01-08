@@ -23,7 +23,7 @@ case class MethodDecl(
                        isAbstract: Boolean,
                        returnType: Type,
                        params: List[VarDecl],
-                       body: Statement
+                       body: Block
                      ) extends ASTNode
 
 // Constructor declaration
@@ -59,7 +59,11 @@ case class IfStatement(cond: Expression, thenBranch: Block, elseBranch: Option[B
 case class WhileStatement(cond: Expression, body: Block) extends Statement
 case class ForStatement(init: Option[Statement], cond: Option[Expression], update: Option[Expression], body: Statement) extends Statement
 case class DoWhileStatement(cond: Expression, body: Statement) extends Statement
-case class SwitchStatement(expr: Expression, cases: List[SwitchCase]) extends Statement
+
+case class SwitchStatement(expr: Expression, cases: List[SwitchCase],default: Option[DefaultCase]) extends Statement
+case class SwitchCase(caseLit : Option[Literal],caseBlock : Block ) extends Statement
+case class DefaultCase(caseBlock : Block) extends Statement
+
 case class StatementExpressions(expr: Expression) extends Statement
 case class BreakStatement() extends Statement
 case class ContinueStatement() extends Statement
