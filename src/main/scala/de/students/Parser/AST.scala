@@ -65,7 +65,7 @@ case class BreakStatement() extends Statement
 case class ContinueStatement() extends Statement
 
 case class TypedStatement(stmt: Statement, stmtType: Type) extends Statement
-
+case class SwitchCase(value: Option[Expression], body: Statement) extends ASTNode
 
 // expressions
 sealed trait Expression extends ASTNode

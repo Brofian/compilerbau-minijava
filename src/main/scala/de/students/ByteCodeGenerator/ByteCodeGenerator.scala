@@ -7,8 +7,8 @@ import de.students.Parser.*;
 
 type ClassBytecode = Array[Byte]
 
-def generateBytecode(program: Program): List[ClassBytecode] = {
-  program.classes.map(generateClassBytecode)
+def generateBytecode(pack: Package): List[ClassBytecode] = {
+  pack.classes.map(generateClassBytecode)
 }
 
 private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {

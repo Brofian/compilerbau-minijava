@@ -56,10 +56,10 @@ object StatementChecks {
     }
 
     // if case
-    val typedThenBranch = this.checkStatement(ifStmt.thenBranch, typeAssumptions)
+    val typedThenBranch = this.checkBlockStatement(BlockStatement(ifStmt.thenBranch.statements), typeAssumptions)
     // else case
     val typedElseBranch: Option[TypedStatement] = ifStmt.elseBranch match {
-      case Some(stmt) => Some(this.checkStatement(stmt, typeAssumptions.clone()))
+      case Some(stmt) => Some(this.checkBlockStatement(BlockStatement(stmt.statements), typeAssumptions.clone()))
       case None => None
     }
 
@@ -68,7 +68,8 @@ object StatementChecks {
       case None => typedThenBranch.stmtType
     }
 
-    TypedStatement(IfStatement(typedCondition, typedThenBranch, typedElseBranch), stmtType)
+    ???
+    // TypedStatement(IfStatement(typedCondition, typedThenBranch, typedElseBranch), stmtType)
   }
 
   private def checkWhileStatement(whileStmt: WhileStatement, typeAssumptions: mutable.Map[String, Type]): TypedStatement = {
@@ -79,9 +80,10 @@ object StatementChecks {
     }
 
     // body
-    val typedBody = this.checkStatement(whileStmt.body, typeAssumptions)
+    // val typedBody = this.checkStatement(whileStmt.body, typeAssumptions)
 
-    TypedStatement(WhileStatement(typedCondition, typedBody), typedBody.stmtType)
+    // TypedStatement(WhileStatement(typedCondition, typedBody), typedBody.stmtType)
+    ???
   }
 
 

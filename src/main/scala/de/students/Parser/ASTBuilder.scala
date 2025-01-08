@@ -56,7 +56,8 @@ object ASTBuilder {
 
       println(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
 
-      MethodDecl(name, isStatic, isAbstract, returnType, params, body)
+      // MethodDecl(name, isStatic, isAbstract, returnType, params, body)
+      ???
     }
 
     override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {

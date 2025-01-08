@@ -21,10 +21,10 @@ object MiniJavaCompiler {
     Parser.main(input)
 
     // Create the AST from the parse-tree
-    val astProgram: Program = Program(List()) // TODO: AST, generated from parse-tree
+    val astProgram = Package("test", List()) // TODO: AST, generated from parse-tree
 
     // Run the semantic- and type-check
-    val typedAst = SemanticCheck.runCheck(astProgram)
+    // val typedAst = SemanticCheck.runCheck(astProgram)
 
     // Translate the typed AST into bytecode
     // TODO

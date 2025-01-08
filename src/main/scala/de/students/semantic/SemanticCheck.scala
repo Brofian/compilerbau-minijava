@@ -10,7 +10,7 @@ object SemanticCheck {
    *
    * @param program The program to run semantic and type checks against
    */
-  def runCheck(program: Program): Program = {
+  def runCheck(program: Package): Package = {
 
     val typeAssumptions = mutable.Map[String, Type]()
 
@@ -27,7 +27,10 @@ object SemanticCheck {
       this.checkClass(cls, typeAssumptions)
     })
 
-    Program(typedClasses)
+    Package(
+      program.name,
+      typedClasses
+    )
   }
 
 
@@ -55,10 +58,24 @@ object SemanticCheck {
         throw new SemanticException(s"Method ${method.name} with return type ${method.returnType} cannot return value of type ${typedBody.stmtType}")
       }
 
-      MethodDecl(method.name, method.returnType, method.params, typedBody)
+      MethodDecl(
+        method.name,
+        method.static,
+        method.isAbstract,
+        method.returnType,
+        method.params,
+        typedBody
+      )
     })
 
 
-    ClassDecl(cls.name, cls.parent, typedMethods, cls.fields)
+    ClassDecl(
+      cls.name,
+      cls.parent,
+      cls.isAbstract,
+      typedMethods,
+      cls.fields,
+      cls.constructors
+    )
   }
 }
