@@ -53,30 +53,6 @@ public class JavaBaseListener implements JavaListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDefaultMethod(JavaParser.DefaultMethodContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitDefaultMethod(JavaParser.DefaultMethodContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStaticMethod(JavaParser.StaticMethodContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStaticMethod(JavaParser.StaticMethodContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterMethod(JavaParser.MethodContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -408,6 +384,30 @@ public class JavaBaseListener implements JavaListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitExpression(JavaParser.ExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectCreation(JavaParser.ObjectCreationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectCreation(JavaParser.ObjectCreationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArrayCreation(JavaParser.ArrayCreationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrayCreation(JavaParser.ArrayCreationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
