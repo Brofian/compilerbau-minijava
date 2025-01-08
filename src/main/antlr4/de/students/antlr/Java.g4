@@ -65,14 +65,15 @@ ifStatement: 'if' '(' expression ')' '{' block '}'
 elseifStatement: 'else if' '{' '(' expression ')' block '}';
 elseStatement: 'else' '{' block '}';
 
-whileStatement: 'while' '(' expression ')' block;
+whileStatement: 'while' '(' expression ')' '{' block '}';
 doWhileStatement: 'do' block 'while' '(' expression ')' SC;
 forStatement: 'for' '(' (variableDeclaration | expressionStatement | SC)
                  expression? SC
                  expression? ')' block;
-switchStatement: 'switch' '(' expression ')' '{' switchCase* '}';
-switchCase: 'case' literal ':' block
-          | 'default' ':' block;
+switchStatement: 'switch' '(' primary ')' '{' switchCase+ defaultCase?'}';
+
+switchCase: 'case' literal ':' block breakStatement?;
+defaultCase : 'default' ':' block;
 breakStatement: 'break' SC;
 continueStatement: 'continue' SC;
 
