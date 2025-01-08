@@ -14,9 +14,15 @@ private def generateStatement(statement: Statement, methodVisitor: MethodVisitor
     case block: BlockStatement => generateBlockStatement(block, methodVisitor, state)
     case returnStatement: ReturnStatement => generateReturnStatement(returnStatement, methodVisitor, state)
     case expressionStatement: StatementExpression => generateExpressionStatement(expressionStatement, methodVisitor, state)
-    case IfStatement(cond, thenBranch, elseBranch) => ???
-    case WhileStatement(cond, body) => ???
-    case TypedStatement(stmt, stmtType) => ???
+    case varDecl: VarDecl => ???
+    case ifStatement: IfStatement => ???
+    case whileStatement: WhileStatement => ???
+    case forStatement: ForStatement => ???
+    case doWhileStatement: DoWhileStatement => ???
+    case switchStatement: SwitchStatement => ???
+    case breakStatement: BreakStatement => ???
+    case continueStatement: ContinueStatement => ???
+    case typedStatement: TypedStatement => ???
   }
 }
 

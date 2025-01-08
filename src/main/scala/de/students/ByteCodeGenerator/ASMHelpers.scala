@@ -19,7 +19,7 @@ private def asmType(t: Type): String = t match {
   case UserType(name) => f"L$name;"
   case FunctionType(returnType, parameterTypes) => {
     val parameters = parameterTypes.map(asmType).fold("")((a ,b) => a + b)
-    f"(${parameters})${asmType(returnType)}"
+    f"($parameters)${asmType(returnType)}"
   }
 }
 
