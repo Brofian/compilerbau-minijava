@@ -5,11 +5,14 @@ import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
 
 // temporary I hope
-def handleBlock(block: Block, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def handleBlock(block: Block, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   block.statements.foreach(stmt => generateStatement(
     stmt, methodVisitor, state
   ))
 }
+
+val EMPTY_STATEMENT = BlockStatement(List())
+val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
 
 //////////////////////////
 //      STATEMENTS      //
@@ -88,12 +91,30 @@ private def generateWhileStatement(whileStatement: WhileStatement, methodVisitor
   methodVisitor.visitInsn(NOP)
 }
 
-private def generateForStatement(statement: ForStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-
+private def generateForStatement(forStatement: ForStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  generateStatement(
+    BlockStatement(
+      List(
+        forStatement.init.getOrElse(EMPTY_STATEMENT),
+        WhileStatement(
+          forStatement.cond.getOrElse(TRUE_EXPRESSION),
+          Block(List(
+            StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION)),
+            forStatement.body
+          ))
+        )
+      )
+    ),
+    methodVisitor, state
+  )
 }
 
-private def generateDoWhileStatement(statement: DoWhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-
+private def generateDoWhileStatement(doWhileStatement: DoWhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  generateStatement(doWhileStatement.body, methodVisitor, state)
+  generateWhileStatement(
+    WhileStatement(doWhileStatement.cond, Block(List(doWhileStatement.body))), // this Block is not pretty
+    methodVisitor, state
+  )
 }
 
 private def generateSwitchStatement(statement: SwitchStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
