@@ -18,7 +18,7 @@ val generateAntlrTask = taskKey[Unit]("generateAntlr")
 generateAntlrTask := {
   println("Generating grammar from g4 file")
   val antlrGeneratorLib = "lib/antlr-4.13.2-complete.jar"
-  val outputDirectory = "src/main/java/de/students/antlr"
+  val outputDirectory = "src/main/scala/de/students/antlr"
   val packageName = "de.students.antlr"
   val inputGrammarFile = "src/main/antlr4/de/students/antlr/Java.g4"
 
