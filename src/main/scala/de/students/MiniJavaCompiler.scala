@@ -1,8 +1,6 @@
 package de.students
 
-import de.students.Parser.{Parser, Package}
-import de.students.InputOutput
-import de.students.semantic.SemanticCheck
+import de.students.Parser.*
 
 object MiniJavaCompiler {
 
@@ -17,18 +15,45 @@ object MiniJavaCompiler {
 
     // Run the scanner and parser
     var io = new InputOutput
-    val input = io.getInput(args)
-    Parser.main(input)
+    // val input = io.getInput(args)
+    // Parser.main(input)
 
     // Create the AST from the parse-tree
-    val astProgram = Package("test", List()) // TODO: AST, generated from parse-tree
+    // val astProgram = Package("test", List()) // TODO: AST, generated from parse-tree
 
     // Run the semantic- and type-check
     // val typedAst = SemanticCheck.runCheck(astProgram)
 
     // Translate the typed AST into bytecode
-    // TODO
+    // some testing
+    val testProg = Package("p",
+      List(
+        ClassDecl(
+          "test",
+          "java/lang/Object",
+          false, // isAbstract
+          List(
+            MethodDecl(
+              "foo",
+              false, // static
+              false, // isAbstract
+              IntType,
+              List(),
+              IfStatement(
+                Literal(1),
+                Block(List(ReturnStatement(Some(TypedExpression(Literal(42), IntType))))),
+                Some(Block(List(ReturnStatement(Some(TypedExpression(Literal(-42), IntType)))))),
+              )
+            )
+          ),
+          List(),
+          List() // constructors
+        )
+      )
+    )
 
+    val bytecode = ByteCodeGenerator.generateBytecode(testProg)
+    io.writeToBinFile(bytecode.head, "test.class")
   }
 
 }
