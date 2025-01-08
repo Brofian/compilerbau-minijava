@@ -52,11 +52,11 @@ private def generateReturnStatement(statement: ReturnStatement, methodVisitor: M
 }
 
 private def generateIfStatement(ifStatement: IfStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  generateExpression(ifStatement.cond, methodVisitor, state)
   val elseBranch = Label()
   val end = Label()
 
-  methodVisitor.visitLdcInsn(1)
+  generateExpression(ifStatement.cond, methodVisitor, state)
+  methodVisitor.visitLdcInsn(0)
   methodVisitor.visitJumpInsn(IFEQ, elseBranch)
 
   handleBlock(ifStatement.thenBranch, methodVisitor, state)
@@ -72,8 +72,20 @@ private def generateIfStatement(ifStatement: IfStatement, methodVisitor: MethodV
   methodVisitor.visitInsn(NOP)
 }
 
-private def generateWhileStatement(statement: WhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateWhileStatement(whileStatement: WhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  val start = Label()
+  val end = Label()
 
+  methodVisitor.visitLabel(start)
+  generateExpression(whileStatement.cond, methodVisitor, state)
+  methodVisitor.visitLdcInsn(0)
+  methodVisitor.visitJumpInsn(IFEQ, end)
+
+  handleBlock(whileStatement.body, methodVisitor, state)
+
+  methodVisitor.visitJumpInsn(GOTO, start)
+  methodVisitor.visitLabel(end)
+  methodVisitor.visitInsn(NOP)
 }
 
 private def generateForStatement(statement: ForStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
