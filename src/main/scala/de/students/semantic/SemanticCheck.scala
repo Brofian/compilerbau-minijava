@@ -1,6 +1,6 @@
 package de.students.semantic
 
-import de.students.Parser._
+import de.students.Parser.*
 import scala.collection.mutable;
 
 object SemanticCheck {
@@ -8,29 +8,26 @@ object SemanticCheck {
   /**
    * Entry point for running checks on a program
    *
-   * @param program The program to run semantic and type checks against
+   * @param packageDecl The program to run semantic and type checks against
    */
-  def runCheck(program: Package): Package = {
+  def runCheck(packageDecl: Package): Package = {
 
     val typeAssumptions = mutable.Map[String, Type]()
 
     // instantly add all class names to the list of known types
-    program.classes.foreach((cls: ClassDecl) => {
+    packageDecl.classes.foreach((cls: ClassDecl) => {
       typeAssumptions.addOne(
         (cls.name, UserType(cls.name))
       )
     })
 
 
-    val typedClasses = program.classes.map((cls: ClassDecl) => {
+    val typedClasses = packageDecl.classes.map((cls: ClassDecl) => {
       // run typeCheck for class and replace with typed class
       this.checkClass(cls, typeAssumptions)
     })
 
-    Package(
-      program.name,
-      typedClasses
-    )
+    Package(packageDecl.name, typedClasses)
   }
 
 
@@ -58,24 +55,21 @@ object SemanticCheck {
         throw new SemanticException(s"Method ${method.name} with return type ${method.returnType} cannot return value of type ${typedBody.stmtType}")
       }
 
-      MethodDecl(
-        method.name,
-        method.static,
-        method.isAbstract,
-        method.returnType,
-        method.params,
-        typedBody
-      )
+      MethodDecl(method.name, method.static, method.isAbstract, method.returnType, method.params, typedBody)
+    })
+
+    // TODO: do we really need to differentiate between constructors and methods?
+    val typedConstructors: List[ConstructorDecl] = cls.constructors.map((constructor: ConstructorDecl) => {
+      val typedBody: TypedStatement = StatementChecks.checkStatement(constructor.body, typeAssumptions)
+
+      if (!UnionTypeFinder.isASubtypeOfB(typedBody.stmtType, VoidType)) {
+        throw new SemanticException(s"Constructor ${constructor.name} cannot return value")
+      }
+
+      ConstructorDecl(constructor.name, constructor.params, typedBody)
     })
 
 
-    ClassDecl(
-      cls.name,
-      cls.parent,
-      cls.isAbstract,
-      typedMethods,
-      cls.fields,
-      cls.constructors
-    )
+    ClassDecl(cls.name, cls.parent, cls.isAbstract, typedMethods, cls.fields, typedConstructors)
   }
 }

@@ -1633,13 +1633,13 @@ public class JavaParser extends Parser {
 			setState(243);
 			match(T__8);
 			setState(244);
-			match(T__0);
-			setState(245);
 			match(T__2);
-			setState(246);
+			setState(245);
 			expression(0);
-			setState(247);
+			setState(246);
 			match(T__3);
+			setState(247);
+			match(T__0);
 			setState(248);
 			block();
 			setState(249);
@@ -3157,8 +3157,8 @@ public class JavaParser extends Parser {
 		"\u0000\u00ef\u00ed\u0001\u0000\u0000\u0000\u00f0\u00f2\u0003(\u0014\u0000"+
 		"\u00f1\u00f0\u0001\u0000\u0000\u0000\u00f1\u00f2\u0001\u0000\u0000\u0000"+
 		"\u00f2%\u0001\u0000\u0000\u0000\u00f3\u00f4\u0005\t\u0000\u0000\u00f4"+
-		"\u00f5\u0005\u0001\u0000\u0000\u00f5\u00f6\u0005\u0003\u0000\u0000\u00f6"+
-		"\u00f7\u0003<\u001e\u0000\u00f7\u00f8\u0005\u0004\u0000\u0000\u00f8\u00f9"+
+		"\u00f5\u0005\u0003\u0000\u0000\u00f5\u00f6\u0003<\u001e\u0000\u00f6\u00f7"+
+		"\u0005\u0004\u0000\u0000\u00f7\u00f8\u0005\u0001\u0000\u0000\u00f8\u00f9"+
 		"\u0003\u001a\r\u0000\u00f9\u00fa\u0005\u0002\u0000\u0000\u00fa\'\u0001"+
 		"\u0000\u0000\u0000\u00fb\u00fc\u0005\n\u0000\u0000\u00fc\u00fd\u0005\u0001"+
 		"\u0000\u0000\u00fd\u00fe\u0003\u001a\r\u0000\u00fe\u00ff\u0005\u0002\u0000"+

@@ -62,7 +62,7 @@ ifStatement: 'if' '(' expression ')' '{' block '}'
               (elseifStatement)* // Allow multiple else-if blocks
               (elseStatement)?;
 
-elseifStatement: 'else if' '{' '(' expression ')' block '}';
+elseifStatement: 'else if' '(' expression ')' '{' block '}';
 elseStatement: 'else' '{' block '}';
 
 whileStatement: 'while' '(' expression ')' block;

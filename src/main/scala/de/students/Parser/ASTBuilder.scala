@@ -1,10 +1,11 @@
 package de.students.Parser
 
-import de.students.Parser._
-import de.students.antlr.JavaParser._
+import de.students
+import de.students.Parser.*
+import de.students.antlr.JavaParser.*
 import de.students.antlr.{JavaBaseVisitor, JavaParser}
 import org.antlr.v4.runtime.tree.ParseTree
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 object ASTBuilder {
 
@@ -55,8 +56,7 @@ object ASTBuilder {
 
       println(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
 
-      // MethodDecl(name, isStatic, isAbstract, returnType, params, body)
-      ???
+      MethodDecl(name, isStatic, isAbstract, returnType, params, BlockStatement(body))
     }
 
     override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
@@ -78,7 +78,7 @@ object ASTBuilder {
 
       println(s"Visiting constructor: $name, Parameters: $params, Body: $body")
 
-      ConstructorDecl(name, params, body)
+      ConstructorDecl(name, params, BlockStatement(body))
     }
 
 
@@ -121,7 +121,7 @@ object ASTBuilder {
       println("Visiting method body")
       ctx.block().asScala.flatMap { blockCtx =>
         blockCtx.statement().asScala.map(visitStatement) ++
-          blockCtx.expression().asScala.map(visitExpression).map(StatementExpression)
+          blockCtx.expression().asScala.map(visitExpression).map(StatementExpressions.apply)
       }.toList
     }
 
@@ -155,7 +155,7 @@ object ASTBuilder {
       println(s"Visiting while statement with condition: $condition")
 
       // Return the corresponding AST node for a while statement
-      WhileStatement(condition, Block(body))
+      WhileStatement(condition, BlockStatement(body))
     }
     override def visitIfStatement(ctx: IfStatementContext): Statement = {
       val condition = visitExpression(ctx.expression())
@@ -165,12 +165,12 @@ object ASTBuilder {
 
       val elseIfBranches = ctx.elseifStatement().asScala.map(visitElseIf).toList
       val elseBranch = if (ctx.elseStatement() != null) {
-        Some(Block(visitElse(ctx.elseStatement())))
+        Some(BlockStatement(visitElse(ctx.elseStatement())))
       } else {
         None
       }
 
-      IfStatement(condition, Block(thenBranch), elseBranch)
+      IfStatement(condition, BlockStatement(thenBranch), elseBranch)
     }
 
     def visitmyBlock(ctx: BlockContext): List[Statement] = {
@@ -179,7 +179,7 @@ object ASTBuilder {
         case statementCtx: StatementContext =>
           Some(visitStatement(statementCtx))
         case exprCtx: ExpressionContext =>
-          Some(StatementExpression(visitExpression(exprCtx)))
+          Some(StatementExpressions(visitExpression(exprCtx)))
         case _ =>
           None
       }.toList
@@ -189,7 +189,7 @@ object ASTBuilder {
       val condition = visitExpression(ctx.expression())
       val thenBranch = visitmyBlock(ctx.block())
       println(s"Visiting else-if statement, condition: $condition")
-      IfStatement(condition, Block(thenBranch), None)
+      IfStatement(condition, BlockStatement(thenBranch), None)
     }
 
     def visitElse(ctx: ElseStatementContext): List[Statement] = {
@@ -328,7 +328,7 @@ object ASTBuilder {
     override def visitExpressionStatement(ctx: ExpressionStatementContext): Statement = {
       val expr = visitExpression(ctx.expression())
       println(s"Visiting expression statement: $expr")
-      StatementExpression(expr)
+      StatementExpressions(expr)
     }
 
     override def visitLiteral(ctx: LiteralContext): Literal = {

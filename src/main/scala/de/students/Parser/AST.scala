@@ -30,7 +30,7 @@ case class MethodDecl(
 case class ConstructorDecl(
                             name: String,
                             params: List[VarDecl],
-                            body: List[Statement]
+                            body: Statement
                           ) extends ASTNode
 
 // variable declaration
@@ -49,23 +49,23 @@ case class FunctionType(returnType: Type, parameterTypes: List[Type]) extends Ty
 
 
 
-case class Block(statements : List[Statement]) extends ASTNode
-
 // statements
 sealed trait Statement extends ASTNode
 case class BlockStatement(stmts: List[Statement]) extends Statement
 case class ReturnStatement(expr: Option[Expression]) extends Statement
-case class IfStatement(cond: Expression, thenBranch: Block, elseBranch: Option[Block]) extends Statement
-case class WhileStatement(cond: Expression, body: Block) extends Statement
-case class DoWhileStatement(cond: Expression, body: Statement) extends Statement
+case class IfStatement(cond: Expression, thenBranch: Statement, elseBranch: Option[Statement]) extends Statement
+case class WhileStatement(cond: Expression, body: Statement) extends Statement
 case class ForStatement(init: Option[Statement], cond: Option[Expression], update: Option[Expression], body: Statement) extends Statement
-case class SwitchStatement(expr: Expression, cases: List[SwitchCase]) extends Statement
-case class StatementExpression(expr: Expression) extends Statement
+case class DoWhileStatement(cond: Expression, body: Statement) extends Statement
+case class SwitchStatement(expr: Expression, cases: List[SwitchCase], default: Option[DefaultCase]) extends Statement
+case class SwitchCase(caseLit: Option[Literal], caseBlock: Statement) extends Statement
+case class DefaultCase(caseBlock: Statement) extends Statement
+case class StatementExpressions(expr: Expression) extends Statement
 case class BreakStatement() extends Statement
 case class ContinueStatement() extends Statement
 
 case class TypedStatement(stmt: Statement, stmtType: Type) extends Statement
-case class SwitchCase(value: Option[Expression], body: Statement) extends ASTNode
+
 
 // expressions
 sealed trait Expression extends ASTNode
