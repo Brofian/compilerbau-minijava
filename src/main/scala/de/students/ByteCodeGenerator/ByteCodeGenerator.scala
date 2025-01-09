@@ -11,6 +11,8 @@ def generateBytecode(pack: Package): List[ClassBytecode] = {
   pack.classes.map(generateClassBytecode)
 }
 
+case class ByteCodeGeneratorException(msg: String) extends RuntimeException(msg)
+
 private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   val cw = new ClassWriter(0)
 

@@ -123,7 +123,7 @@ private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisi
     case None => EMPTY_STATEMENT
   }
   val evaluableCases = switchStatement.cases.filter(c => c.value.isDefined)
-  val keys = Array.fill(evaluableCases.size)(0) // evaluableCases.map(c => c.value.get).toArray
+  val keys = Array.fill(evaluableCases.size)(0) // TODO evaluableCases.map(c => c.value.get).toArray
 
   val defaultLabel = Label()
   val bodyLabels = Array.fill(evaluableCases.size)(Label())
@@ -139,7 +139,7 @@ private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisi
 }
 
 private def generateBreakStatement(statement: BreakStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-
+  
 }
 
 private def generateContinueStatement(statement: ContinueStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
