@@ -72,7 +72,7 @@ private def generateIfStatement(ifStatement: IfStatement, methodVisitor: MethodV
   }
 
   methodVisitor.visitLabel(end)
-  methodVisitor.visitInsn(NOP)
+  generateNop(methodVisitor)
 }
 
 private def generateWhileStatement(whileStatement: WhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
@@ -88,7 +88,7 @@ private def generateWhileStatement(whileStatement: WhileStatement, methodVisitor
 
   methodVisitor.visitJumpInsn(GOTO, start)
   methodVisitor.visitLabel(end)
-  methodVisitor.visitInsn(NOP)
+  generateNop(methodVisitor)
 }
 
 private def generateForStatement(forStatement: ForStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
@@ -117,8 +117,25 @@ private def generateDoWhileStatement(doWhileStatement: DoWhileStatement, methodV
   )
 }
 
-private def generateSwitchStatement(statement: SwitchStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  val default = switchStatement.cases.find(c => c.value.isEmpty) match {
+    case Some(c) => c.body
+    case None => EMPTY_STATEMENT
+  }
+  val evaluableCases = switchStatement.cases.filter(c => c.value.isDefined)
+  val keys = Array.fill(evaluableCases.size)(0) // evaluableCases.map(c => c.value.get).toArray
 
+  val defaultLabel = Label()
+  val bodyLabels = Array.fill(evaluableCases.size)(Label())
+
+  generateExpression(switchStatement.expr, methodVisitor, state)
+  methodVisitor.visitLookupSwitchInsn(defaultLabel, keys, bodyLabels)
+
+  evaluableCases.zipWithIndex.foreach((c, i) => {
+    methodVisitor.visitLabel(bodyLabels(i))
+    generateStatement(c.body, methodVisitor, state)
+  })
+  generateNop(methodVisitor)
 }
 
 private def generateBreakStatement(statement: BreakStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
@@ -139,4 +156,8 @@ private def generateTypedStatement(statement: TypedStatement, methodVisitor: Met
 
 private def generateExpressionStatement(statement: StatementExpression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   generateExpression(statement.expr, methodVisitor, state)
+}
+
+private def generateNop(methodVisitor: MethodVisitor): Unit = {
+  methodVisitor.visitInsn(NOP)
 }
