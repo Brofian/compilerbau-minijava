@@ -29,18 +29,6 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitClassbody(JavaParser.ClassbodyContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#defaultMethod}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDefaultMethod(JavaParser.DefaultMethodContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link JavaParser#staticMethod}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStaticMethod(JavaParser.StaticMethodContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JavaParser#method}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -208,6 +196,18 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExpression(JavaParser.ExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#objectCreation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectCreation(JavaParser.ObjectCreationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#arrayCreation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayCreation(JavaParser.ArrayCreationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaParser#thisAccess}.
 	 * @param ctx the parse tree
