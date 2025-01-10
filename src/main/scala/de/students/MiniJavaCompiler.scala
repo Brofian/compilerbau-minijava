@@ -8,7 +8,7 @@ object MiniJavaCompiler {
 
   def main(args: Array[String]): Unit = {
 
-    if(args.isEmpty) {
+    if(args.nonEmpty) {
       val io = new InputOutput
       val input = io.getInput(args)
       Parser.main(input)
