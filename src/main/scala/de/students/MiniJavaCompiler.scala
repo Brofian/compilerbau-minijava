@@ -9,16 +9,17 @@ object MiniJavaCompiler {
   def main(args: Array[String]): Unit = {
 
     if(args.isEmpty) {
-      throw new RuntimeException("No input arguments given")
+      val io = new InputOutput
+      val input = io.getInput(args)
+      Parser.main(input)
+    }else{
+      testAll()
     }
 
     // input preparation
     // TODO: read the input arguments to determine the output file path, input file path(s) and options separately
 
     // Run the scanner and parser
-    var io = new InputOutput
-    val input = io.getInput(args)
-    Parser.main(input)
 
     // Create the AST from the parse-tree
     val astProgram: Package = Package("", List()) // TODO: AST, generated from parse-tree
@@ -28,6 +29,28 @@ object MiniJavaCompiler {
 
     // Translate the typed AST into bytecode
     // TODO
+
+  }
+
+  private def testAll(): Unit = {
+    println("Testing these Files:  Arrays.java ===== Objects.Java =====  FullProgramm.java \n \n")
+    println("-".repeat(50))
+
+    val io = new InputOutput
+
+    println("Testing Arrays.java: \n")
+    Parser.main(io.getInput(Array("Arrays.java")))
+
+    println( "\n \n" + "-".repeat(50))
+
+    println("Testing Object.java: \n")
+    Parser.main(io.getInput(Array("Objects.java")))
+
+    println("\n \n" + "-".repeat(50))
+
+    println("Testing FullProgramm.java: \n")
+    Parser.main(io.getInput(Array("FullProgramm.java")))
+
 
   }
 
