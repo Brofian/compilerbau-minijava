@@ -77,5 +77,7 @@ case class ThisAccess(name: String) extends Expression
 case class ClassAccess(className: String, memberName: String) extends Expression
 case class NewObject(className: String, arguments: List[Expression]) extends Expression
 case class NewArray(arrayType: Type, dimensions: List[Expression]) extends Expression
+case class ArrayAccess(array: Expression, index: Expression) extends Expression
+
 case class MethodCall(target: Expression, methodName: String, args: List[Expression]) extends Expression
 case class TypedExpression(expr: Expression, exprType: Type) extends Expression
