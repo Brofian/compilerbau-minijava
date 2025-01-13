@@ -17,7 +17,7 @@ object SemanticCheck {
     val mergedProject = SyntacticSugarHandler.mergeClassesWithSamePackageName(project)
 
     // create context and make all classes and their fields known to the whole project
-    val globalContext = SemanticContext(mutable.Map[String, Type](), "", "")
+    val globalContext = SemanticContext(mutable.Map[String, Type](), mutable.Map[String, String](), "", "")
     this.gatherGlobalTypeAssumptions(mergedProject, globalContext)
 
     val typedPackages = mergedProject.packages.map((pckg: Package) => {
@@ -45,6 +45,9 @@ object SemanticCheck {
       pckg.classes.foreach((cls: ClassDecl) => {
         val fullyQualifiedClassName = pckgContext.getFullyQualifiedClassName(cls.name)
         context.addTypeAssumption(fullyQualifiedClassName, UserType(fullyQualifiedClassName))
+
+        // TODO: determine fully qualified parent name from imports
+        context.addClassRelation(fullyQualifiedClassName, cls.parent)
 
         // use context to determine fully qualified names
         val classContext = pckgContext.createChildContext(None, Some(fullyQualifiedClassName))
@@ -78,16 +81,16 @@ object SemanticCheck {
   private def checkPackage(pckg: Package, context: SemanticContext): Package = {
     // run typeCheck for class and replace with typed class
     val typedClasses = pckg.classes.map((cls: ClassDecl) => {
-      
+
       // create a new class-level-context
       val classContext = context.createChildContext(None,
         Some(context.getFullyQualifiedClassName(cls.name)))
       // typeCheck the class
       this.checkClass(
         SyntacticSugarHandler.moveFieldInitializerToConstructor(cls, context),
-        classContext  
+        classContext
       )
-      
+
     })
     Package(pckg.name, typedClasses)
   }
@@ -106,7 +109,7 @@ object SemanticCheck {
       if (!UnionTypeFinder.isASubtypeOfB(typedBody.stmtType, method.returnType, context)) {
         throw new SemanticException(s"Method ${method.name} in ${context.getClassName} with return type ${method.returnType} cannot return value of type ${typedBody.stmtType}")
       }
-      
+
       val fullyQualifiedMethodName = context.getFullyQualifiedMemberName(method.name)
       MethodDecl(fullyQualifiedMethodName, method.static, method.isAbstract, method.returnType, method.params, typedBody)
     })

@@ -1,6 +1,6 @@
 package de.students
 
-import Parser.{Package, Parser, Project}
+import Parser.{Parser, Project}
 import de.students.semantic.SemanticCheck
 import de.students.util.{ArgParser, InputOutput, Logger}
 
@@ -20,9 +20,8 @@ object MiniJavaCompiler {
     // Create the AST from the parse-tree
     val astProject: Project = Parser.main(fileContents)
 
-    val astProgram: Package = Package("", List()) // TODO: remove and use astProject instead
     // Run the semantic- and type-check
-    val typedAst = SemanticCheck.runCheck(astProgram)
+    val typedAst = SemanticCheck.runCheck(astProject)
 
     // Translate the typed AST into bytecode
     // TODO
