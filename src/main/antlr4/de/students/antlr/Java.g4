@@ -1,7 +1,7 @@
 grammar Java;
 
 // Package Definition
-package: PACKAGE id SC class+ ;
+package: PACKAGE id ('.' id)* SC class+ ;
 
 // Class Definitions
 class: PUBLIC? CLASS id (EXTENDS id)? classbody

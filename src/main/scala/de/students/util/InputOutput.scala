@@ -1,19 +1,29 @@
-package de.students
+package de.students.util
 
 import java.io.File
 import scala.io.Source
 import scala.util.Using
 
-class InputOutput {
+object InputOutput {
+
+  def getInput(filePaths: List[String]): String = {
+    val input = loadFiles(filePaths)
+
+    input match {
+      case Some(content) => content
+      case None => new Exception("No input folder or files were specified in the arguments."); ""
+    }
+  }
+
   /**
    * Load files from the specified paths. Supports multiple files and folders.
    *
-   * @param paths Array of paths to files or folders.
+   * @param paths Array of paths to files or folders
    * @return Option containing the combined file contents as a string, or None if an error occurs.
    */
-  def loadFiles(paths: Array[String]): Option[String] = {
+  private def loadFiles(paths: List[String]): Option[String] = {
     val files = paths.flatMap { path =>
-      val file = new File("input/" + path) // the files should be located in root/input/
+      val file = new File(path)
 
       // process Args into a List of file(paths)
       if (!file.exists()) {
@@ -36,21 +46,5 @@ class InputOutput {
     }
 
     if (fileContents.nonEmpty) Some(fileContents.mkString("\n")) else None
-  }
-
-  def getInput(args: Array[String]):String = {
-    // Check if arguments are provided
-    if (args.isEmpty) {
-      new Exception("No input folder or files were specified in the arguments.")
-    }
-
-    val io = new InputOutput
-    val input = loadFiles(args)
-
-    input match {
-      case Some(content) => content
-      case None => new Exception("No input folder or files were specified in the arguments."); ""
-
-    }
   }
 }

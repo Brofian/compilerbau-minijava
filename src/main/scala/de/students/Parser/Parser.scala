@@ -1,7 +1,8 @@
 package de.students.Parser
-import org.antlr.v4.runtime._
-import org.antlr.v4.runtime.tree._
+import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.tree.*
 import de.students.antlr.*
+import de.students.util.Logger
 
 object Parser {
   def main(inputString : String): Unit = {
@@ -20,11 +21,11 @@ object Parser {
     val tree = parser.package_()
 
     // print parsetree
-    println(tree.toStringTree(parser))
+    Logger.debug(tree.toStringTree(parser))
 
     val astBuilder = new ASTBuilder.ASTGenerator()
     val ast = astBuilder.generateAST(tree)
-    println(ast)
+    Logger.debug(ast)
    
   }
 }
