@@ -5,7 +5,7 @@ import scala.collection.mutable
 
 object UnionTypeFinder {
 
-  def getUnion(typeA: Type, typeB: Type, typeAssumptions: mutable.Map[String, Type]): Type = {
+  def getUnion(typeA: Type, typeB: Type, context: SemanticContext): Type = {
 
     // special cases
     if (typeA == NoneType) {
@@ -20,7 +20,7 @@ object UnionTypeFinder {
     }
   }
 
-  def isASubtypeOfB(typeA: Type, typeB: Type/* TODO: , classDefinitions */): Boolean  = {
+  def isASubtypeOfB(typeA: Type, typeB: Type, context: SemanticContext): Boolean  = {
     typeA match {
       case UserType(_) =>
         // TODO: check if typeA is a subtype of typeB
