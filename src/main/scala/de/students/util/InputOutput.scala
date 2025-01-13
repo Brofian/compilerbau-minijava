@@ -6,23 +6,9 @@ import scala.util.Using
 
 object InputOutput {
 
-  def getInput(filePaths: List[String]): String = {
-    val input = loadFiles(filePaths)
+  def getFileContents(filePaths: List[String]): List[String] = {
 
-    input match {
-      case Some(content) => content
-      case None => new Exception("No input folder or files were specified in the arguments."); ""
-    }
-  }
-
-  /**
-   * Load files from the specified paths. Supports multiple files and folders.
-   *
-   * @param paths Array of paths to files or folders
-   * @return Option containing the combined file contents as a string, or None if an error occurs.
-   */
-  private def loadFiles(paths: List[String]): Option[String] = {
-    val files = paths.flatMap { path =>
+    val files = filePaths.map { path =>
       val file = new File(path)
 
       // process Args into a List of file(paths)
@@ -33,18 +19,20 @@ object InputOutput {
       } else {
         List(file)
       }
-    }
+    }.flatten()
 
+    
     // get file contents and concat
-    val fileContents = files.flatMap { f =>
-      Using(Source.fromFile(f)) { source =>
-        source.mkString
-      }.recover {
-        case e: Exception =>
-          throw new RuntimeException(s"Failed to read file: ${f.getAbsolutePath}", e)
-      }.toOption
+    val fileContents: List[String] = files.map { f =>
+      val source = Source.fromFile(f)
+      val lines = try source.mkString catch {
+        case e: Exception => throw new RuntimeException(s"Failed to read file: ${f.getAbsolutePath}", e)
+      } finally source.close()
+
+      lines
     }
 
-    if (fileContents.nonEmpty) Some(fileContents.mkString("\n")) else None
+    fileContents
   }
+
 }

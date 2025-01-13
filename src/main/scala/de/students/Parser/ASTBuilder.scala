@@ -4,7 +4,9 @@ import de.students
 import de.students.Parser.*
 import de.students.antlr.JavaParser.*
 import de.students.antlr.{JavaBaseVisitor, JavaParser}
+import de.students.util.Logger
 import org.antlr.v4.runtime.tree.ParseTree
+
 import scala.jdk.CollectionConverters.*
 
 object ASTBuilder {
@@ -13,13 +15,13 @@ object ASTBuilder {
 
     // Generate the AST from the parse tree root
     def generateAST(tree: ParseTree): Package = {
-      Logger.info("Generating AST from parse tree root")
+      Logger.info(s"Generating AST from parse tree root")
       tree.accept(this).asInstanceOf[Package]
     }
 
     // Visit a package node and extract class declarations
     override def visitPackage(ctx: PackageContext): Package = {
-      val packageName = ctx.id().getText
+      val packageName = ctx.packageId().getText
       Logger.debug(s"Visiting package: $packageName")
 
       val classDecls = ctx.class_()
