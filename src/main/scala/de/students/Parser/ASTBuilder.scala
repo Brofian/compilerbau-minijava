@@ -52,11 +52,11 @@ object ASTBuilder {
       val isAbstract = ctx.modifier().ABSTRACT() != null
       val returnType = visitReturntype(ctx.returntype()) // A helper function for return type
       val params = ctx.parameterList().parameter().asScala.map(visitParameter).toList
-      val body = visitmyMethodBody(ctx.methodBody())
+      val body = visitBlockStmt(ctx.block())
 
       println(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
 
-      MethodDecl(name, isStatic, isAbstract, returnType, params, BlockStatement(body))
+      MethodDecl(name, isStatic, isAbstract, returnType, params, body)
     }
 
     override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
@@ -70,15 +70,11 @@ object ASTBuilder {
       }
 
       // Parse the method body: Iterate over each block and collect statements
-      val body = if (ctx.methodBody() != null) {
-        ctx.methodBody().block().asScala.flatMap(visitmyBlock).toList
-      } else {
-        List() // Empty body
-      }
+      val body = visitBlockStmt(ctx.block())
 
       println(s"Visiting constructor: $name, Parameters: $params, Body: $body")
 
-      ConstructorDecl(name, params, BlockStatement(body))
+      ConstructorDecl(name, params, body)
     }
 
 
@@ -117,12 +113,18 @@ object ASTBuilder {
       }
     }
 
-    def visitmyMethodBody(ctx: MethodBodyContext): List[Statement] = {
-      println("Visiting method body")
-      ctx.block().asScala.flatMap { blockCtx =>
-        blockCtx.statement().asScala.map(visitStatement) ++
-          blockCtx.expression().asScala.map(visitExpression).map(StatementExpressions.apply)
+    def visitBlockStmt(ctx: BlockContext): BlockStatement = {
+      println("Visiting block")
+      val StmtList = ctx.children.asScala.flatMap {
+        case statementCtx: StatementContext =>
+          Some(visitStatement(statementCtx))
+        case exprCtx: ExpressionContext =>
+          Some(StatementExpressions(visitExpression(exprCtx)))
+        case _ =>
+          None
       }.toList
+
+      BlockStatement(StmtList)
     }
 
     override def visitStatement(ctx: StatementContext): Statement = {
@@ -149,52 +151,42 @@ object ASTBuilder {
       val condition = visitExpression(ctx.expression())
 
       // Get the body (block of statements)
-      val body = visitmyBlock(ctx.block())
+      val body = visitBlockStmt(ctx.block())
 
       // Print the visited while statement
       println(s"Visiting while statement with condition: $condition")
 
       // Return the corresponding AST node for a while statement
-      WhileStatement(condition, BlockStatement(body))
+      WhileStatement(condition, body)
     }
     override def visitIfStatement(ctx: IfStatementContext): Statement = {
       val condition = visitExpression(ctx.expression())
-      val thenBranch = visitmyBlock(ctx.block())
+      val thenBranch = visitBlockStmt(ctx.block())
 
       println(s"Visiting if statement, condition: $condition")
 
       val elseIfBranches = ctx.elseifStatement().asScala.map(visitElseIf).toList
       val elseBranch = if (ctx.elseStatement() != null) {
-        Some(BlockStatement(visitElse(ctx.elseStatement())))
+        Some(visitElse(ctx.elseStatement()))
       } else {
         None
       }
 
-      IfStatement(condition, BlockStatement(thenBranch), elseBranch)
+      IfStatement(condition, thenBranch, elseBranch)
     }
 
-    def visitmyBlock(ctx: BlockContext): List[Statement] = {
-      println("Visiting block")
-      ctx.children.asScala.flatMap {
-        case statementCtx: StatementContext =>
-          Some(visitStatement(statementCtx))
-        case exprCtx: ExpressionContext =>
-          Some(StatementExpressions(visitExpression(exprCtx)))
-        case _ =>
-          None
-      }.toList
-    }
+
 
     def visitElseIf(ctx: ElseifStatementContext): Statement = {
       val condition = visitExpression(ctx.expression())
-      val thenBranch = visitmyBlock(ctx.block())
+      val thenBranch = visitBlockStmt(ctx.block())
       println(s"Visiting else-if statement, condition: $condition")
-      IfStatement(condition, BlockStatement(thenBranch), None)
+      IfStatement(condition, thenBranch, None)
     }
 
-    def visitElse(ctx: ElseStatementContext): List[Statement] = {
+    def visitElse(ctx: ElseStatementContext): BlockStatement  = {
       println("Visiting else statement")
-      visitmyBlock(ctx.block())
+      visitBlockStmt(ctx.block())
     }
 
     override def visitVariableDeclaration(ctx: VariableDeclarationContext): VarDecl = {
@@ -224,7 +216,11 @@ object ASTBuilder {
       } else if (ctx.objectCreation() != null) {
         visitObjectCreation(ctx.objectCreation())
       } else if (ctx.arrayCreation() != null) {
-        visitArrayCreation(ctx.arrayCreation())}else {
+        visitArrayCreation(ctx.arrayCreation())
+      } else if (ctx.arrayAccess() != null) { // Handle array access
+        visitArrayAccess(ctx.arrayAccess())
+      }
+      else {
         throw new UnsupportedOperationException(s"Unsupported expression: ${ctx.getText}")
       }
     }
@@ -240,6 +236,15 @@ object ASTBuilder {
       println(s"Visiting object creation: new $className(${arguments.mkString(", ")})")
       NewObject(className, arguments)
     }
+
+    override def visitArrayAccess(ctx: ArrayAccessContext): ArrayAccess = {
+      val arrayExpr = visitPrimary(ctx.primary())
+      val index = visitExpression(ctx.expression())
+
+      println(s"Visiting array access: ${arrayExpr} with indix ${index}]")
+      ArrayAccess(arrayExpr, index)
+    }
+
 
     override def visitArrayCreation(ctx: ArrayCreationContext): NewArray = {
       val arrayType = visitType(ctx.`type`())
@@ -319,6 +324,9 @@ object ASTBuilder {
       }
       if (ctx.objectCreation() != null) {
         return visitObjectCreation(ctx.objectCreation())
+      }
+      if (ctx.arrayCreation() != null) {
+        return visitArrayCreation(ctx.arrayCreation())
       }
 
 
