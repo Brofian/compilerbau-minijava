@@ -55,11 +55,11 @@ object UnionTypeFinder {
             }
             else {
               // this branch should not even be possible, as both types must be java/lang/Object
-              throw SemanticException(s"Types $typeA and $typeB cannot be combined")
+              throw SemanticException(s"Types $typeA and $typeB do not overlap")
             }
-          case _ => throw SemanticException(s"Types $typeA and $typeB cannot be combined")
+          case _ => throw SemanticException(s"Types $typeA and $typeB do not overlap")
         }
-      case _ => throw SemanticException(s"Types $typeA and $typeB cannot be combined")
+      case _ => throw SemanticException(s"Types $typeA and $typeB do not overlap")
     }
   }
 

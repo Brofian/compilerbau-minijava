@@ -1,35 +1,21 @@
 package de.students.semantic
 
 import de.students.Parser.*
-import scala.collection.mutable;
+
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer;
 
 
 object SyntacticSugarHandler {
 
-  /**
-   * If the same package name was used in multiple files, combine these into a single package and merge the class lists
-   * @param project The project to handle
-   * @return
-   */
-  def mergeClassesWithSamePackageName(project: Project): Project = {
-    val combinedPackageMap = mutable.Map[String, Package]()
+  def handleSyntacticSugar(cls: ClassDecl, classContext: SemanticContext): ClassDecl = {
+    var updatedClass = cls
 
-    project.packages.foreach((packageSpace: Package) => {
-      if (combinedPackageMap.contains(packageSpace.name)) {
-        // merge
-        combinedPackageMap.put(packageSpace.name, Package(
-          packageSpace.name,
-          packageSpace.classes ++ combinedPackageMap.apply(packageSpace.name).classes
-        ))
-      }
-      else {
-        combinedPackageMap.addOne(packageSpace.name, packageSpace)
-      }
-    })
+    updatedClass = this.moveFieldInitializerToConstructor(updatedClass, classContext)
+    updatedClass = this.splitVarInitializerFromDeclaration(updatedClass, classContext)
 
-    Project(combinedPackageMap.toList.map(e => e._2))
+    updatedClass
   }
-
 
   /**
    * Move the initializer expressions from class fields to the start of every constructor
@@ -37,10 +23,37 @@ object SyntacticSugarHandler {
    * @param classContext  The current context of the class
    * @return
    */
-  def moveFieldInitializerToConstructor(cls: ClassDecl, classContext: SemanticContext): ClassDecl = {
+  private def moveFieldInitializerToConstructor(cls: ClassDecl, classContext: SemanticContext): ClassDecl = {
     
     // TODO
     cls
+  }
+
+  /**
+   * Move the initializer expressions from a variable definition into a separate statement
+   *
+   * @param cls          The class to check
+   * @param classContext The current context of the class
+   * @return
+   */
+  private def splitVarInitializerFromDeclaration(cls: ClassDecl, classContext: SemanticContext): ClassDecl = {
+
+    val fixedMethods = cls.methods.map(method => {
+      val splitStatements: ListBuffer[Statement] = ListBuffer()
+      // split var declarations with initializer into
+      method.body.asInstanceOf[BlockStatement].stmts.foreach {
+        case stmt@(varDeclStmt: VarDecl) =>
+          varDeclStmt.initializer match
+            case Some(varInitializer) =>
+              splitStatements.addOne(VarDecl(varDeclStmt.name, varDeclStmt.varType, None)) // remove initializer
+              splitStatements.addOne(StatementExpressions(BinaryOp(VarRef(varDeclStmt.name), "=", varInitializer))) // add initializer as separate statement
+            case None => splitStatements.addOne(stmt) // no initializer, no changes required
+        case stmt => splitStatements.addOne(stmt) // not a var declaration, no changes required
+      }
+      MethodDecl(method.name, method.static, method.isAbstract, method.returnType, method.params, BlockStatement(splitStatements.toList))
+    })
+
+    ClassDecl(cls.name, cls.parent, cls.isAbstract, fixedMethods, cls.fields, cls.constructors)
   }
   
 }

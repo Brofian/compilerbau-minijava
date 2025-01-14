@@ -7,6 +7,7 @@ object StatementChecks {
 
   def checkStatement(stmt: Statement, context: SemanticContext): TypedStatement = {
     stmt match {
+      case v@VarDecl(_,_,_) => this.checkVarDeclarationStatement(v, context)
       case b@BlockStatement(_) => this.checkBlockStatement(b, context.createChildContext() /* New block, new context */)
       case r@ReturnStatement(_) => this.checkReturnStatement(r, context)
       case s@IfStatement(_, _, _) => this.checkIfStatement(s, context)
@@ -21,6 +22,15 @@ object StatementChecks {
       case c@ContinueStatement() => this.checkContinueStatement(c, context)
       case _ => throw new SemanticException(s"Could not match statement $stmt")
     }
+  }
+
+  private def checkVarDeclarationStatement(varDecl: VarDecl, context: SemanticContext): TypedStatement = {
+    val evaluatedType = varDecl.varType match {
+      case UserType(clsName) => UserType(context.getFullyQualifiedClassName(clsName))
+      case _ => varDecl.varType
+    }
+    context.addTypeAssumption(varDecl.name, evaluatedType)
+    TypedStatement(VarDecl(varDecl.name, evaluatedType, None), NoneType)
   }
 
   private def checkBlockStatement(blockStmt: BlockStatement, context: SemanticContext): TypedStatement = {
