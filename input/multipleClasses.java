@@ -1,6 +1,7 @@
 package de.mypackage;
 
-import example.other.CClass;
+// imports are still not included in the grammar
+// import example.other.CClass;
 
 class AClass {
     private int value;
