@@ -52,8 +52,9 @@ object ASTBuilder {
       val name = ctx.IDENTIFIER().getText
       val isStatic = ctx.STATIC() != null
       val isAbstract = ctx.modifier().ABSTRACT() != null
+      // val visibilityModifier = ctx.modifier()
       val returnType = visitReturntype(ctx.returntype()) // A helper function for return type
-      val params = ctx.parameterList().parameter().asScala.map(visitParameter).toList
+      val params = if ctx.parameterList() == null then List() else ctx.parameterList().parameter().asScala.map(visitParameter).toList
       val body = visitBlockStmt(ctx.block())
 
       Logger.debug(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
