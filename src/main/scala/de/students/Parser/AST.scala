@@ -1,5 +1,8 @@
 package de.students.Parser
 
+case class Project(packages: List[Package])
+
+
 // basic node for all AST-trees
 sealed trait ASTNode
 

@@ -244,4 +244,10 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitId(JavaParser.IdContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#packageId}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPackageId(JavaParser.PackageIdContext ctx);
 }

@@ -1,7 +1,7 @@
 grammar Java;
 
 // Package Definition
-package: PACKAGE id SC class+ ;
+package: PACKAGE packageId SC class+ ;
 
 // Class Definitions
 class: PUBLIC? CLASS id (EXTENDS id)? classbody
@@ -141,6 +141,7 @@ NULL_LITERAL: 'null';
 // Identifiers
 id: IDENTIFIER;
 IDENTIFIER: [a-zA-Z_$][a-zA-Z0-9_$]*;
+packageId: IDENTIFIER ('.' IDENTIFIER)*;
 
 SC: ';';
 
