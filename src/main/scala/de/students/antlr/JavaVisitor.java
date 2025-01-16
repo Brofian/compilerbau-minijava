@@ -83,12 +83,6 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitParameter(JavaParser.ParameterContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#methodBody}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMethodBody(JavaParser.MethodBodyContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JavaParser#block}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -179,18 +173,6 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitContinueStatement(JavaParser.ContinueStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#primary}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitPrimary(JavaParser.PrimaryContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link JavaParser#methodCall}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMethodCall(JavaParser.MethodCallContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JavaParser#expression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -208,6 +190,24 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitArrayCreation(JavaParser.ArrayCreationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#arrayAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayAccess(JavaParser.ArrayAccessContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#primary}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimary(JavaParser.PrimaryContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#methodCall}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMethodCall(JavaParser.MethodCallContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaParser#thisAccess}.
 	 * @param ctx the parse tree
@@ -244,4 +244,10 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitId(JavaParser.IdContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#packageId}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPackageId(JavaParser.PackageIdContext ctx);
 }

@@ -1,31 +1,25 @@
 grammar Java;
 
 // Package Definition
-package: PACKAGE id SC imports class+ ;
+package: PACKAGE packageId SC imports class+ ;
 
-
-// Import definition ('import' is a reserved keyword)
-imports: (IMPORT importStatement SC)* ;
-importStatement: IDENTIFIER ('.' IDENTIFIER)* ;
+imports: (IMPORT packageId SC)* ;
 
 
 // Class Definitions
 class: PUBLIC? CLASS id (EXTENDS id)? classbody
-     | PUBLIC? ABSTRACT id classbody; // should later be abstract-classbody?
+     | PUBLIC? ABSTRACT id classbody;
 
 classbody: '{' (method | attribute | constructor | class)* '}';
 
 // Methods
-method: modifier STATIC? returntype IDENTIFIER '(' parameterList? ')' methodBody;
-//staticMethod : modifier STATIC returntype IDENTIFIER '(' parameterList? ')' methodBody;
-
-//method: fullMethod;
+method: modifier STATIC? returntype IDENTIFIER '(' parameterList? ')' block;
 
 // Attributes
 attribute: optionalModifier type IDENTIFIER ('=' expression)? SC;
 
 // Constructors
-constructor: PUBLIC? id '(' parameterList? ')' methodBody;
+constructor: PUBLIC? id '(' parameterList? ')' block;
 
 // Modifiers
 modifier: PRIVATE | PUBLIC | PROTECTED  | FINAL | ABSTRACT;
@@ -43,10 +37,7 @@ type: PRIMITIVE_TYPE
 parameterList: parameter (',' parameter)*;
 parameter: type IDENTIFIER;
 
-// Method Body
-methodBody:  '{' block* '}' ;
-
-block: (statement | expression)+;
+block: '{' statement* '}';
 
 // Statements
 statement: variableDeclaration
@@ -64,12 +55,12 @@ variableDeclaration: type IDENTIFIER ('=' expression)? SC;
 expressionStatement: expression SC;
 returnStatement: RETURN expression? SC;
 
-ifStatement: 'if' '(' expression ')' '{' block '}'
-              (elseifStatement)* // Allow multiple else-if blocks
+ifStatement: 'if' '(' expression ')'  block
+              (elseifStatement)*
               (elseStatement)?;
 
-elseifStatement: 'else if' '(' expression ')' '{' block '}';
-elseStatement: 'else' '{' block '}';
+elseifStatement: 'else if' '(' expression ')'  block ;
+elseStatement: 'else' block ;
 
 whileStatement: 'while' '(' expression ')' block;
 doWhileStatement: 'do' block 'while' '(' expression ')' SC;
@@ -82,39 +73,39 @@ switchCase: 'case' literal ':' block
 breakStatement: 'break' SC;
 continueStatement: 'continue' SC;
 
-
-// A primary expression can be an identifier, 'this', a class access, or a method call
-primary: IDENTIFIER
-       | thisAccess
-       | classAccess
-       | '(' expression ')'
-       | objectCreation // Allow `new ...` as a primary
-       ;
-
-// Method calls, allowing chaining without left recursion
-methodCall: primary ('.' IDENTIFIER '(' argumentList? ')')*;
-
-
 // Expressions
 expression: literal
           | primary
           | methodCall
           | thisAccess
-          | IDENTIFIER
-          | objectCreation // Added rule for clarity
-          | arrayCreation // Added rule for arrays          | '(' expression ')'
+          | arrayAccess
+          | objectCreation
+          | arrayCreation
+          | '(' expression ')'
           | expression operator expression;
 
 // Object creation
 objectCreation: 'new' id '(' argumentList? ')';
 
 // Array creation
-arrayCreation: 'new' type '[' expression ']' ('[' expression ']')*;
+arrayCreation: 'new' type ('[' expression ']')+; // Updated for multi-dimensional arrays
 
+// Array access
+arrayAccess: primary '[' expression ']'; // Accessing elements in arrays
+
+// A primary expression can be an identifier, 'this', a class access, or a method call
+primary: IDENTIFIER
+       | thisAccess
+       | classAccess
+       | '(' expression ')'
+       | objectCreation
+       | arrayCreation;
+
+// Method calls, allowing chaining without left recursion
+methodCall: primary ('.' IDENTIFIER '(' argumentList? ')')*;
 
 thisAccess: 'this' '.' IDENTIFIER;
 classAccess: IDENTIFIER '.' IDENTIFIER;
-
 
 argumentList: expression (',' expression)*;
 
@@ -153,6 +144,7 @@ NULL_LITERAL: 'null';
 // Identifiers
 id: IDENTIFIER;
 IDENTIFIER: [a-zA-Z_$][a-zA-Z0-9_$]*;
+packageId: IDENTIFIER ('.' IDENTIFIER)*;
 
 SC: ';';
 

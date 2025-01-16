@@ -11,15 +11,6 @@ provided by [...] DHBW-Stuttgart.
 
 ## Usage
 - Make sure you have the FULL Antler4 jar file (not just the generator and not just the runtime) in the lib directory
-- Run `sbt generateAntlrTask` to generate the parser code from the grammar file
-- Run `sbt "run secondinput.java"` to compile and execute the scala code once OR
-- Run `sbt "~run secondinput.java"` to compile and execute the scala code and rerun automatically on changes
-
-
-## ToDo
-- [x] Read in file(s)
-- [x] Implement Antlr grammar (-> lexer and parser)
-- [ ] Translate from ParseTree to AST
-- [ ] Implement semantic check (generate typed ast)
-- [ ] Implement byte code generation
-- [ ] Write output bytes into file
+- Run `sbt generateAntlrTask` to regenerate the parser code from the grammar file
+- Run `sbt "run --help"` to get an overview over the usage and arguments of the compiler 
+- Run `sbt "~run ..."` to compile and execute the scala code and rerun automatically on changes
