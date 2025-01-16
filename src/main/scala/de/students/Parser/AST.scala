@@ -7,7 +7,9 @@ case class Project(packages: List[Package])
 sealed trait ASTNode
 
 // Program-node
-case class Package(name: String, classes: List[ClassDecl]) extends ASTNode
+case class Package(name: String, imports : List[Import], classes: List[ClassDecl]) extends ASTNode
+
+case class Import(name: String) extends ASTNode
 
 // Class declaration
 case class ClassDecl(
