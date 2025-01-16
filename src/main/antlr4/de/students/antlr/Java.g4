@@ -1,7 +1,13 @@
 grammar Java;
 
 // Package Definition
-package: PACKAGE id SC class+ ;
+package: PACKAGE id SC imports class+ ;
+
+
+// Import definition ('import' is a reserved keyword)
+imports: (IMPORT importStatement SC)* ;
+importStatement: IDENTIFIER ('.' IDENTIFIER)* ;
+
 
 // Class Definitions
 class: PUBLIC? CLASS id (EXTENDS id)? classbody
@@ -133,7 +139,7 @@ FINAL: 'final';
 ABSTRACT: 'abstract';
 VOID: 'void';
 RETURN: 'return';
-
+IMPORT: 'import';
 // Primitive Types
 PRIMITIVE_TYPE: 'int' | 'char' | 'boolean';
 

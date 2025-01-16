@@ -27,8 +27,19 @@ object ASTBuilder {
         .map(visitClass) // Call visitClass for each class in the package
         .toList
 
+      val imports = visitImports(ctx.imports())
       println(s"Package: $packageName, Classes: ${classDecls.map(_.name).mkString(", ")}")
-      Package(packageName, classDecls)
+      Package(packageName, imports, classDecls)
+    }
+
+    override def visitImports(ctx: ImportsContext): List[Import] = {
+      println("Visiting import statements")
+
+      ctx.importStatement().asScala.map { importCtx =>
+        val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
+        println(s"Import: $importPath")
+        Import(importPath)
+      }.toList
     }
 
     // Visit a class node, handling its name, inheritance, and body
