@@ -30,18 +30,18 @@ object ASTBuilder {
         .toList
 
       val imports = visitImports(ctx.imports())
-      Logger.debug(s"Package: $packageName, Imports: ${imports.map(_.name).mkString(", ")}, Classes: ${classDecls.map(_.name).mkString(", ")}")
+      Logger.debug(s"Package: $packageName, Imports: ${imports.names.mkString(", ")}, Classes: ${classDecls.map(_.name).mkString(", ")}")
       Package(packageName, imports, classDecls)
     }
 
-    override def visitImports(ctx: ImportsContext): List[Import] = {
-       
-      ctx.importStatement().asScala.map { importCtx =>
-        val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
-        Logger.debug(s"Visiting import $importPath ")
-        Import(importPath)
-      }.toList
-      
+    override def visitImports(ctx: ImportsContext): Imports = {
+       Imports(
+         ctx.packageId().asScala.map { importCtx =>
+           val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
+           Logger.debug(s"Visiting import $importPath ")
+           importPath
+         }.toList 
+       )
     }
 
     // Visit a class node, handling its name, inheritance, and body

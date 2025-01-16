@@ -115,7 +115,7 @@ object SemanticCheck {
       )
 
     })
-    Package(pckg.name, typedClasses)
+    Package(pckg.name, pckg.imports, typedClasses)
   }
 
 

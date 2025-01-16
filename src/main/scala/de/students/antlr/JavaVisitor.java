@@ -17,6 +17,12 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPackage(JavaParser.PackageContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link JavaParser#imports}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitImports(JavaParser.ImportsContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link JavaParser#class}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
