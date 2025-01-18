@@ -1,7 +1,6 @@
 package de.mypackage;
 
-// imports are still not included in the grammar
-// import example.other.CClass;
+import java.lang.String;
 
 class AClass {
     private int value;
@@ -14,6 +13,12 @@ class AClass {
         a.calc(this.value);
 
         return n;
+    }
+
+    public String getTestString() {
+        String text = "Hello world";
+
+        return text.substring(1, 3);
     }
 }
 

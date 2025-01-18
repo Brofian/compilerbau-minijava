@@ -17,8 +17,8 @@ object UnionTypeFinder {
       case UserType(typeAName) =>
         typeB match {
           case UserType(typeBName) =>
-            val typeAParent = context.getClassRelation(typeAName)
-            val typeBParent = context.getClassRelation(typeBName)
+            val typeAParent = context.getClassParent(typeAName)
+            val typeBParent = context.getClassParent(typeBName)
 
             // the combination of classes is only possible, if one is a subtype of the other
             // we will check this recursively
@@ -79,7 +79,7 @@ object UnionTypeFinder {
 
     typeA match {
       case UserType(className) =>
-        val typeAParent = context.getClassRelation(className)
+        val typeAParent = context.getClassParent(className)
         if (typeAParent.isEmpty) {
           false // We arrived at java/lang/Object and B is still not equal
         }

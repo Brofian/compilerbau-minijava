@@ -6,8 +6,8 @@ import scala.collection.mutable
 
 class SemanticContext
 (
+  classTypeBridge: ClassTypeBridge,
   typeAssumptions: mutable.Map[String, Type],
-  classRelations: mutable.Map[String, String],
   imports: mutable.Map[String, String],
   packageName: String,
   className: String,
@@ -18,29 +18,23 @@ class SemanticContext
 
   def getClassName: String = className
 
-  def getClassRelation(cls: String): Option[String] = classRelations.get(cls)
-
   def getTypeAssumption(varName: String): Option[Type] = typeAssumptions.get(varName)
 
   /**
    * copy the current data and return a new context, optionally with changed
    *
-   * @param newPackageName  A new package name, of None if there is no change
-   * @param newClassName    A new class name, of None if there is no change
+   * @param newPackageName A new package name, of None if there is no change
+   * @param newClassName   A new class name, of None if there is no change
    * @return
    */
   def createChildContext(newPackageName: Option[String] = None, newClassName: Option[String] = None): SemanticContext = {
     SemanticContext(
+      classTypeBridge,
       typeAssumptions.clone(), // prevent new type assumptions from bubbling up
-      classRelations, // class relations will not change after they have been set at the beginning
       if newPackageName.isEmpty then imports else imports.clone(), // if we enter a new package (aka file) context
       newPackageName.getOrElse(packageName),
       newClassName.getOrElse(className),
     )
-  }
-
-  def addClassRelation(cls: String, parent: String): Unit = {
-    classRelations.addOne(cls, parent)
   }
 
   def addImport(className: String, fullyQualifiedClassName: String): Unit = {
@@ -63,9 +57,17 @@ class SemanticContext
     )
   }
 
-  def getFullyQualifiedMemberName(member: String, useClass: Option[String] = None): String = {
-    useClass.getOrElse(className) + "->" + member
+  def getMemberType(fullyQualifiedClassName: String, memberName: String): Type = {
+    this.classTypeBridge.getClassMemberType(fullyQualifiedClassName, memberName)
   }
 
+  def getClassParent(fullyQualifiedClassName: String): Option[String] = {
+    if (fullyQualifiedClassName == "java.lang.Object") {
+      None
+    }
+    else {
+      Some(this.classTypeBridge.getClassParent(fullyQualifiedClassName))
+    }
+  }
 
 }
