@@ -12,6 +12,11 @@ object SemanticCheck {
    * @param project The project to run semantic and type checks against
    */
   def runCheck(project: Project): Project = {
+
+    // todo: make sure, no class exists twice
+    // todo: make sure, no class contains two fields with the same name twice *
+    // todo: respect method overloading (*)
+
     // create context and make all classes and their fields known to the whole project
     val globalContext = SemanticContext(
       ClassTypeBridge(project),

@@ -9,12 +9,19 @@ import scala.util.matching.Regex
 
 
 /**
- *
+ * A bridge between the local type system and the predefined classes from the JDK. This allows to simply retrieve
+ * types of classes, methods and fields by a fully qualified name, regardless of it being a local or a predefined type.
  *
  * @param baseAST The untyped root project
  */
 class ClassTypeBridge(baseAST: Project) {
 
+  /**
+   * Get the fully qualified name of the parent of a class with the given fully qualified name
+   *
+   * @param fullyQualifiedClassName The base class, which parent shall be retrieved
+   * @return
+   */
   def getClassParent(fullyQualifiedClassName: String): String = {
     // option a: this is our class
     val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
@@ -34,7 +41,14 @@ class ClassTypeBridge(baseAST: Project) {
     }
   }
 
-
+  /**
+   * Retrieve the type of specific member of the given class. This method does work for fields and methods
+   * at the same time. ClassNames in the retrieved type will already be fully qualified
+   *
+   * @param fullyQualifiedClassName The class to search in
+   * @param memberName  The name of the field or method to search
+   * @return
+   */
   def getClassMemberType(fullyQualifiedClassName: String, memberName: String): Type = {
 
     val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
@@ -92,10 +106,18 @@ class ClassTypeBridge(baseAST: Project) {
     }
   }
 
+  /**
+   * Resolve simple class names to their fully qualified form
+   *
+   * @param rawType The raw type, which should be made fully qualified
+   * @param classDecl The current class we are in
+   * @param packageDecl The current package we are in
+   * @return
+   */
   private def resolveTypeInClassContext(rawType: Type, classDecl: ClassDecl, packageDecl: Package): Type = {
     // gather all mappings from simple class name to fully qualified names
     val knownFullyQualifiedNames: mutable.Map[String, String] = mutable.Map[String, String]()
-    knownFullyQualifiedNames.addOne(classDecl.name, packageDecl.name +"."+ classDecl.name) // current class
+    knownFullyQualifiedNames.addOne(classDecl.name, packageDecl.name + "." + classDecl.name) // current class
     knownFullyQualifiedNames.addAll(
       packageDecl.imports.names.map(importName => {
         val splitImportName = this.splitFullyQualifiedClassName(importName)
@@ -116,7 +138,7 @@ class ClassTypeBridge(baseAST: Project) {
         )
       case _ => rawType
     }
-    
+
     resolveClassTypes(rawType)
   }
 

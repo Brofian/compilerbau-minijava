@@ -15,9 +15,7 @@ class SemanticContext
 
   // getter methods to access data
   def getPackageName: String = packageName
-
   def getClassName: String = className
-
   def getTypeAssumption(varName: String): Option[Type] = typeAssumptions.get(varName)
 
   /**

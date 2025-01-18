@@ -6,6 +6,14 @@ import scala.annotation.tailrec
 
 object UnionTypeFinder {
 
+  /**
+   * Retrieve the first shared type of two base types or throw an error, if they do not overlap
+   *
+   * @param typeA The first type to find the union of
+   * @param typeB The second type to find the union of
+   * @param context The current context for resolving class names
+   * @return
+   */
   def getUnion(typeA: Type, typeB: Type, context: SemanticContext): Type = {
     // if types are equal or B is of NoneType, return A
     if (typeA == typeB || typeB == NoneType) {
