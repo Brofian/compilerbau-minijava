@@ -28,36 +28,31 @@ object ExpressionChecks {
     }
 
     // determine method definition
-    val fullyQualifiedMethodName = context.getFullyQualifiedMemberName(methodCall.methodName,
-      Some(typedTarget.exprType.asInstanceOf[UserType].name)
-    )
-    val methodTypeOption = context.getTypeAssumption(fullyQualifiedMethodName)
-    if (methodTypeOption.isEmpty) {
-      throw new SemanticException(s"Cannot call undefined method $fullyQualifiedMethodName")
+    val fqClassName = typedTarget.exprType.asInstanceOf[UserType].name
+    val methodType = context.getMemberType(fqClassName, methodCall.methodName)
+    if (!methodType.isInstanceOf[FunctionType]) {
+      throw new SemanticException(s"Cannot call member ${methodCall.methodName} of type $methodType as method")
     }
-    else if (!methodTypeOption.get.isInstanceOf[FunctionType]) {
-      throw new SemanticException(s"Cannot call value of type ${methodTypeOption.get} as a function")
-    }
-    val methodType = methodTypeOption.get.asInstanceOf[FunctionType]
+    val methodTypeF = methodType.asInstanceOf[FunctionType]
 
     // validate arguments
     val typedArguments = methodCall.args.map(argument => ExpressionChecks.checkExpression(argument, context))
 
     // check if number of arguments matches number of parameters
-    val expectedArgs = methodType.parameterTypes.length
+    val expectedArgs = methodTypeF.parameterTypes.length
     val providedArgs = typedArguments.length
     if (expectedArgs != providedArgs) {
-      throw new SemanticException(s"Wrong number of arguments provided for method $fullyQualifiedMethodName ($expectedArgs expected, but ${providedArgs} found)")
+      throw new SemanticException(s"Wrong number of arguments provided for method ${methodCall.methodName} in $fqClassName ($expectedArgs expected, but $providedArgs found)")
     }
 
     // check if arguments have the correct types
-    methodType.parameterTypes.zip(typedArguments.map(a => a.exprType)).foreach((parameterType, argumentType) => {
+    methodTypeF.parameterTypes.zip(typedArguments.map(a => a.exprType)).foreach((parameterType, argumentType) => {
       if (!UnionTypeFinder.isASubtypeOfB(parameterType, argumentType, context)) {
-        throw new SemanticException(s"Wrong number of arguments provided for method $fullyQualifiedMethodName ($expectedArgs expected, but ${providedArgs} found)")
+        throw new SemanticException(s"Value of type $argumentType cannot be used for argument of type $parameterType")
       }
     })
 
-    TypedExpression(MethodCall(typedTarget, methodCall.methodName, typedArguments), methodType.returnType)
+    TypedExpression(MethodCall(typedTarget, methodCall.methodName, typedArguments), methodTypeF.returnType)
   }
 
   private def checkArrayAccessExpression(arrayAccess: ArrayAccess, context: SemanticContext): TypedExpression = {
@@ -108,23 +103,13 @@ object ExpressionChecks {
 
   private def checkClassAccessExpression(clsAccess: ClassAccess, context: SemanticContext): TypedExpression = {
     val fullyQualifiedClassName = context.getFullyQualifiedClassName(clsAccess.className)
-    val fullyQualifiedMemberName = context.getFullyQualifiedMemberName(clsAccess.memberName, Some(fullyQualifiedClassName))
-    val memberTypeOption = context.getTypeAssumption(fullyQualifiedMemberName)
-
-    memberTypeOption match {
-      case Some(memberType) => TypedExpression(ClassAccess(fullyQualifiedClassName, clsAccess.memberName), memberType)
-      case None => throw new SemanticException(s"Referenced class member $fullyQualifiedMemberName is not defined")
-    }
+    val memberType = context.getMemberType(fullyQualifiedClassName, clsAccess.memberName)
+    TypedExpression(ClassAccess(fullyQualifiedClassName, clsAccess.memberName), memberType)
   }
 
   private def checkThisAccessExpression(thisAccess: ThisAccess, context: SemanticContext): TypedExpression = {
-    val fullyQualifiedMember = context.getFullyQualifiedMemberName(thisAccess.name)
-    val memberTypeOption = context.getTypeAssumption(fullyQualifiedMember)
-
-    memberTypeOption match {
-      case Some(memberType) => TypedExpression(thisAccess, memberType)
-      case None => throw new SemanticException(s"Referenced class member $fullyQualifiedMember is not defined")
-    }
+    val memberType = context.getMemberType(context.getClassName, thisAccess.name)
+    TypedExpression(thisAccess, memberType)
   }
 
   private def checkBinaryOpExpression(binOp: BinaryOp, context: SemanticContext): TypedExpression = {
@@ -148,7 +133,7 @@ object ExpressionChecks {
     literal.value match {
       case _: Boolean => TypedExpression(literal, BoolType)
       case _: Int => TypedExpression(literal, IntType)
-      case _: String => throw SemanticException("String is not yet implemented as a type")
+      case _: String => TypedExpression(literal, UserType("java.lang.String")) /* throw SemanticException("String is not yet implemented as a type") */
       case _ => throw SemanticException(s"Unknown literal: $literal")
     }
   }

@@ -6,6 +6,14 @@ import scala.annotation.tailrec
 
 object UnionTypeFinder {
 
+  /**
+   * Retrieve the first shared type of two base types or throw an error, if they do not overlap
+   *
+   * @param typeA The first type to find the union of
+   * @param typeB The second type to find the union of
+   * @param context The current context for resolving class names
+   * @return
+   */
   def getUnion(typeA: Type, typeB: Type, context: SemanticContext): Type = {
     // if types are equal or B is of NoneType, return A
     if (typeA == typeB || typeB == NoneType) {
@@ -17,8 +25,8 @@ object UnionTypeFinder {
       case UserType(typeAName) =>
         typeB match {
           case UserType(typeBName) =>
-            val typeAParent = context.getClassRelation(typeAName)
-            val typeBParent = context.getClassRelation(typeBName)
+            val typeAParent = context.getClassParent(typeAName)
+            val typeBParent = context.getClassParent(typeBName)
 
             // the combination of classes is only possible, if one is a subtype of the other
             // we will check this recursively
@@ -79,7 +87,7 @@ object UnionTypeFinder {
 
     typeA match {
       case UserType(className) =>
-        val typeAParent = context.getClassRelation(className)
+        val typeAParent = context.getClassParent(className)
         if (typeAParent.isEmpty) {
           false // We arrived at java/lang/Object and B is still not equal
         }
