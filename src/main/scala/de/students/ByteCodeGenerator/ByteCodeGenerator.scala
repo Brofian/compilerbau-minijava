@@ -85,7 +85,7 @@ private def generateConstructor(cw: ClassWriter): Unit = {
 private def generateMethodBody(methodDecl: MethodDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   methodVisitor.visitCode()
 
-  state.localVariableCount = methodDecl.params.size + 1 // `this` is param #0
+  state.localVariableCount = 1 // methodDecl.params.size + 1 // `this` is param #0
   state.stackDepth = 0
   generateStatement(methodDecl.body, methodVisitor, state)
 
@@ -102,30 +102,39 @@ private case class MethodGeneratorState(
                                  val scopeEnds: ArrayBuffer[Label],
                                  val loopStarts: ArrayBuffer[Label],
                                  var currentScope: Int,
-                                 val variables: mutable.HashMap[String, Int],
+                                 val variables: mutable.HashMap[String, VariableInfo],
                                ) {
-  def startScope(end: Label): Unit = {
+  def startSimpleScope(end: Label): Unit = {
     scopeEnds += end
     currentScope += 1
   }
 
-  def endScope(): Unit = {
+  def endSimpleScope(): Unit = {
     scopeEnds.remove(scopeEnds.size - 1)
-    currentScope += 1
+    currentScope -= 1
   }
 
   def startLoopScope(start: Label, end: Label): Unit = {
     loopStarts += start
-    startScope(end)
+    startSimpleScope(end)
   }
 
   def endLoopScope(): Unit = {
     loopStarts.remove(loopStarts.size - 1)
-    endScope()
+    endSimpleScope()
   }
 
-  def addVariable(): Unit = {
+  def addVariable(name: String): Int = {
+    val res = variables.put(name, VariableInfo(localVariableCount, currentScope))
+    if (res.isDefined) {
+      throw ByteCodeGeneratorException(f"variable $name already exists")
+    }
+    localVariableCount += 1
+    localVariableCount - 1
+  }
 
+  def checkVariableScopes(): Unit = {
+    variables.filterInPlace { (_, variableInfo) => variableInfo.scopeId >= currentScope }
   }
 }
 

@@ -25,6 +25,7 @@ private def generateStatement(statement: Statement, methodVisitor: MethodVisitor
     case continueStatement: ContinueStatement => generateContinueStatement(continueStatement, methodVisitor, state)
     case typedStatement: TypedStatement => generateTypedStatement(typedStatement, methodVisitor, state)
     case varDecl: VarDecl => generateVariableDeclaration(varDecl, methodVisitor, state)
+    case printStatement: PrintStatement => makePrintStatement(printStatement.toPrint, methodVisitor, state)
     case _ => throw NotImplementedError("unknown statement")
   }
 }
@@ -119,7 +120,7 @@ private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisi
   val keys = evaluableCases.map(c => c.caseLit.get.asInstanceOf[Int]).toArray
 
   val end = Label()
-  state.startScope(end)
+  state.startSimpleScope(end)
 
   val defaultLabel = Label()
   val bodyLabels = Array.fill(evaluableCases.size)(Label())
@@ -136,7 +137,7 @@ private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisi
   methodVisitor.visitLabel(end)
   generateNop(methodVisitor)
 
-  state.endScope()
+  state.endSimpleScope()
 }
 
 private def generateBreakStatement(breakStatement: BreakStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
@@ -154,11 +155,15 @@ private def generateContinueStatement(statement: ContinueStatement, methodVisito
 }
 
 private def generateVariableDeclaration(varDecl: VarDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-
+  val varId = state.addVariable(varDecl.name)
+  if (varDecl.initializer.isDefined) {
+    generateExpression(varDecl.initializer.get, methodVisitor, state)
+    methodVisitor.visitVarInsn(ISTORE, varId)
+  }
 }
 
 private def generateTypedStatement(statement: TypedStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  // I have no idea what this is
+  // I have no idea why a statement should be typed :D
   generateStatement(statement.stmt, methodVisitor, state)
 }
 

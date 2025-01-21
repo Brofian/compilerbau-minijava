@@ -6,7 +6,7 @@ object MiniJavaCompiler {
 
   def main(args: Array[String]): Unit = {
 
-    if(args.isEmpty) {
+    if(args.isEmpty && false) {
       throw new RuntimeException("No input arguments given")
     }
 
@@ -34,16 +34,16 @@ object MiniJavaCompiler {
           false, // isAbstract
           List(
             MethodDecl(
-              "foo",
-              false, // static
+              "main",
+              true, // static
               false, // isAbstract
-              IntType,
-              List(),
-              IfStatement(
-                Literal(1),
-                ReturnStatement(Some(TypedExpression(Literal(42), IntType))),
-                Some(ReturnStatement(Some(TypedExpression(Literal(-42), IntType)))),
-              )
+              VoidType,
+              List(VarDecl("args", ArrayType(UserType("java/lang/String")), None)),
+              BlockStatement(List(
+                // VarDecl("testVar", IntType, Some(Literal(3))),
+                PrintStatement(TypedExpression(Literal(42), IntType)),
+                ReturnStatement(None)
+              ))
             )
           ),
           List(),

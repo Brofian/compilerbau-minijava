@@ -1,13 +1,15 @@
 package de.students.ByteCodeGenerator
 
 import org.objectweb.asm.Opcodes.*
-
 import de.students.Parser.*
+import org.objectweb.asm.MethodVisitor
 
 private def visibilityModifier(classDecl: ClassDecl): Int = 0 // ACC_PUBLIC
 private def visibilityModifier(varDecl: VarDecl): Int = 0 // ACC_PUBLIC
 private def visibilityModifier(methodDecl: MethodDecl): Int = {
-  if methodDecl.name == "main" then ACC_PUBLIC + ACC_STATIC else 0
+  0
+    + (if methodDecl.static then ACC_STATIC else 0)
+    + ACC_PUBLIC
 }
 
 private def asmType(t: Type): String = t match {
@@ -67,4 +69,11 @@ private def asmReturnCode(t: Type): Int = t match {
   case ArrayType(baseType) => ARETURN
   case UserType(name) => ARETURN
   case _ => throw RuntimeException(f"return type \"$t\" is not allowed")
+}
+
+private def makePrintStatement(toPrint: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
+  val t = generateTypedExpression(toPrint.asInstanceOf[TypedExpression], methodVisitor, state)
+  state.stackDepth += 1
+  methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", f"(${asmType(t)})V", false)
 }

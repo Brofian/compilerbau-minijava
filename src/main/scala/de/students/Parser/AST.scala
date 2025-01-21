@@ -66,6 +66,8 @@ case class ContinueStatement() extends Statement
 
 case class TypedStatement(stmt: Statement, stmtType: Type) extends Statement
 
+case class PrintStatement(toPrint: Expression) extends Statement
+
 
 // expressions
 sealed trait Expression extends ASTNode
