@@ -85,7 +85,7 @@ private def generateConstructor(cw: ClassWriter): Unit = {
 private def generateMethodBody(methodDecl: MethodDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   methodVisitor.visitCode()
 
-  state.localVariableCount = 1 // methodDecl.params.size + 1 // `this` is param #0
+  state.localVariableCount = methodDecl.params.size + (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
   state.stackDepth = 0
   generateStatement(methodDecl.body, methodVisitor, state)
 

@@ -44,6 +44,16 @@ object MiniJavaCompiler {
                 PrintStatement(TypedExpression(Literal(42), IntType)),
                 ReturnStatement(None)
               ))
+            ),
+            MethodDecl(
+              "foo",
+              false,
+              false,
+              VoidType,
+              List(VarDecl("a", IntType, None), VarDecl("b", IntType, None)),
+              BlockStatement(List(
+                ReturnStatement(None)
+              ))
             )
           ),
           List(),
