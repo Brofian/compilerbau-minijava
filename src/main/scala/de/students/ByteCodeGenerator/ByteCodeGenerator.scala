@@ -1,9 +1,11 @@
 package de.students.ByteCodeGenerator
 
-import org.objectweb.asm.{ClassWriter, MethodVisitor}
+import scala.collection.mutable.ArrayBuffer
+import org.objectweb.asm.{ClassWriter, Label, MethodVisitor}
 import org.objectweb.asm.Opcodes.*
+import de.students.Parser.*
 
-import de.students.Parser.*;
+import scala.collection.mutable;
 
 type ClassBytecode = Array[Byte]
 
@@ -45,7 +47,16 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     asmType(functionType(methodDecl)),
     null, // signature
     null // exceptions
-  ), MethodGeneratorState(classDecl.fields, methodDecl.returnType, classDecl.name, 0, 0)))
+  ), MethodGeneratorState(
+    classDecl.fields,
+    methodDecl.returnType,
+    classDecl.name,
+    0, 0,
+    ArrayBuffer.empty,
+    ArrayBuffer.empty,
+    0,
+    mutable.HashMap.empty,
+  )))
 
   cw.visitEnd()
 
@@ -88,4 +99,37 @@ private case class MethodGeneratorState(
                                  val className: String,
                                  var stackDepth: Int,
                                  var localVariableCount: Int,
+                                 val scopeEnds: ArrayBuffer[Label],
+                                 val loopStarts: ArrayBuffer[Label],
+                                 var currentScope: Int,
+                                 val variables: mutable.HashMap[String, Int],
+                               ) {
+  def startScope(end: Label): Unit = {
+    scopeEnds += end
+    currentScope += 1
+  }
+
+  def endScope(): Unit = {
+    scopeEnds.remove(scopeEnds.size - 1)
+    currentScope += 1
+  }
+
+  def startLoopScope(start: Label, end: Label): Unit = {
+    loopStarts += start
+    startScope(end)
+  }
+
+  def endLoopScope(): Unit = {
+    loopStarts.remove(loopStarts.size - 1)
+    endScope()
+  }
+
+  def addVariable(): Unit = {
+
+  }
+}
+
+private case class VariableInfo(
+                               id: Int,
+                               scopeId: Int,
                                )

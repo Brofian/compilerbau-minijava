@@ -56,10 +56,10 @@ object StatementChecks {
     }
 
     // if case
-    val typedThenBranch = this.checkBlockStatement(BlockStatement(ifStmt.thenBranch.statements), typeAssumptions)
+    val typedThenBranch = this.checkStatement(ifStmt.thenBranch, typeAssumptions)
     // else case
     val typedElseBranch: Option[TypedStatement] = ifStmt.elseBranch match {
-      case Some(stmt) => Some(this.checkBlockStatement(BlockStatement(stmt.statements), typeAssumptions.clone()))
+      case Some(stmt) => Some(this.checkStatement(stmt, typeAssumptions.clone()))
       case None => None
     }
 

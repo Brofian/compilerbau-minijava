@@ -4,13 +4,6 @@ import org.objectweb.asm.{Label, MethodVisitor}
 import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
 
-// temporary I hope
-private def handleBlock(block: Block, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  block.statements.foreach(stmt => generateStatement(
-    stmt, methodVisitor, state
-  ))
-}
-
 val EMPTY_STATEMENT = BlockStatement(List())
 val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
 
@@ -62,13 +55,13 @@ private def generateIfStatement(ifStatement: IfStatement, methodVisitor: MethodV
   methodVisitor.visitLdcInsn(0)
   methodVisitor.visitJumpInsn(IFEQ, elseBranch)
 
-  handleBlock(ifStatement.thenBranch, methodVisitor, state)
+  generateStatement(ifStatement.thenBranch, methodVisitor, state)
 
   methodVisitor.visitJumpInsn(GOTO, end)
   methodVisitor.visitLabel(elseBranch)
 
   if (ifStatement.elseBranch.isDefined) {
-    handleBlock(ifStatement.elseBranch.get, methodVisitor, state)
+    generateStatement(ifStatement.elseBranch.get, methodVisitor, state)
   }
 
   methodVisitor.visitLabel(end)
@@ -79,16 +72,20 @@ private def generateWhileStatement(whileStatement: WhileStatement, methodVisitor
   val start = Label()
   val end = Label()
 
+  state.startLoopScope(start, end)
+
   methodVisitor.visitLabel(start)
   generateExpression(whileStatement.cond, methodVisitor, state)
   methodVisitor.visitLdcInsn(0)
   methodVisitor.visitJumpInsn(IFEQ, end)
 
-  handleBlock(whileStatement.body, methodVisitor, state)
+  generateStatement(whileStatement.body, methodVisitor, state)
 
   methodVisitor.visitJumpInsn(GOTO, start)
   methodVisitor.visitLabel(end)
   generateNop(methodVisitor)
+
+  state.endLoopScope()
 }
 
 private def generateForStatement(forStatement: ForStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
@@ -98,7 +95,7 @@ private def generateForStatement(forStatement: ForStatement, methodVisitor: Meth
         forStatement.init.getOrElse(EMPTY_STATEMENT),
         WhileStatement(
           forStatement.cond.getOrElse(TRUE_EXPRESSION),
-          Block(List(
+          BlockStatement(List(
             StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION)),
             forStatement.body
           ))
@@ -112,18 +109,17 @@ private def generateForStatement(forStatement: ForStatement, methodVisitor: Meth
 private def generateDoWhileStatement(doWhileStatement: DoWhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   generateStatement(doWhileStatement.body, methodVisitor, state)
   generateWhileStatement(
-    WhileStatement(doWhileStatement.cond, Block(List(doWhileStatement.body))), // this Block is not pretty
+    WhileStatement(doWhileStatement.cond, doWhileStatement.body),
     methodVisitor, state
   )
 }
 
 private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  val default = switchStatement.cases.find(c => c.value.isEmpty) match {
-    case Some(c) => c.body
-    case None => EMPTY_STATEMENT
-  }
-  val evaluableCases = switchStatement.cases.filter(c => c.value.isDefined)
-  val keys = Array.fill(evaluableCases.size)(0) // TODO evaluableCases.map(c => c.value.get).toArray
+  val evaluableCases = switchStatement.cases.filter(c => c.caseLit.isDefined)
+  val keys = evaluableCases.map(c => c.caseLit.get.asInstanceOf[Int]).toArray
+
+  val end = Label()
+  state.startScope(end)
 
   val defaultLabel = Label()
   val bodyLabels = Array.fill(evaluableCases.size)(Label())
@@ -133,25 +129,37 @@ private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisi
 
   evaluableCases.zipWithIndex.foreach((c, i) => {
     methodVisitor.visitLabel(bodyLabels(i))
-    generateStatement(c.body, methodVisitor, state)
+    generateStatement(c.caseBlock, methodVisitor, state)
   })
+  methodVisitor.visitLabel(defaultLabel)
+  generateStatement(switchStatement.default.getOrElse(EMPTY_STATEMENT), methodVisitor, state)
+  methodVisitor.visitLabel(end)
   generateNop(methodVisitor)
+
+  state.endScope()
 }
 
-private def generateBreakStatement(statement: BreakStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  
+private def generateBreakStatement(breakStatement: BreakStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  if (state.scopeEnds.isEmpty) {
+    throw ByteCodeGeneratorException("no scope to break out from")
+  }
+  methodVisitor.visitJumpInsn(GOTO, state.scopeEnds.last)
 }
 
 private def generateContinueStatement(statement: ContinueStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-
+  if (state.loopStarts.isEmpty) {
+    throw ByteCodeGeneratorException("can't continue, not in loop")
+  }
+  methodVisitor.visitJumpInsn(GOTO, state.loopStarts.last)
 }
 
-private def generateVariableDeclaration(statement: VarDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateVariableDeclaration(varDecl: VarDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
 
 }
 
 private def generateTypedStatement(statement: TypedStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-
+  // I have no idea what this is
+  generateStatement(statement.stmt, methodVisitor, state)
 }
 
 private def generateExpressionStatement(statement: StatementExpression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {

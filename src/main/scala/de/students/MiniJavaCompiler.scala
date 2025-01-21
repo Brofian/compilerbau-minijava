@@ -41,8 +41,8 @@ object MiniJavaCompiler {
               List(),
               IfStatement(
                 Literal(1),
-                Block(List(ReturnStatement(Some(TypedExpression(Literal(42), IntType))))),
-                Some(Block(List(ReturnStatement(Some(TypedExpression(Literal(-42), IntType)))))),
+                ReturnStatement(Some(TypedExpression(Literal(42), IntType))),
+                Some(ReturnStatement(Some(TypedExpression(Literal(-42), IntType)))),
               )
             )
           ),

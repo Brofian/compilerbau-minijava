@@ -121,7 +121,7 @@ object ASTBuilder {
       println("Visiting method body")
       ctx.block().asScala.flatMap { blockCtx =>
         blockCtx.statement().asScala.map(visitStatement) ++
-          blockCtx.expression().asScala.map(visitExpression).map(StatementExpressions.apply)
+          blockCtx.expression().asScala.map(visitExpression).map(StatementExpression.apply)
       }.toList
     }
 
@@ -179,7 +179,7 @@ object ASTBuilder {
         case statementCtx: StatementContext =>
           Some(visitStatement(statementCtx))
         case exprCtx: ExpressionContext =>
-          Some(StatementExpressions(visitExpression(exprCtx)))
+          Some(StatementExpression(visitExpression(exprCtx)))
         case _ =>
           None
       }.toList
@@ -328,7 +328,7 @@ object ASTBuilder {
     override def visitExpressionStatement(ctx: ExpressionStatementContext): Statement = {
       val expr = visitExpression(ctx.expression())
       println(s"Visiting expression statement: $expr")
-      StatementExpressions(expr)
+      StatementExpression(expr)
     }
 
     override def visitLiteral(ctx: LiteralContext): Literal = {
