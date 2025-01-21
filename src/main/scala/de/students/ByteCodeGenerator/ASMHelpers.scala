@@ -28,29 +28,17 @@ private def asmType(t: Type): String = t match {
 private def functionType(methodDecl: MethodDecl): FunctionType =
   FunctionType(methodDecl.returnType, methodDecl.params.map(varDecl => varDecl.varType))
 
-private enum Operation {
-  case Add, Sub, Mul, Div, Rem // TODO the rest
-}
-
-private def stringToOperation(op: String): Operation = op match {
-  case "+" => Operation.Add
-  case "-" => Operation.Sub
-  case "*" => Operation.Mul
-  case "/" => Operation.Div
-  case "%" => Operation.Rem
-  case _ => throw NotImplementedError("rest of operations is not yet implemented")
-}
-private def binaryOpcode(op: Operation, t: Type): String = {
+private def binaryOpcode(op: String, t: Type): String = {
   val prefix = t match {
     case IntType => "I"
     case _ => throw RuntimeException("this type is not allowed")
   }
   val opName = op match {
-    case Operation.Add => "ADD"
-    case Operation.Sub => "SUB"
-    case Operation.Mul => "MUL"
-    case Operation.Div => "DIV"
-    case Operation.Rem => "REM"
+    case "+" => "ADD"
+    case "-" => "SUB"
+    case "*" => "MUL"
+    case "/" => "DIV"
+    case "%" => "REM"
   }
   prefix + opName
 }
@@ -61,6 +49,21 @@ private def asmOpcode(opName: String): Int = opName match {
   case "IDIV" => IDIV
   case "IREM" => IREM
   case _ => throw NotImplementedError("asm opcode")
+}
+
+private def asmLoadInsn(t: Type): Int = t match {
+  case IntType => ILOAD
+  case BoolType => ILOAD
+  case ArrayType(baseType) => ALOAD
+  case UserType(name) => ALOAD
+  case _ => throw ByteCodeGeneratorException(f"type ${asmType(t)} can not be fetched as variable")
+}
+private def asmStoreInsn(t: Type): Int = t match {
+  case IntType => ISTORE
+  case BoolType => ISTORE
+  case ArrayType(baseType) => ASTORE
+  case UserType(name) => ASTORE
+  case _ => throw ByteCodeGeneratorException(f"type ${asmType(t)} can not be saved as variable")
 }
 
 private def asmReturnCode(t: Type): Int = t match {

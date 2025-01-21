@@ -41,7 +41,7 @@ object MiniJavaCompiler {
               List(VarDecl("args", ArrayType(UserType("java/lang/String")), None)),
               BlockStatement(List(
                 // VarDecl("testVar", IntType, Some(Literal(3))),
-                PrintStatement(TypedExpression(Literal(42), IntType)),
+                PrintStatement(TypedExpression(VarRef("t"), IntType)),
                 ReturnStatement(None)
               ))
             ),
@@ -56,7 +56,7 @@ object MiniJavaCompiler {
               ))
             )
           ),
-          List(),
+          List(VarDecl("t", IntType, None)),
           List() // constructors
         )
       )

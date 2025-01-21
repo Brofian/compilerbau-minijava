@@ -24,14 +24,18 @@ private def generateExpression(expression: Expression, methodVisitor: MethodVisi
 
 // VARIABLE REFERENCE
 private def generateVariableReference(varRef: VarRef, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  state.stackDepth += 1
+
   val field = state.fields.find(varDecl => varDecl.name == varRef.name)
+
   field match {
-    case Some(varDecl) => {
-      state.stackDepth += 1
-      methodVisitor.visitVarInsn(ALOAD, 0)
+    case Some(varDecl) => { // field variable
+      methodVisitor.visitVarInsn(asmLoadInsn(varDecl.varType), 0)
       methodVisitor.visitFieldInsn(GETFIELD, state.className, varRef.name, asmType(varDecl.varType))
     }
-    case None => throw NotImplementedError("local variables are not yet implemented")
+    case None => { // local variable
+      // methodVisitor.visitVarInsn(A)
+    }
   }
 }
 
@@ -46,7 +50,7 @@ private def generateBinaryOperation(operation: BinaryOp, methodVisitor: MethodVi
   val expressionType = generateTypedExpression(operation.left.asInstanceOf[TypedExpression], methodVisitor, state)
   generateExpression(operation.right, methodVisitor, state) // should be same type, this is not our problem if not
 
-  val opcode = asmOpcode(binaryOpcode(stringToOperation(operation.op), expressionType))
+  val opcode = asmOpcode(binaryOpcode(operation.op, expressionType))
   methodVisitor.visitInsn(opcode)
 }
 
