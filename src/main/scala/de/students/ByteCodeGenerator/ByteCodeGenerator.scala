@@ -28,8 +28,19 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     null // interfaces
   )
 
-  // there is currently no definable constructor, so an empty one is added
-  generateConstructor(cw)
+  // set constructors
+  classDecl.constructors.foreach(constructorDecl => generateConstructor(
+    cw,
+    constructorDecl,
+    defaultMethodGeneratorState(classDecl, VoidType)
+  ))
+  if (classDecl.constructors.isEmpty) {
+    generateConstructor(
+      cw,
+      ConstructorDecl("", List(), EMPTY_STATEMENT),
+      defaultMethodGeneratorState(classDecl, VoidType)
+    )
+  }
 
   // set fields
   classDecl.fields.foreach(varDecl => cw.visitField(
@@ -47,16 +58,8 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     asmType(functionType(methodDecl)),
     null, // signature
     null // exceptions
-  ), MethodGeneratorState(
-    classDecl.fields,
-    methodDecl.returnType,
-    classDecl.name,
-    0, 0,
-    ArrayBuffer.empty,
-    ArrayBuffer.empty,
-    0,
-    mutable.HashMap.empty,
-  )))
+  ),
+  defaultMethodGeneratorState(classDecl, methodDecl.returnType)))
 
   cw.visitEnd()
 
@@ -64,18 +67,21 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
 }
 
 // default empty constructor for now
-private def generateConstructor(cw: ClassWriter): Unit = {
+private def generateConstructor(cw: ClassWriter, constructorDecl: ConstructorDecl, state: MethodGeneratorState): Unit = {
   val mv = cw.visitMethod(
-    0,
+    ACC_PUBLIC,
     "<init>",
-    "()V",
+    asmType(constructorType(constructorDecl)),
     null,
     null
   )
   mv.visitCode()
 
-  mv.visitVarInsn(ALOAD, 0)
-  mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false)
+  mv.visitVarInsn(ALOAD, 0) // load this
+  mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false) // call Object constructor
+
+  generateStatement(constructorDecl.body, mv, state)
+
   mv.visitInsn(RETURN)
 
   mv.visitMaxs(1, 1)
@@ -137,6 +143,19 @@ private case class MethodGeneratorState(
     variables.filterInPlace { (_, variableInfo) => variableInfo.scopeId >= currentScope }
   }
 }
+
+private def defaultMethodGeneratorState(classDecl: ClassDecl, returnType: Type): MethodGeneratorState =
+  MethodGeneratorState(
+    classDecl.fields,
+    returnType,
+    classDecl.name,
+    0, 0,
+    ArrayBuffer.empty,
+    ArrayBuffer.empty,
+    0,
+    mutable.HashMap.empty,
+  )
+
 
 private case class VariableInfo(
                                id: Int,

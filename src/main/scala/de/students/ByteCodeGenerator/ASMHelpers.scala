@@ -27,6 +27,9 @@ private def asmType(t: Type): String = t match {
 
 private def functionType(methodDecl: MethodDecl): FunctionType =
   FunctionType(methodDecl.returnType, methodDecl.params.map(varDecl => varDecl.varType))
+  
+private def constructorType(constructorDecl: ConstructorDecl): FunctionType =
+  FunctionType(VoidType, constructorDecl.params.map(param => param.varType))
 
 private def binaryOpcode(op: String, t: Type): String = {
   val prefix = t match {

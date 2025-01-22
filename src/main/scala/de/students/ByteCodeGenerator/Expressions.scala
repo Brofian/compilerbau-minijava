@@ -15,8 +15,6 @@ private def generateExpression(expression: Expression, methodVisitor: MethodVisi
       generateBinaryOperation(binaryOperation, methodVisitor, state)
     case typedExpression: TypedExpression =>
       generateTypedExpression(typedExpression, methodVisitor, state)
-
-    // case assignment: Assignment => ???
     // case methodCall: MethodCall => ???
     case _ => throw NotImplementedError("this expression is not yet implemented")
   }
