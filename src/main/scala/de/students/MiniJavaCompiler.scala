@@ -40,23 +40,32 @@ object MiniJavaCompiler {
               VoidType,
               List(VarDecl("args", ArrayType(UserType("java/lang/String")), None)),
               BlockStatement(List(
-                // VarDecl("testVar", IntType, Some(Literal(3))),
                 VarDecl("t", IntType, Some(TypedExpression(Literal(10), IntType))),
-                StatementExpression(BinaryOp(VarRef("t"), "=", TypedExpression(Literal(42), IntType))),
+                StatementExpression(TypedExpression(BinaryOp(VarRef("t"), "=", TypedExpression(Literal(42), IntType)), VoidType)),
                 PrintStatement(TypedExpression(VarRef("t"), IntType)),
                 ReturnStatement(None)
               ))
             ),
-            // MethodDecl(
-            //   "foo",
-            //   false,
-            //   false,
-            //   VoidType,
-            //   List(VarDecl("a", IntType, None), VarDecl("b", IntType, None)),
-            //   BlockStatement(List(
-            //     ReturnStatement(None)
-            //   ))
-            // )
+            MethodDecl(
+              "foo",
+              false,
+              false,
+              VoidType,
+              List(),
+              BlockStatement(List(
+                ReturnStatement(None)
+              ))
+            ),
+            MethodDecl(
+              "bar",
+              false, false,
+              VoidType,
+              List(),
+              BlockStatement(List(
+                StatementExpression(TypedExpression(MethodCall(Literal(42), "foo", List()), VoidType)),
+                ReturnStatement(None)
+              ))
+            )
           ),
           List(
             // VarDecl("t", IntType, None)

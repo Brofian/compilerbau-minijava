@@ -15,7 +15,8 @@ private def generateExpression(expression: Expression, methodVisitor: MethodVisi
       generateBinaryOperation(binaryOperation, methodVisitor, state)
     case typedExpression: TypedExpression =>
       generateTypedExpression(typedExpression, methodVisitor, state)
-    // case methodCall: MethodCall => ???
+    case methodCall: MethodCall =>
+      generateMethodCall(methodCall, methodVisitor, state)
     case _ => throw NotImplementedError("this expression is not yet implemented")
   }
 }
@@ -26,7 +27,7 @@ private def generateVariableReference(varRef: VarRef, methodVisitor: MethodVisit
 
   val variableInfo = state.getVariable(varRef.name)
   if (variableInfo.isField) {
-    methodVisitor.visitVarInsn(asmLoadInsn(variableInfo.t), 0)
+    methodVisitor.visitVarInsn(ALOAD, 0)
     methodVisitor.visitFieldInsn(GETFIELD, state.className, varRef.name, asmType(variableInfo.t))
   } else {
     val varInfo = state.getVariable(varRef.name)
@@ -52,7 +53,7 @@ private def generateBinaryOperation(operation: BinaryOp, methodVisitor: MethodVi
     val opcode = asmOpcode(binaryOpcode(operation.op, expressionType))
     methodVisitor.visitInsn(opcode)
 
-    state.popStack()
+    state.popStack(1)
   }
 }
 
@@ -65,19 +66,34 @@ private def generateAssignment(left: Expression, right: Expression, methodVisito
 
   val variableInfo = state.getVariable(varName)
   if (variableInfo.isField) {
-    methodVisitor.visitVarInsn(asmLoadInsn(variableInfo.t), 0)
+    state.pushStack()
+
+    methodVisitor.visitVarInsn(ALOAD, 0)
     generateExpression(right, methodVisitor, state)
     methodVisitor.visitFieldInsn(PUTFIELD, state.className, varName, asmType(variableInfo.t))
+
+    state.popStack(2)
   } else {
     generateExpression(right, methodVisitor, state)
     methodVisitor.visitVarInsn(ISTORE, variableInfo.id)
+
+    state.popStack(1)
   }
-  
-  state.popStack()
 }
 
 // TYPED EXPRESSION
 private def generateTypedExpression(expression: TypedExpression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Type = {
   generateExpression(expression.expr, methodVisitor, state)
   expression.exprType
+}
+
+// METHOD CALL
+private def generateMethodCall(methodCall: MethodCall, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  state.pushStack()
+
+  methodVisitor.visitVarInsn(ALOAD, 0)
+  methodCall.args.foreach(expr => generateExpression(expr, methodVisitor, state))
+  methodVisitor.visitMethodInsn(INVOKEVIRTUAL, state.className, methodCall.methodName, state.methodDescriptors(methodCall.methodName), false)
+
+  state.popStack(1 + methodCall.args.size)
 }

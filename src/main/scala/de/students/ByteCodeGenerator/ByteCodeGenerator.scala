@@ -6,6 +6,7 @@ import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
 
 import scala.collection.mutable;
+import scala.collection.immutable;
 
 type ClassBytecode = Array[Byte]
 
@@ -101,6 +102,7 @@ private def generateMethodBody(methodDecl: MethodDecl, methodVisitor: MethodVisi
 
 private case class MethodGeneratorState(
                                  val fields: List[VarDecl],
+                                 val methodDescriptors: immutable.HashMap[String, String],
                                  val returnType: Type,
                                  val className: String,
                                  var stackDepth: Int,
@@ -135,8 +137,8 @@ private case class MethodGeneratorState(
     stackDepth += 1
     maxStackDepth = Math.max(stackDepth, maxStackDepth)
   }
-  def popStack(): Unit = {
-    stackDepth -= 1
+  def popStack(count: Int): Unit = {
+    stackDepth -= count
   }
 
   def addVariable(name: String, t: Type): Int = {
@@ -173,6 +175,7 @@ private case class MethodGeneratorState(
 private def defaultMethodGeneratorState(classDecl: ClassDecl, returnType: Type): MethodGeneratorState =
   MethodGeneratorState(
     classDecl.fields,
+    immutable.HashMap(classDecl.methods.map(methodDecl => (methodDecl.name, asmType(functionType(methodDecl))))*),
     returnType,
     classDecl.name,
     0, 0, 0,

@@ -168,7 +168,12 @@ private def generateTypedStatement(statement: TypedStatement, methodVisitor: Met
 }
 
 private def generateExpressionStatement(statement: StatementExpression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  generateExpression(statement.expr, methodVisitor, state)
+  val t = generateTypedExpression(statement.expr.asInstanceOf[TypedExpression], methodVisitor, state)
+
+  // expression result is not used, so the stack must be popped
+  if (t != VoidType) {
+    methodVisitor.visitInsn(POP)
+  }
 }
 
 private def generateNop(methodVisitor: MethodVisitor): Unit = {
