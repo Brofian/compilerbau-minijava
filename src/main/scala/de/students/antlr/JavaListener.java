@@ -18,6 +18,16 @@ public interface JavaListener extends ParseTreeListener {
 	 */
 	void exitPackage(JavaParser.PackageContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link JavaParser#imports}.
+	 * @param ctx the parse tree
+	 */
+	void enterImports(JavaParser.ImportsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#imports}.
+	 * @param ctx the parse tree
+	 */
+	void exitImports(JavaParser.ImportsContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link JavaParser#class}.
 	 * @param ctx the parse tree
 	 */
@@ -127,16 +137,6 @@ public interface JavaListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitParameter(JavaParser.ParameterContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link JavaParser#methodBody}.
-	 * @param ctx the parse tree
-	 */
-	void enterMethodBody(JavaParser.MethodBodyContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link JavaParser#methodBody}.
-	 * @param ctx the parse tree
-	 */
-	void exitMethodBody(JavaParser.MethodBodyContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaParser#block}.
 	 * @param ctx the parse tree
@@ -288,26 +288,6 @@ public interface JavaListener extends ParseTreeListener {
 	 */
 	void exitContinueStatement(JavaParser.ContinueStatementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JavaParser#primary}.
-	 * @param ctx the parse tree
-	 */
-	void enterPrimary(JavaParser.PrimaryContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link JavaParser#primary}.
-	 * @param ctx the parse tree
-	 */
-	void exitPrimary(JavaParser.PrimaryContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link JavaParser#methodCall}.
-	 * @param ctx the parse tree
-	 */
-	void enterMethodCall(JavaParser.MethodCallContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link JavaParser#methodCall}.
-	 * @param ctx the parse tree
-	 */
-	void exitMethodCall(JavaParser.MethodCallContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link JavaParser#expression}.
 	 * @param ctx the parse tree
 	 */
@@ -337,6 +317,36 @@ public interface JavaListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitArrayCreation(JavaParser.ArrayCreationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link JavaParser#arrayAccess}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayAccess(JavaParser.ArrayAccessContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#arrayAccess}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayAccess(JavaParser.ArrayAccessContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link JavaParser#primary}.
+	 * @param ctx the parse tree
+	 */
+	void enterPrimary(JavaParser.PrimaryContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#primary}.
+	 * @param ctx the parse tree
+	 */
+	void exitPrimary(JavaParser.PrimaryContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link JavaParser#methodCall}.
+	 * @param ctx the parse tree
+	 */
+	void enterMethodCall(JavaParser.MethodCallContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#methodCall}.
+	 * @param ctx the parse tree
+	 */
+	void exitMethodCall(JavaParser.MethodCallContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaParser#thisAccess}.
 	 * @param ctx the parse tree
@@ -397,4 +407,14 @@ public interface JavaListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitId(JavaParser.IdContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link JavaParser#packageId}.
+	 * @param ctx the parse tree
+	 */
+	void enterPackageId(JavaParser.PackageIdContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#packageId}.
+	 * @param ctx the parse tree
+	 */
+	void exitPackageId(JavaParser.PackageIdContext ctx);
 }

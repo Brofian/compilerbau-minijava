@@ -1,10 +1,15 @@
 package de.students.Parser
 
+case class Project(packages: List[Package])
+
+
 // basic node for all AST-trees
 sealed trait ASTNode
 
 // Program-node
-case class Package(name: String, classes: List[ClassDecl]) extends ASTNode
+case class Package(name: String, imports : Imports, classes: List[ClassDecl]) extends ASTNode
+
+case class Imports(names: List[String]) extends ASTNode
 
 // Class declaration
 case class ClassDecl(
@@ -79,5 +84,7 @@ case class ThisAccess(name: String) extends Expression
 case class ClassAccess(className: String, memberName: String) extends Expression
 case class NewObject(className: String, arguments: List[Expression]) extends Expression
 case class NewArray(arrayType: Type, dimensions: List[Expression]) extends Expression
+case class ArrayAccess(array: Expression, index: Expression) extends Expression
+
 case class MethodCall(target: Expression, methodName: String, args: List[Expression]) extends Expression
 case class TypedExpression(expr: Expression, exprType: Type) extends Expression
