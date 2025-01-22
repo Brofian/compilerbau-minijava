@@ -46,7 +46,7 @@ object SyntacticSugarHandler {
           varDeclStmt.initializer match
             case Some(varInitializer) =>
               splitStatements.addOne(VarDecl(varDeclStmt.name, varDeclStmt.varType, None)) // remove initializer
-              splitStatements.addOne(StatementExpressions(BinaryOp(VarRef(varDeclStmt.name), "=", varInitializer))) // add initializer as separate statement
+              splitStatements.addOne(StatementExpression(BinaryOp(VarRef(varDeclStmt.name), "=", varInitializer))) // add initializer as separate statement
             case None => splitStatements.addOne(stmt) // no initializer, no changes required
         case stmt => splitStatements.addOne(stmt) // not a var declaration, no changes required
       }
