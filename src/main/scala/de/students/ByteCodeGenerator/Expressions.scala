@@ -22,34 +22,58 @@ private def generateExpression(expression: Expression, methodVisitor: MethodVisi
 
 // VARIABLE REFERENCE
 private def generateVariableReference(varRef: VarRef, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  state.stackDepth += 1
+  state.pushStack()
 
-  val field = state.fields.find(varDecl => varDecl.name == varRef.name)
-
-  field match {
-    case Some(varDecl) => { // field variable
-      methodVisitor.visitVarInsn(asmLoadInsn(varDecl.varType), 0)
-      methodVisitor.visitFieldInsn(GETFIELD, state.className, varRef.name, asmType(varDecl.varType))
-    }
-    case None => { // local variable
-      // methodVisitor.visitVarInsn(A)
-    }
+  val variableInfo = state.getVariable(varRef.name)
+  if (variableInfo.isField) {
+    methodVisitor.visitVarInsn(asmLoadInsn(variableInfo.t), 0)
+    methodVisitor.visitFieldInsn(GETFIELD, state.className, varRef.name, asmType(variableInfo.t))
+  } else {
+    val varInfo = state.getVariable(varRef.name)
+    methodVisitor.visitVarInsn(asmLoadInsn(varInfo.t), varInfo.id)
   }
 }
 
 // LITERAL
 private def generateLiteral(literal: Literal, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  state.stackDepth += 1
+  state.pushStack()
+
   methodVisitor.visitLdcInsn(literal.value)
 }
 
 // BINARY OPERATION
 private def generateBinaryOperation(operation: BinaryOp, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  val expressionType = generateTypedExpression(operation.left.asInstanceOf[TypedExpression], methodVisitor, state)
-  generateExpression(operation.right, methodVisitor, state) // should be same type, this is not our problem if not
+  if (operation.op == "=") {
+    generateAssignment(operation.left, operation.right, methodVisitor, state)
+  } else {
+    val expressionType = generateTypedExpression(operation.left.asInstanceOf[TypedExpression], methodVisitor, state)
+    generateExpression(operation.right, methodVisitor, state) // should be same type, this is not our problem if not
 
-  val opcode = asmOpcode(binaryOpcode(operation.op, expressionType))
-  methodVisitor.visitInsn(opcode)
+    val opcode = asmOpcode(binaryOpcode(operation.op, expressionType))
+    methodVisitor.visitInsn(opcode)
+
+    state.popStack()
+  }
+}
+
+// ASSIGNMENT
+private def generateAssignment(left: Expression, right: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+  val varName = left match {
+    case VarRef(name) => name
+    case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $left")
+  }
+
+  val variableInfo = state.getVariable(varName)
+  if (variableInfo.isField) {
+    methodVisitor.visitVarInsn(asmLoadInsn(variableInfo.t), 0)
+    generateExpression(right, methodVisitor, state)
+    methodVisitor.visitFieldInsn(PUTFIELD, state.className, varName, asmType(variableInfo.t))
+  } else {
+    generateExpression(right, methodVisitor, state)
+    methodVisitor.visitVarInsn(ISTORE, variableInfo.id)
+  }
+  
+  state.popStack()
 }
 
 // TYPED EXPRESSION

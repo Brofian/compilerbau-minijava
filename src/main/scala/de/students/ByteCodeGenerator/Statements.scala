@@ -155,7 +155,7 @@ private def generateContinueStatement(statement: ContinueStatement, methodVisito
 }
 
 private def generateVariableDeclaration(varDecl: VarDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  val varId = state.addVariable(varDecl.name)
+  val varId = state.addVariable(varDecl.name, varDecl.varType)
   if (varDecl.initializer.isDefined) {
     generateExpression(varDecl.initializer.get, methodVisitor, state)
     methodVisitor.visitVarInsn(ISTORE, varId)

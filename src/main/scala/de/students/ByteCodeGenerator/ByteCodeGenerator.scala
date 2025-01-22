@@ -95,7 +95,7 @@ private def generateMethodBody(methodDecl: MethodDecl, methodVisitor: MethodVisi
   state.stackDepth = 0
   generateStatement(methodDecl.body, methodVisitor, state)
 
-  methodVisitor.visitMaxs(state.stackDepth, state.localVariableCount)
+  methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
   methodVisitor.visitEnd()
 }
 
@@ -104,6 +104,7 @@ private case class MethodGeneratorState(
                                  val returnType: Type,
                                  val className: String,
                                  var stackDepth: Int,
+                                 var maxStackDepth: Int,
                                  var localVariableCount: Int,
                                  val scopeEnds: ArrayBuffer[Label],
                                  val loopStarts: ArrayBuffer[Label],
@@ -130,13 +131,38 @@ private case class MethodGeneratorState(
     endSimpleScope()
   }
 
-  def addVariable(name: String): Int = {
-    val res = variables.put(name, VariableInfo(localVariableCount, currentScope))
+  def pushStack(): Unit = {
+    stackDepth += 1
+    maxStackDepth = Math.max(stackDepth, maxStackDepth)
+  }
+  def popStack(): Unit = {
+    stackDepth -= 1
+  }
+
+  def addVariable(name: String, t: Type): Int = {
+    val field = fields.find(varDecl => varDecl.name == name)
+    if (field.isDefined) {
+      throw ByteCodeGeneratorException(f"variable $name already exists, it is a field")
+    }
+
+    val res = variables.put(name, VariableInfo(localVariableCount, currentScope, t, false))
     if (res.isDefined) {
       throw ByteCodeGeneratorException(f"variable $name already exists")
     }
     localVariableCount += 1
     localVariableCount - 1
+  }
+
+  def getVariable(name: String): VariableInfo = {
+    val res = variables.get(name)
+    val field = fields.find(varDecl => varDecl.name == name)
+    if (res.isDefined) {
+      res.get
+    } else if (field.isDefined) {
+      VariableInfo(0, 0, field.get.varType, true)
+    } else {
+      throw ByteCodeGeneratorException(f"variable $name does not exist")
+    }
   }
 
   def checkVariableScopes(): Unit = {
@@ -149,7 +175,7 @@ private def defaultMethodGeneratorState(classDecl: ClassDecl, returnType: Type):
     classDecl.fields,
     returnType,
     classDecl.name,
-    0, 0,
+    0, 0, 0,
     ArrayBuffer.empty,
     ArrayBuffer.empty,
     0,
@@ -160,4 +186,6 @@ private def defaultMethodGeneratorState(classDecl: ClassDecl, returnType: Type):
 private case class VariableInfo(
                                id: Int,
                                scopeId: Int,
+                               t: Type,
+                               isField: Boolean
                                )
