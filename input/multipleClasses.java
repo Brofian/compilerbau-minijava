@@ -1,4 +1,4 @@
-package de.mypackage;
+package out;
 
 import java.lang.String;
 
@@ -6,6 +6,7 @@ class AClass {
     private int value;
 
     public int calc(int n) {
+        n = 4;
         this.value = 5;
 
         BClass b = new BClass();

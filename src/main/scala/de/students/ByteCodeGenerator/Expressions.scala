@@ -9,20 +9,22 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
   debugLogStack(state, f"eval expr $expression")
 
   expression match {
-    case variableReference: VarRef =>
+    case TypedExpression(variableReference: VarRef, _) =>
       generateVariableReference(variableReference, state)
-    case literal: Literal =>
+    case TypedExpression(literal: Literal, _) =>
       generateLiteral(literal, state)
-    case binaryOperation: BinaryOp =>
+    case TypedExpression(binaryOperation: BinaryOp, _) =>
       generateBinaryOperation(binaryOperation, state)
-    case typedExpression: TypedExpression =>
-      generateTypedExpression(typedExpression, state)
-    case methodCall: MethodCall =>
-      generateMethodCall(methodCall, state)
-    case newObject: NewObject =>
+    case TypedExpression(methodCall: MethodCall, returnType) =>
+      generateMethodCall(methodCall, returnType, state)
+    case TypedExpression(newObject: NewObject, _) =>
       generateNewObject(newObject, state)
-    case thisAccess: ThisAccess =>
-      generateThisAccess(thisAccess, state)
+    case TypedExpression(thisAccess: ThisAccess, fieldType) =>
+      generateThisRValue(thisAccess, fieldType, state)
+    case TypedExpression(classAccess: ClassAccess, fieldType) =>
+      generateClassRValue(classAccess, fieldType, state)
+    case typedExpression: TypedExpression =>
+      throw ByteCodeGeneratorException("did not expect raw typed expression, this may indicate a bug in the code generator")
     case _ => throw ByteCodeGeneratorException(f"the expression $expression is not supported")
   }
 }
@@ -132,16 +134,26 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
 }
 
 // ASSIGNMENT
-private def generateAssignment(left: Expression, right: Expression, state: MethodGeneratorState): Unit = {
-  val varName = left match {
-    case VarRef(name) => name
-    case TypedExpression(VarRef(name), _) => name
-    case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $left")
+private def generateAssignment(lvalue: Expression, rvalue: Expression, state: MethodGeneratorState): Unit = {
+  lvalue match {
+    case VarRef(name) => generateVariableAccess(name, rvalue, state)
+    case TypedExpression(VarRef(name), _) => generateVariableAccess(name, rvalue, state)
+    case TypedExpression(thisAccess: ThisAccess, fieldType) => generateThisLValue(thisAccess, fieldType, rvalue, state)
+    case TypedExpression(classAccess: ClassAccess, fieldType) => generateClassLValue(classAccess, fieldType, rvalue, state)
+    case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $lvalue")
   }
+}
 
+/**
+ * sets the variable or field to the evaluated rvalue
+ * @param varName name of a local variable or field of this
+ * @param rvalue
+ * @param state
+ */
+private def generateVariableAccess(varName: String, rvalue: Expression, state: MethodGeneratorState): Unit = {
   val variableInfo = state.getVariable(varName)
   if (variableInfo.isField) {
-    generateExpression(right, state)
+    generateExpression(rvalue, state)
     Instructions.loadThis(state)
 
     Instructions.duplicateTopTwo(state) // val | this | val | this
@@ -149,7 +161,7 @@ private def generateAssignment(left: Expression, right: Expression, state: Metho
 
     Instructions.storeField(varName, variableInfo.t, state)
   } else {
-    generateExpression(right, state)
+    generateExpression(rvalue, state)
 
     Instructions.duplicateTop(state)
 
@@ -159,27 +171,93 @@ private def generateAssignment(left: Expression, right: Expression, state: Metho
 
 // TYPED EXPRESSION
 private def generateTypedExpression(expression: TypedExpression, state: MethodGeneratorState): Type = {
-  generateExpression(expression.expr, state)
+  generateExpression(TypedExpression(expression.expr, expression.exprType), state) // TODO refactor generateExpression
   expression.exprType
 }
 
 // METHOD CALL
-private def generateMethodCall(methodCall: MethodCall, state: MethodGeneratorState): Unit = {
+private def generateMethodCall(methodCall: MethodCall, returnType: Type, state: MethodGeneratorState): Unit = {
   val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
-  methodCall.args.foreach(expr => generateExpression(expr, state))
-  Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, state)
+  val parameterTypes = methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
+  val methodDescriptor = asmType(FunctionType(returnType, parameterTypes))
+  Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, methodDescriptor, state)
 }
 
 // NEW OBJECT
 private def generateNewObject(newObject: NewObject, state: MethodGeneratorState): Unit = {
-  val javaClassName = javaifyClass(newObject.className)
-  Instructions.newObject(javaClassName, state)
+  Instructions.newObject(newObject.className, state)
   Instructions.duplicateTop(state)
   newObject.arguments.foreach(expr => generateExpression(expr, state))
-  Instructions.callConstructor(javaClassName, newObject.arguments.map(expr => expr.asInstanceOf[TypedExpression].exprType), state)
+  Instructions.callConstructor(newObject.className, newObject.arguments.map(expr => expr.asInstanceOf[TypedExpression].exprType), state)
 }
 
 // THIS ACCESS
-private def generateThisAccess(access: ThisAccess, state: MethodGeneratorState): Unit = {
+/**
+ * set field of this to rvalue and leave value of rvalue on stack
+ * @param access
+ * @param fieldType
+ * @param rvalue
+ * @param state
+ */
+private def generateThisLValue(access: ThisAccess, fieldType: Type, rvalue: Expression, state: MethodGeneratorState): Unit = {
+  generateExpression(rvalue, state)
+  Instructions.loadThis(state)
 
+  Instructions.duplicateTopTwo(state) // val | this | val | this
+  Instructions.pop(state) // val | this | val
+
+  Instructions.storeField(access.name, fieldType, state)
+}
+/**
+ * push field of this on stack
+ * @param access
+ * @param fieldType
+ * @param state
+ */
+private def generateThisRValue(access: ThisAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
+  Instructions.loadThis(state)
+  Instructions.loadField(access.name, fieldType, state)
+}
+
+// CLASS ACCESS
+/**
+ * push object saved as field or local variable under className on stack
+ * @param className
+ * @param state
+ */
+private def loadLValueObject(className: String, state: MethodGeneratorState): Unit = {
+  val variableInfo = state.getVariable(className)
+  if (variableInfo.isField) {
+    Instructions.loadThis(state)
+    Instructions.loadField(className, variableInfo.t, state)
+  } else {
+    Instructions.loadVar(variableInfo.id, variableInfo.t, state)
+  }
+}
+/**
+ * set field of object given in classAccess to rvalue and leave value of rvalue on the stack
+ * @param classAccess
+ * @param fieldType
+ * @param rvalue
+ * @param state
+ */
+private def generateClassLValue(classAccess: ClassAccess, fieldType: Type, rvalue: Expression, state: MethodGeneratorState): Unit = {
+  generateExpression(rvalue, state)
+  loadLValueObject(classAccess.className, state)
+
+  Instructions.duplicateTopTwo(state) // val | object | val | object
+  Instructions.pop(state) // val | object | val
+
+  Instructions.storeField(classAccess.memberName, fieldType, state)
+}
+/**
+ * push field of object given in classAccess on stack
+ * @param classAccess
+ * @param fieldType
+ * @param state
+ */
+private def generateClassRValue(classAccess: ClassAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
+  loadLValueObject(classAccess.className, state)
+
+  Instructions.loadField(classAccess.memberName, fieldType, state)
 }

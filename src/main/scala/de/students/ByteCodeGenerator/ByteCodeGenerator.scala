@@ -10,7 +10,7 @@ import scala.collection.immutable;
 
 case class ClassBytecode(
                         bytecode: Array[Byte],
-                        fileName: String
+                        className: String
                         )
 
 def generateBytecode(project: Project): List[ClassBytecode] = {
@@ -69,7 +69,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
 
   ClassBytecode(
     classWriter.toByteArray,
-    classDecl.name + ".class"
+    classDecl.name
   )
 }
 
@@ -111,10 +111,12 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
     methodVisitor,
     methodDecl.returnType
   )
+  state.localVariableCount = (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
+
+  methodDecl.params.foreach(param => state.addVariable(param.name, param.varType))
 
   methodVisitor.visitCode()
 
-  state.localVariableCount = methodDecl.params.size + (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
   state.stackDepth = 0
   generateStatement(methodDecl.body, state)
 
@@ -125,7 +127,6 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
 private case class MethodGeneratorState(
                                  val methodVisitor: MethodVisitor,
                                  val fields: List[VarDecl],
-                                 val methodDescriptors: immutable.HashMap[String, String],
                                  val returnType: Type,
                                  val className: String,
                                  var stackDepth: Int,
@@ -199,7 +200,6 @@ private def defaultMethodGeneratorState(classDecl: ClassDecl, methodVisitor: Met
   MethodGeneratorState(
     methodVisitor,
     classDecl.fields,
-    immutable.HashMap(classDecl.methods.map(methodDecl => (methodDecl.name, asmType(functionType(methodDecl))))*),
     returnType,
     classDecl.name,
     0, 0, 0,

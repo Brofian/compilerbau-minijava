@@ -90,16 +90,24 @@ private object Instructions {
     state.pushStack()
   }
 
+  def loadClass(className: String, state: MethodGeneratorState) = {
+    state.methodVisitor.visitVarInsn
+  }
+
   def storeField(name: String, fieldType: Type, state: MethodGeneratorState) = {
-    loadThis(state)
-    state.methodVisitor.visitFieldInsn(PUTFIELD, state.className, name, asmType(fieldType))
+    state.methodVisitor.visitFieldInsn(PUTFIELD, javaifyClass(state.className), name, asmType(fieldType))
     state.popStack(1)
   }
 
+  /**
+   * pop object off stack and push field
+   * @param name field name
+   * @param fieldType field type
+   * @param state
+   */
   def loadField(name: String, fieldType: Type, state: MethodGeneratorState) = {
-    loadThis(state)
-    state.methodVisitor.visitFieldInsn(GETFIELD, state.className, name, asmType(fieldType))
-    // this is popped and field is pushed
+    state.methodVisitor.visitFieldInsn(GETFIELD, javaifyClass(state.className), name, asmType(fieldType))
+    // object is popped and field is pushed
   }
 
    def binaryOperation(opcode: Int, state: MethodGeneratorState): Unit = {
@@ -107,9 +115,8 @@ private object Instructions {
     state.popStack(1) // the instruction takes two arguments from the stack and then pushes the result
   }
 
-  // NOTE this has to be loaded before calling
-  def callMethod(className: String, methodName: String, argumentCount: Int, state: MethodGeneratorState): Unit = {
-    state.methodVisitor.visitMethodInsn(INVOKEVIRTUAL, javaifyClass(className), methodName, state.methodDescriptors(methodName), false)
+  def callMethod(className: String, methodName: String, argumentCount: Int, methodDescriptor: String, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitMethodInsn(INVOKEVIRTUAL, javaifyClass(className), methodName, methodDescriptor, false)
     state.popStack(1 + argumentCount)
   }
 
@@ -122,8 +129,8 @@ private object Instructions {
     state.popStack(1)
   }
 
-  def newObject(descriptor: String, state: MethodGeneratorState): Unit = {
-    state.methodVisitor.visitTypeInsn(NEW, descriptor)
+  def newObject(className: String, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitTypeInsn(NEW, javaifyClass(className))
     state.pushStack()
   }
 
