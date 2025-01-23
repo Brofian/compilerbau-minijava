@@ -121,4 +121,14 @@ private object Instructions {
     state.methodVisitor.visitInsn(asmReturnCode(descriptor))
     state.popStack(1)
   }
+
+  def newObject(descriptor: String, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitTypeInsn(NEW, descriptor)
+    state.pushStack()
+  }
+
+  def callConstructor(className: String, parameterDescriptors: List[Type], state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", asmConstructorType(parameterDescriptors), false)
+    state.popStack(1 + parameterDescriptors.size)
+  }
 }

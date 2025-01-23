@@ -13,6 +13,8 @@ private def visibilityModifier(methodDecl: MethodDecl): Int = {
     + ACC_PUBLIC
 }
 
+private def javaifyClass(fullName: String) = fullName.replace('.', '/')
+
 private def asmType(t: Type): String = t match {
   case NoneType => "" // TODO find out descriptor of NoneType
   case IntType => "I"
@@ -20,14 +22,16 @@ private def asmType(t: Type): String = t match {
   case VoidType => "V"
   case ArrayType(baseType) => f"[${asmType(baseType)}"
   case UserType(name) => {
-    if name == "String"
-      then "Ljava/lang/String;"
-      else f"L$name;"
+      f"L${javaifyClass(name)};"
   }
   case FunctionType(returnType, parameterTypes) => {
     val parameters = parameterTypes.map(asmType).fold("")((a ,b) => a + b)
     f"($parameters)${asmType(returnType)}"
   }
+}
+
+private def asmConstructorType(parameters: List[Type]): String = {
+  asmType(FunctionType(VoidType, parameters))
 }
 
 private def functionType(methodDecl: MethodDecl): FunctionType =

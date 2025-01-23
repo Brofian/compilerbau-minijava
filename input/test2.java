@@ -1,13 +1,10 @@
 package out;
 
+import java.lang.String;
+
 class HelloWorld {
-    public static void main(String[] args) {
-		int a = 3;
-		if (true || false) {
-			a = 1;
-		} else {
-			a = 5;
-		}
+    public static void test() {
+		HelloWorld obj = new HelloWorld();
 		return;
     }
 }

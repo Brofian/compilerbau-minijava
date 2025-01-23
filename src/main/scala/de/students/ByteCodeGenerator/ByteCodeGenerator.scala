@@ -26,7 +26,7 @@ case class ByteCodeGeneratorException(msg: String) extends RuntimeException(msg)
 private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   val classWriter = new ClassWriter(0)
 
-  val javaClassName = classDecl.name.replace('.', '/')
+  val javaClassName = javaifyClass(classDecl.name)
   val parent = "java/lang/Object" // TODO use real parent
 
   // set class header

@@ -19,7 +19,9 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
       generateTypedExpression(typedExpression, state)
     case methodCall: MethodCall =>
       generateMethodCall(methodCall, state)
-    case _ => throw NotImplementedError("this expression is not yet implemented")
+    case NewObject(className, arguments) =>
+      generateNewObject(className, arguments, state)
+    case _ => throw ByteCodeGeneratorException(f"the expression $expression is not supported")
   }
 }
 
@@ -164,4 +166,13 @@ private def generateMethodCall(methodCall: MethodCall, state: MethodGeneratorSta
   Instructions.loadThis(state)
   methodCall.args.foreach(expr => generateExpression(expr, state))
   Instructions.callOwnMethod(methodCall.methodName, methodCall.args.size, state)
+}
+
+// NEW OBJECT
+private def generateNewObject(className: String, arguments: List[Expression], state: MethodGeneratorState): Unit = {
+  val javaClassName = javaifyClass(className)
+  Instructions.newObject(javaClassName, state)
+  Instructions.duplicateTop(state)
+  arguments.foreach(expr => generateExpression(expr, state))
+  Instructions.callConstructor(javaClassName, arguments.map(expr => expr.asInstanceOf[TypedExpression].exprType), state)
 }
