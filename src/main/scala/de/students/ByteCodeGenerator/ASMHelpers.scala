@@ -2,6 +2,7 @@ package de.students.ByteCodeGenerator
 
 import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
+import de.students.util.Logger
 import org.objectweb.asm.MethodVisitor
 
 private def visibilityModifier(classDecl: ClassDecl): Int = 0 // ACC_PUBLIC
@@ -18,7 +19,11 @@ private def asmType(t: Type): String = t match {
   case BoolType => "Z"
   case VoidType => "V"
   case ArrayType(baseType) => f"[${asmType(baseType)}"
-  case UserType(name) => f"L$name;"
+  case UserType(name) => {
+    if name == "String"
+      then "Ljava/lang/String;"
+      else f"L$name;"
+  }
   case FunctionType(returnType, parameterTypes) => {
     val parameters = parameterTypes.map(asmType).fold("")((a ,b) => a + b)
     f"($parameters)${asmType(returnType)}"
@@ -34,7 +39,8 @@ private def constructorType(constructorDecl: ConstructorDecl): FunctionType =
 private def binaryOpcode(op: String, t: Type): String = {
   val prefix = t match {
     case IntType => "I"
-    case _ => throw RuntimeException("this type is not allowed")
+    case BoolType => "I" // NOTE: this should be Z
+    case _ => throw ByteCodeGeneratorException(f"the type $t is not allowed")
   }
   val opName = op match {
     case "+" => "ADD"
@@ -42,6 +48,7 @@ private def binaryOpcode(op: String, t: Type): String = {
     case "*" => "MUL"
     case "/" => "DIV"
     case "%" => "REM"
+    case _ => throw ByteCodeGeneratorException(f"the operator \"$op\" is not allowed for binary operations")
   }
   prefix + opName
 }
@@ -53,6 +60,16 @@ private def asmOpcode(opName: String): Int = opName match {
   case "IREM" => IREM
   case _ => throw NotImplementedError("asm opcode")
 }
+
+private def isBooleanOpcode(op: String): Boolean =
+  op == "==" ||
+  op == "!=" ||
+  op == "<" ||
+  op == "<=" ||
+  op == ">" ||
+  op == ">=" ||
+  op == "&&" ||
+  op == "||"
 
 private def asmLoadInsn(t: Type): Int = t match {
   case IntType => ILOAD
@@ -74,7 +91,7 @@ private def asmReturnCode(t: Type): Int = t match {
   case BoolType => IRETURN
   case ArrayType(baseType) => ARETURN
   case UserType(name) => ARETURN
-  case _ => throw RuntimeException(f"return type \"$t\" is not allowed")
+  case _ => throw ByteCodeGeneratorException(f"return type \"$t\" is not allowed")
 }
 
 private def makePrintStatement(toPrint: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
@@ -82,4 +99,8 @@ private def makePrintStatement(toPrint: Expression, methodVisitor: MethodVisitor
   val t = generateTypedExpression(toPrint.asInstanceOf[TypedExpression], methodVisitor, state)
   state.stackDepth += 1
   methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", f"(${asmType(t)})V", false)
+}
+
+private def debugLogStack(state: MethodGeneratorState, where: String): Unit = {
+  Logger.debug(f"stack size ${state.stackDepth} | max stack size ${state.maxStackDepth} | $where")
 }

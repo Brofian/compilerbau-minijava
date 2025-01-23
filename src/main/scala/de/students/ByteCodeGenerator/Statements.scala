@@ -3,6 +3,7 @@ package de.students.ByteCodeGenerator
 import org.objectweb.asm.{Label, MethodVisitor}
 import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
+import de.students.util.Logger
 
 val EMPTY_STATEMENT = BlockStatement(List())
 val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
@@ -28,6 +29,8 @@ private def generateStatement(statement: Statement, methodVisitor: MethodVisitor
     case printStatement: PrintStatement => makePrintStatement(printStatement.toPrint, methodVisitor, state)
     case _ => throw NotImplementedError("unknown statement")
   }
+
+  debugLogStack(state, f"end of statement ${statement.getClass.toString.split('.').last}")
 }
 
 // BLOCK STATEMENT
@@ -173,6 +176,7 @@ private def generateExpressionStatement(statement: StatementExpression, methodVi
   // expression result is not used, so the stack must be popped
   if (t != VoidType) {
     methodVisitor.visitInsn(POP)
+    state.popStack(1)
   }
 }
 
