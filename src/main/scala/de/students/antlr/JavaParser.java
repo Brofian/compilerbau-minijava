@@ -25,8 +25,9 @@ public class JavaParser extends Parser {
 		T__38=39, T__39=40, T__40=41, T__41=42, CLASS=43, EXTENDS=44, PACKAGE=45, 
 		PUBLIC=46, PRIVATE=47, PROTECTED=48, STATIC=49, FINAL=50, ABSTRACT=51, 
 		VOID=52, RETURN=53, IMPORT=54, PRIMITIVE_TYPE=55, INTEGER_LITERAL=56, 
-		CHAR_LITERAL=57, STRING_LITERAL=58, BOOLEAN_LITERAL=59, NULL_LITERAL=60, 
-		IDENTIFIER=61, SC=62, WS=63, COMMENT=64, MULTILINE_COMMENT=65;
+		BYTE_LITERAL=57, SHORT_LITERAL=58, LONG_LITERAL=59, DOUBLE_LITERAL=60, 
+		FLOAT_LITERAL=61, CHAR_LITERAL=62, STRING_LITERAL=63, BOOLEAN_LITERAL=64, 
+		NULL_LITERAL=65, IDENTIFIER=66, SC=67, WS=68, COMMENT=69, MULTILINE_COMMENT=70;
 	public static final int
 		RULE_package = 0, RULE_imports = 1, RULE_class = 2, RULE_classbody = 3, 
 		RULE_method = 4, RULE_attribute = 5, RULE_constructor = 6, RULE_modifier = 7, 
@@ -63,7 +64,7 @@ public class JavaParser extends Parser {
 			"'&&'", "'||'", "'+='", "'-='", "'*='", "'/='", "'%='", "'class'", "'extends'", 
 			"'package'", "'public'", "'private'", "'protected'", "'static'", "'final'", 
 			"'abstract'", "'void'", "'return'", "'import'", null, null, null, null, 
-			null, "'null'", null, "';'"
+			null, null, null, null, null, null, "'null'", null, "';'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
@@ -74,7 +75,8 @@ public class JavaParser extends Parser {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, "CLASS", "EXTENDS", "PACKAGE", 
 			"PUBLIC", "PRIVATE", "PROTECTED", "STATIC", "FINAL", "ABSTRACT", "VOID", 
-			"RETURN", "IMPORT", "PRIMITIVE_TYPE", "INTEGER_LITERAL", "CHAR_LITERAL", 
+			"RETURN", "IMPORT", "PRIMITIVE_TYPE", "INTEGER_LITERAL", "BYTE_LITERAL", 
+			"SHORT_LITERAL", "LONG_LITERAL", "DOUBLE_LITERAL", "FLOAT_LITERAL", "CHAR_LITERAL", 
 			"STRING_LITERAL", "BOOLEAN_LITERAL", "NULL_LITERAL", "IDENTIFIER", "SC", 
 			"WS", "COMMENT", "MULTILINE_COMMENT"
 		};
@@ -446,7 +448,7 @@ public class JavaParser extends Parser {
 			setState(127);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2345750883255451648L) != 0)) {
+			while (((((_la - 43)) & ~0x3f) == 0 && ((1L << (_la - 43)) & 8393145L) != 0)) {
 				{
 				setState(125);
 				_errHandler.sync(this);
@@ -1155,7 +1157,7 @@ public class JavaParser extends Parser {
 			setState(201);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4584664420681808136L) != 0)) {
+			while (((((_la - 3)) & ~0x3f) == 0 && ((1L << (_la - 3)) & -3377699718197471L) != 0)) {
 				{
 				{
 				setState(198);
@@ -1475,7 +1477,7 @@ public class JavaParser extends Parser {
 			setState(231);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4539628424407285768L) != 0)) {
+			if (((((_la - 3)) & ~0x3f) == 0 && ((1L << (_la - 3)) & -9007199252512767L) != 0)) {
 				{
 				setState(230);
 				expression(0);
@@ -1883,7 +1885,7 @@ public class JavaParser extends Parser {
 			setState(280);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4539628424407285768L) != 0)) {
+			if (((((_la - 3)) & ~0x3f) == 0 && ((1L << (_la - 3)) & -9007199252512767L) != 0)) {
 				{
 				setState(279);
 				expression(0);
@@ -1895,7 +1897,7 @@ public class JavaParser extends Parser {
 			setState(284);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4539628424407285768L) != 0)) {
+			if (((((_la - 3)) & ~0x3f) == 0 && ((1L << (_la - 3)) & -9007199252512767L) != 0)) {
 				{
 				setState(283);
 				expression(0);
@@ -2361,7 +2363,7 @@ public class JavaParser extends Parser {
 			setState(345);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4539628424407285768L) != 0)) {
+			if (((((_la - 3)) & ~0x3f) == 0 && ((1L << (_la - 3)) & -9007199252512767L) != 0)) {
 				{
 				setState(344);
 				argumentList();
@@ -2678,7 +2680,7 @@ public class JavaParser extends Parser {
 					setState(380);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
-					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4539628424407285768L) != 0)) {
+					if (((((_la - 3)) & ~0x3f) == 0 && ((1L << (_la - 3)) & -9007199252512767L) != 0)) {
 						{
 						setState(379);
 						argumentList();
@@ -2923,6 +2925,11 @@ public class JavaParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class LiteralContext extends ParserRuleContext {
 		public TerminalNode INTEGER_LITERAL() { return getToken(JavaParser.INTEGER_LITERAL, 0); }
+		public TerminalNode BYTE_LITERAL() { return getToken(JavaParser.BYTE_LITERAL, 0); }
+		public TerminalNode SHORT_LITERAL() { return getToken(JavaParser.SHORT_LITERAL, 0); }
+		public TerminalNode LONG_LITERAL() { return getToken(JavaParser.LONG_LITERAL, 0); }
+		public TerminalNode DOUBLE_LITERAL() { return getToken(JavaParser.DOUBLE_LITERAL, 0); }
+		public TerminalNode FLOAT_LITERAL() { return getToken(JavaParser.FLOAT_LITERAL, 0); }
 		public TerminalNode CHAR_LITERAL() { return getToken(JavaParser.CHAR_LITERAL, 0); }
 		public TerminalNode BOOLEAN_LITERAL() { return getToken(JavaParser.BOOLEAN_LITERAL, 0); }
 		public TerminalNode STRING_LITERAL() { return getToken(JavaParser.STRING_LITERAL, 0); }
@@ -2955,7 +2962,7 @@ public class JavaParser extends Parser {
 			{
 			setState(406);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 2233785415175766016L) != 0)) ) {
+			if ( !(((((_la - 56)) & ~0x3f) == 0 && ((1L << (_la - 56)) & 1023L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -3107,7 +3114,7 @@ public class JavaParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001A\u01a3\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001F\u01a3\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
@@ -3172,7 +3179,7 @@ public class JavaParser extends Parser {
 		"\b(\n(\f(\u01a1\t(\u0001(\u0000\u0002\u00148)\u0000\u0002\u0004\u0006"+
 		"\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e \"$&(*,."+
 		"02468:<>@BDFHJLNP\u0000\u0003\u0002\u0000.023\u0002\u0000\u0005\u0005"+
-		"\u0019*\u0001\u00008<\u01b4\u0000R\u0001\u0000\u0000\u0000\u0002a\u0001"+
+		"\u0019*\u0001\u00008A\u01b4\u0000R\u0001\u0000\u0000\u0000\u0002a\u0001"+
 		"\u0000\u0000\u0000\u0004v\u0001\u0000\u0000\u0000\u0006x\u0001\u0000\u0000"+
 		"\u0000\b\u0084\u0001\u0000\u0000\u0000\n\u0091\u0001\u0000\u0000\u0000"+
 		"\f\u009b\u0001\u0000\u0000\u0000\u000e\u00a5\u0001\u0000\u0000\u0000\u0010"+
@@ -3191,10 +3198,10 @@ public class JavaParser extends Parser {
 		"\u0000F\u0188\u0001\u0000\u0000\u0000H\u018c\u0001\u0000\u0000\u0000J"+
 		"\u0194\u0001\u0000\u0000\u0000L\u0196\u0001\u0000\u0000\u0000N\u0198\u0001"+
 		"\u0000\u0000\u0000P\u019a\u0001\u0000\u0000\u0000RS\u0005-\u0000\u0000"+
-		"ST\u0003P(\u0000TU\u0005>\u0000\u0000UW\u0003\u0002\u0001\u0000VX\u0003"+
+		"ST\u0003P(\u0000TU\u0005C\u0000\u0000UW\u0003\u0002\u0001\u0000VX\u0003"+
 		"\u0004\u0002\u0000WV\u0001\u0000\u0000\u0000XY\u0001\u0000\u0000\u0000"+
 		"YW\u0001\u0000\u0000\u0000YZ\u0001\u0000\u0000\u0000Z\u0001\u0001\u0000"+
-		"\u0000\u0000[\\\u00056\u0000\u0000\\]\u0003P(\u0000]^\u0005>\u0000\u0000"+
+		"\u0000\u0000[\\\u00056\u0000\u0000\\]\u0003P(\u0000]^\u0005C\u0000\u0000"+
 		"^`\u0001\u0000\u0000\u0000_[\u0001\u0000\u0000\u0000`c\u0001\u0000\u0000"+
 		"\u0000a_\u0001\u0000\u0000\u0000ab\u0001\u0000\u0000\u0000b\u0003\u0001"+
 		"\u0000\u0000\u0000ca\u0001\u0000\u0000\u0000df\u0005.\u0000\u0000ed\u0001"+
@@ -3215,15 +3222,15 @@ public class JavaParser extends Parser {
 		"\u0000\u0000\u0084\u0086\u0003\u000e\u0007\u0000\u0085\u0087\u00051\u0000"+
 		"\u0000\u0086\u0085\u0001\u0000\u0000\u0000\u0086\u0087\u0001\u0000\u0000"+
 		"\u0000\u0087\u0088\u0001\u0000\u0000\u0000\u0088\u0089\u0003\u0012\t\u0000"+
-		"\u0089\u008a\u0005=\u0000\u0000\u008a\u008c\u0005\u0003\u0000\u0000\u008b"+
+		"\u0089\u008a\u0005B\u0000\u0000\u008a\u008c\u0005\u0003\u0000\u0000\u008b"+
 		"\u008d\u0003\u0016\u000b\u0000\u008c\u008b\u0001\u0000\u0000\u0000\u008c"+
 		"\u008d\u0001\u0000\u0000\u0000\u008d\u008e\u0001\u0000\u0000\u0000\u008e"+
 		"\u008f\u0005\u0004\u0000\u0000\u008f\u0090\u0003\u001a\r\u0000\u0090\t"+
 		"\u0001\u0000\u0000\u0000\u0091\u0092\u0003\u0010\b\u0000\u0092\u0093\u0003"+
-		"\u0014\n\u0000\u0093\u0096\u0005=\u0000\u0000\u0094\u0095\u0005\u0005"+
+		"\u0014\n\u0000\u0093\u0096\u0005B\u0000\u0000\u0094\u0095\u0005\u0005"+
 		"\u0000\u0000\u0095\u0097\u00038\u001c\u0000\u0096\u0094\u0001\u0000\u0000"+
 		"\u0000\u0096\u0097\u0001\u0000\u0000\u0000\u0097\u0098\u0001\u0000\u0000"+
-		"\u0000\u0098\u0099\u0005>\u0000\u0000\u0099\u000b\u0001\u0000\u0000\u0000"+
+		"\u0000\u0098\u0099\u0005C\u0000\u0000\u0099\u000b\u0001\u0000\u0000\u0000"+
 		"\u009a\u009c\u0005.\u0000\u0000\u009b\u009a\u0001\u0000\u0000\u0000\u009b"+
 		"\u009c\u0001\u0000\u0000\u0000\u009c\u009d\u0001\u0000\u0000\u0000\u009d"+
 		"\u009e\u0003N\'\u0000\u009e\u00a0\u0005\u0003\u0000\u0000\u009f\u00a1"+
@@ -3247,7 +3254,7 @@ public class JavaParser extends Parser {
 		"\u0000\u0000\u00be\u00c1\u0001\u0000\u0000\u0000\u00bf\u00bd\u0001\u0000"+
 		"\u0000\u0000\u00bf\u00c0\u0001\u0000\u0000\u0000\u00c0\u0017\u0001\u0000"+
 		"\u0000\u0000\u00c1\u00bf\u0001\u0000\u0000\u0000\u00c2\u00c3\u0003\u0014"+
-		"\n\u0000\u00c3\u00c4\u0005=\u0000\u0000\u00c4\u0019\u0001\u0000\u0000"+
+		"\n\u0000\u00c3\u00c4\u0005B\u0000\u0000\u00c4\u0019\u0001\u0000\u0000"+
 		"\u0000\u00c5\u00c9\u0005\u0001\u0000\u0000\u00c6\u00c8\u0003\u001c\u000e"+
 		"\u0000\u00c7\u00c6\u0001\u0000\u0000\u0000\u00c8\u00cb\u0001\u0000\u0000"+
 		"\u0000\u00c9\u00c7\u0001\u0000\u0000\u0000\u00c9\u00ca\u0001\u0000\u0000"+
@@ -3263,15 +3270,15 @@ public class JavaParser extends Parser {
 		"\u00d8\u00d3\u0001\u0000\u0000\u0000\u00d8\u00d4\u0001\u0000\u0000\u0000"+
 		"\u00d8\u00d5\u0001\u0000\u0000\u0000\u00d8\u00d6\u0001\u0000\u0000\u0000"+
 		"\u00d8\u00d7\u0001\u0000\u0000\u0000\u00d9\u001d\u0001\u0000\u0000\u0000"+
-		"\u00da\u00db\u0003\u0014\n\u0000\u00db\u00de\u0005=\u0000\u0000\u00dc"+
+		"\u00da\u00db\u0003\u0014\n\u0000\u00db\u00de\u0005B\u0000\u0000\u00dc"+
 		"\u00dd\u0005\u0005\u0000\u0000\u00dd\u00df\u00038\u001c\u0000\u00de\u00dc"+
 		"\u0001\u0000\u0000\u0000\u00de\u00df\u0001\u0000\u0000\u0000\u00df\u00e0"+
-		"\u0001\u0000\u0000\u0000\u00e0\u00e1\u0005>\u0000\u0000\u00e1\u001f\u0001"+
-		"\u0000\u0000\u0000\u00e2\u00e3\u00038\u001c\u0000\u00e3\u00e4\u0005>\u0000"+
+		"\u0001\u0000\u0000\u0000\u00e0\u00e1\u0005C\u0000\u0000\u00e1\u001f\u0001"+
+		"\u0000\u0000\u0000\u00e2\u00e3\u00038\u001c\u0000\u00e3\u00e4\u0005C\u0000"+
 		"\u0000\u00e4!\u0001\u0000\u0000\u0000\u00e5\u00e7\u00055\u0000\u0000\u00e6"+
 		"\u00e8\u00038\u001c\u0000\u00e7\u00e6\u0001\u0000\u0000\u0000\u00e7\u00e8"+
 		"\u0001\u0000\u0000\u0000\u00e8\u00e9\u0001\u0000\u0000\u0000\u00e9\u00ea"+
-		"\u0005>\u0000\u0000\u00ea#\u0001\u0000\u0000\u0000\u00eb\u00ec\u0005\b"+
+		"\u0005C\u0000\u0000\u00ea#\u0001\u0000\u0000\u0000\u00eb\u00ec\u0005\b"+
 		"\u0000\u0000\u00ec\u00ed\u0005\u0003\u0000\u0000\u00ed\u00ee\u00038\u001c"+
 		"\u0000\u00ee\u00ef\u0005\u0004\u0000\u0000\u00ef\u00f3\u0003\u001a\r\u0000"+
 		"\u00f0\u00f2\u0003&\u0013\u0000\u00f1\u00f0\u0001\u0000\u0000\u0000\u00f2"+
@@ -3289,14 +3296,14 @@ public class JavaParser extends Parser {
 		"\u0000\u0000\u0108\u0109\u0005\f\u0000\u0000\u0109\u010a\u0003\u001a\r"+
 		"\u0000\u010a\u010b\u0005\u000b\u0000\u0000\u010b\u010c\u0005\u0003\u0000"+
 		"\u0000\u010c\u010d\u00038\u001c\u0000\u010d\u010e\u0005\u0004\u0000\u0000"+
-		"\u010e\u010f\u0005>\u0000\u0000\u010f-\u0001\u0000\u0000\u0000\u0110\u0111"+
+		"\u010e\u010f\u0005C\u0000\u0000\u010f-\u0001\u0000\u0000\u0000\u0110\u0111"+
 		"\u0005\r\u0000\u0000\u0111\u0115\u0005\u0003\u0000\u0000\u0112\u0116\u0003"+
-		"\u001e\u000f\u0000\u0113\u0116\u0003 \u0010\u0000\u0114\u0116\u0005>\u0000"+
+		"\u001e\u000f\u0000\u0113\u0116\u0003 \u0010\u0000\u0114\u0116\u0005C\u0000"+
 		"\u0000\u0115\u0112\u0001\u0000\u0000\u0000\u0115\u0113\u0001\u0000\u0000"+
 		"\u0000\u0115\u0114\u0001\u0000\u0000\u0000\u0116\u0118\u0001\u0000\u0000"+
 		"\u0000\u0117\u0119\u00038\u001c\u0000\u0118\u0117\u0001\u0000\u0000\u0000"+
 		"\u0118\u0119\u0001\u0000\u0000\u0000\u0119\u011a\u0001\u0000\u0000\u0000"+
-		"\u011a\u011c\u0005>\u0000\u0000\u011b\u011d\u00038\u001c\u0000\u011c\u011b"+
+		"\u011a\u011c\u0005C\u0000\u0000\u011b\u011d\u00038\u001c\u0000\u011c\u011b"+
 		"\u0001\u0000\u0000\u0000\u011c\u011d\u0001\u0000\u0000\u0000\u011d\u011e"+
 		"\u0001\u0000\u0000\u0000\u011e\u011f\u0005\u0004\u0000\u0000\u011f\u0120"+
 		"\u0003\u001a\r\u0000\u0120/\u0001\u0000\u0000\u0000\u0121\u0122\u0005"+
@@ -3312,8 +3319,8 @@ public class JavaParser extends Parser {
 		"\u0011\u0000\u0000\u0134\u0135\u0005\u0010\u0000\u0000\u0135\u0137\u0003"+
 		"\u001a\r\u0000\u0136\u012e\u0001\u0000\u0000\u0000\u0136\u0133\u0001\u0000"+
 		"\u0000\u0000\u01373\u0001\u0000\u0000\u0000\u0138\u0139\u0005\u0012\u0000"+
-		"\u0000\u0139\u013a\u0005>\u0000\u0000\u013a5\u0001\u0000\u0000\u0000\u013b"+
-		"\u013c\u0005\u0013\u0000\u0000\u013c\u013d\u0005>\u0000\u0000\u013d7\u0001"+
+		"\u0000\u0139\u013a\u0005C\u0000\u0000\u013a5\u0001\u0000\u0000\u0000\u013b"+
+		"\u013c\u0005\u0013\u0000\u0000\u013c\u013d\u0005C\u0000\u0000\u013d7\u0001"+
 		"\u0000\u0000\u0000\u013e\u013f\u0006\u001c\uffff\uffff\u0000\u013f\u014b"+
 		"\u0003L&\u0000\u0140\u014b\u0003@ \u0000\u0141\u014b\u0003B!\u0000\u0142"+
 		"\u014b\u0003D\"\u0000\u0143\u014b\u0003>\u001f\u0000\u0144\u014b\u0003"+
@@ -3340,7 +3347,7 @@ public class JavaParser extends Parser {
 		"\u0000\u0000\u0165\u0166\u0001\u0000\u0000\u0000\u0166=\u0001\u0000\u0000"+
 		"\u0000\u0167\u0168\u0003@ \u0000\u0168\u0169\u0005\u0015\u0000\u0000\u0169"+
 		"\u016a\u00038\u001c\u0000\u016a\u016b\u0005\u0016\u0000\u0000\u016b?\u0001"+
-		"\u0000\u0000\u0000\u016c\u0176\u0005=\u0000\u0000\u016d\u0176\u0003D\""+
+		"\u0000\u0000\u0000\u016c\u0176\u0005B\u0000\u0000\u016d\u0176\u0003D\""+
 		"\u0000\u016e\u0176\u0003F#\u0000\u016f\u0170\u0005\u0003\u0000\u0000\u0170"+
 		"\u0171\u00038\u001c\u0000\u0171\u0172\u0005\u0004\u0000\u0000\u0172\u0176"+
 		"\u0001\u0000\u0000\u0000\u0173\u0176\u0003:\u001d\u0000\u0174\u0176\u0003"+
@@ -3348,25 +3355,25 @@ public class JavaParser extends Parser {
 		"\u0000\u0000\u0175\u016e\u0001\u0000\u0000\u0000\u0175\u016f\u0001\u0000"+
 		"\u0000\u0000\u0175\u0173\u0001\u0000\u0000\u0000\u0175\u0174\u0001\u0000"+
 		"\u0000\u0000\u0176A\u0001\u0000\u0000\u0000\u0177\u0181\u0003@ \u0000"+
-		"\u0178\u0179\u0005\u0017\u0000\u0000\u0179\u017a\u0005=\u0000\u0000\u017a"+
+		"\u0178\u0179\u0005\u0017\u0000\u0000\u0179\u017a\u0005B\u0000\u0000\u017a"+
 		"\u017c\u0005\u0003\u0000\u0000\u017b\u017d\u0003H$\u0000\u017c\u017b\u0001"+
 		"\u0000\u0000\u0000\u017c\u017d\u0001\u0000\u0000\u0000\u017d\u017e\u0001"+
 		"\u0000\u0000\u0000\u017e\u0180\u0005\u0004\u0000\u0000\u017f\u0178\u0001"+
 		"\u0000\u0000\u0000\u0180\u0183\u0001\u0000\u0000\u0000\u0181\u017f\u0001"+
 		"\u0000\u0000\u0000\u0181\u0182\u0001\u0000\u0000\u0000\u0182C\u0001\u0000"+
 		"\u0000\u0000\u0183\u0181\u0001\u0000\u0000\u0000\u0184\u0185\u0005\u0018"+
-		"\u0000\u0000\u0185\u0186\u0005\u0017\u0000\u0000\u0186\u0187\u0005=\u0000"+
-		"\u0000\u0187E\u0001\u0000\u0000\u0000\u0188\u0189\u0005=\u0000\u0000\u0189"+
-		"\u018a\u0005\u0017\u0000\u0000\u018a\u018b\u0005=\u0000\u0000\u018bG\u0001"+
+		"\u0000\u0000\u0185\u0186\u0005\u0017\u0000\u0000\u0186\u0187\u0005B\u0000"+
+		"\u0000\u0187E\u0001\u0000\u0000\u0000\u0188\u0189\u0005B\u0000\u0000\u0189"+
+		"\u018a\u0005\u0017\u0000\u0000\u018a\u018b\u0005B\u0000\u0000\u018bG\u0001"+
 		"\u0000\u0000\u0000\u018c\u0191\u00038\u001c\u0000\u018d\u018e\u0005\u0007"+
 		"\u0000\u0000\u018e\u0190\u00038\u001c\u0000\u018f\u018d\u0001\u0000\u0000"+
 		"\u0000\u0190\u0193\u0001\u0000\u0000\u0000\u0191\u018f\u0001\u0000\u0000"+
 		"\u0000\u0191\u0192\u0001\u0000\u0000\u0000\u0192I\u0001\u0000\u0000\u0000"+
 		"\u0193\u0191\u0001\u0000\u0000\u0000\u0194\u0195\u0007\u0001\u0000\u0000"+
 		"\u0195K\u0001\u0000\u0000\u0000\u0196\u0197\u0007\u0002\u0000\u0000\u0197"+
-		"M\u0001\u0000\u0000\u0000\u0198\u0199\u0005=\u0000\u0000\u0199O\u0001"+
-		"\u0000\u0000\u0000\u019a\u019f\u0005=\u0000\u0000\u019b\u019c\u0005\u0017"+
-		"\u0000\u0000\u019c\u019e\u0005=\u0000\u0000\u019d\u019b\u0001\u0000\u0000"+
+		"M\u0001\u0000\u0000\u0000\u0198\u0199\u0005B\u0000\u0000\u0199O\u0001"+
+		"\u0000\u0000\u0000\u019a\u019f\u0005B\u0000\u0000\u019b\u019c\u0005\u0017"+
+		"\u0000\u0000\u019c\u019e\u0005B\u0000\u0000\u019d\u019b\u0001\u0000\u0000"+
 		"\u0000\u019e\u01a1\u0001\u0000\u0000\u0000\u019f\u019d\u0001\u0000\u0000"+
 		"\u0000\u019f\u01a0\u0001\u0000\u0000\u0000\u01a0Q\u0001\u0000\u0000\u0000"+
 		"\u01a1\u019f\u0001\u0000\u0000\u0000&Yaekpv}\u007f\u0086\u008c\u0096\u009b"+

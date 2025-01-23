@@ -116,8 +116,7 @@ operator: '+' | '-' | '*' | '/' | '%'
         | '=' | '+=' | '-=' | '*=' | '/=' | '%=';
 
 // Literals
-literal: INTEGER_LITERAL | CHAR_LITERAL | BOOLEAN_LITERAL | STRING_LITERAL | NULL_LITERAL;
-
+literal: INTEGER_LITERAL | BYTE_LITERAL | SHORT_LITERAL | LONG_LITERAL | DOUBLE_LITERAL | FLOAT_LITERAL | CHAR_LITERAL | BOOLEAN_LITERAL | STRING_LITERAL | NULL_LITERAL;
 // Keywords
 CLASS: 'class';
 EXTENDS: 'extends';
@@ -132,11 +131,17 @@ VOID: 'void';
 RETURN: 'return';
 IMPORT: 'import';
 // Primitive Types
-PRIMITIVE_TYPE: 'int' | 'char' | 'boolean';
+PRIMITIVE_TYPE: 'int' | 'char' | 'boolean' | 'byte' | 'double' | 'float' | 'short' | 'long';
 
 // Literals
-INTEGER_LITERAL: [0-9]+;
+INTEGER_LITERAL: '-'? [0-9]+;
+BYTE_LITERAL: ('0' | ('-'? [1-9] [0-9]*)) [bB];
+SHORT_LITERAL: ('0' | ('-'? [1-9] [0-9]*)) [sS];
+LONG_LITERAL: ('0' | ('-'? [1-9] [0-9]*)) [lL];
+DOUBLE_LITERAL: ('0' | ('-'? [1-9] [0-9]*)) ('.' [0-9]+)? ('e' [+-]? [0-9]+)?;
+FLOAT_LITERAL: ('0' | ('-'? [1-9] [0-9]*)) ('.' [0-9]+)? ('f' | 'F');
 CHAR_LITERAL: '\'' . '\'';
+
 STRING_LITERAL: '"' (~["\\\r\n] | '\\' .)* '"';
 BOOLEAN_LITERAL: 'true' | 'false';
 NULL_LITERAL: 'null';
