@@ -14,15 +14,15 @@ public class A {
         boolean flag3 = flag1 && flag2;
 
         // Byte type
-        byte byteVar1 = 127;
-        byte byteVar2 = 0;
-        byte byteVar3 = 12;
+        byte byteVar1 = 127b;
+        byte byteVar2 = 0B;
+        byte byteVar3 = 12b;
 
 
         // Short type
-        short shortVar1 = 32767;
-        short shortVar2 = 0;
-        short shortVar3 = 12;
+        short shortVar1 = 32767s;
+        short shortVar2 = 0S;
+        short shortVar3 = 12s;
 
         // Long type
         long longVar1 = 100000L;
