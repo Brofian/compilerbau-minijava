@@ -28,7 +28,5 @@ object MiniJavaCompiler {
     // Translate the typed AST into bytecode
     val bytecode = ByteCodeGenerator.generateBytecode(typedAst)
     bytecode.foreach(classFile => InputOutput.writeClassFile(classFile))
-    ByteCodeGenerator.
   }
-
 }
