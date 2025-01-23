@@ -30,6 +30,11 @@ private def asmType(t: Type): String = t match {
   }
 }
 
+private def asmUserType(t: Type): String = t match {
+  case UserType(name) => javaifyClass(name)
+  case _ => throw ByteCodeGeneratorException(f"$t is no user defined type")
+}
+
 private def asmConstructorType(parameters: List[Type]): String = {
   asmType(FunctionType(VoidType, parameters))
 }

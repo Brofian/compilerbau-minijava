@@ -108,8 +108,8 @@ private object Instructions {
   }
 
   // NOTE this has to be loaded before calling
-  def callOwnMethod(name: String, argumentCount: Int, state: MethodGeneratorState): Unit = {
-    state.methodVisitor.visitMethodInsn(INVOKEVIRTUAL, state.className, name, state.methodDescriptors(name), false)
+  def callMethod(className: String, methodName: String, argumentCount: Int, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitMethodInsn(INVOKEVIRTUAL, javaifyClass(className), methodName, state.methodDescriptors(methodName), false)
     state.popStack(1 + argumentCount)
   }
 
@@ -128,7 +128,7 @@ private object Instructions {
   }
 
   def callConstructor(className: String, parameterDescriptors: List[Type], state: MethodGeneratorState): Unit = {
-    state.methodVisitor.visitMethodInsn(INVOKESPECIAL, className, "<init>", asmConstructorType(parameterDescriptors), false)
+    state.methodVisitor.visitMethodInsn(INVOKESPECIAL, javaifyClass(className), "<init>", asmConstructorType(parameterDescriptors), false)
     state.popStack(1 + parameterDescriptors.size)
   }
 }
