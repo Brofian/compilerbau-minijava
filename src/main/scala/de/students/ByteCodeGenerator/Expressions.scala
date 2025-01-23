@@ -5,29 +5,27 @@ import org.objectweb.asm.Opcodes.*
 
 import de.students.Parser.*
 
-private def generateExpression(expression: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateExpression(expression: Expression, state: MethodGeneratorState): Unit = {
   debugLogStack(state, f"eval expr $expression")
 
   expression match {
     case variableReference: VarRef =>
-      generateVariableReference(variableReference, methodVisitor, state)
+      generateVariableReference(variableReference, state)
     case literal: Literal =>
-      generateLiteral(literal, methodVisitor, state)
+      generateLiteral(literal, state)
     case binaryOperation: BinaryOp =>
-      generateBinaryOperation(binaryOperation, methodVisitor, state)
+      generateBinaryOperation(binaryOperation, state)
     case typedExpression: TypedExpression =>
-      generateTypedExpression(typedExpression, methodVisitor, state)
+      generateTypedExpression(typedExpression, state)
     case methodCall: MethodCall =>
-      generateMethodCall(methodCall, methodVisitor, state)
+      generateMethodCall(methodCall, state)
     case _ => throw NotImplementedError("this expression is not yet implemented")
   }
 }
 
 // VARIABLE REFERENCE
-private def generateVariableReference(varRef: VarRef, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateVariableReference(varRef: VarRef, state: MethodGeneratorState): Unit = {
   debugLogStack(state, "start var ref")
-
-  state.pushStack()
 
   val variableInfo = state.getVariable(varRef.name)
   if (variableInfo.isField) {
@@ -41,75 +39,67 @@ private def generateVariableReference(varRef: VarRef, methodVisitor: MethodVisit
 }
 
 // LITERAL
-private def generateLiteral(literal: Literal, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  state.pushStack()
-
-  methodVisitor.visitLdcInsn(literal.value)
+private def generateLiteral(literal: Literal, state: MethodGeneratorState): Unit = {
+  Instructions.pushConstant(literal.value, state)
 
   debugLogStack(state, f"pushed $literal")
 }
 
 // BINARY OPERATION
-private def generateBinaryOperation(operation: BinaryOp, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateBinaryOperation(operation: BinaryOp, state: MethodGeneratorState): Unit = {
   debugLogStack(state, f"start bin op ${operation.op}")
 
   if (operation.op == "=") {
-    generateAssignment(operation.left, operation.right, methodVisitor, state)
+    generateAssignment(operation.left, operation.right, state)
   } else if (isBooleanOpcode(operation.op)) {
-    generateBooleanOperation(operation, methodVisitor, state)
+    generateBooleanOperation(operation, state)
   } else {
-    val expressionType = generateTypedExpression(operation.left.asInstanceOf[TypedExpression], methodVisitor, state)
-    generateExpression(operation.right, methodVisitor, state) // should be same type, this is not our problem if not
+    val expressionType = generateTypedExpression(operation.left.asInstanceOf[TypedExpression], state)
+    generateExpression(operation.right, state) // should be same type, this is not our problem if not
 
     val opcode = asmOpcode(binaryOpcode(operation.op, expressionType))
-    methodVisitor.visitInsn(opcode)
-
-    state.popStack(1)
+    Instructions.binaryOperation(opcode, state)
   }
 
   debugLogStack(state, f"end bin op ${operation.op}")
 }
 
 // BOOLEAN OPERATION
-private def generateBooleanOperation(operation: BinaryOp, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateBooleanOperation(operation: BinaryOp, state: MethodGeneratorState): Unit = {
   // && and || need special treatment
   if (operation.op == "&&") {
     val rightEval = Label()
     val falsePush = Label()
     val end = Label()
 
-    generateExpression(operation.left, methodVisitor, state)
-    methodVisitor.visitLdcInsn(1)
-    methodVisitor.visitJumpInsn(IFEQ, rightEval)
-    methodVisitor.visitJumpInsn(GOTO, falsePush)
-    methodVisitor.visitLabel(rightEval)
-    generateExpression(operation.right, methodVisitor, state)
-    methodVisitor.visitLdcInsn(0)
-    methodVisitor.visitJumpInsn(IFEQ, falsePush)
-    methodVisitor.visitLdcInsn(1) // true
-    methodVisitor.visitJumpInsn(GOTO, end)
-    methodVisitor.visitLabel(falsePush)
-    methodVisitor.visitLdcInsn(0) // false
-    methodVisitor.visitLabel(end)
-
-    state.popStack(2)
+    generateExpression(operation.left, state)
+    Instructions.pushTrue(state)
+    Instructions.condJump(IFEQ, rightEval, state)
+    Instructions.goto(falsePush, state)
+    Instructions.visitLabel(rightEval, state)
+    generateExpression(operation.right, state)
+    Instructions.pushFalse(state)
+    Instructions.condJump(IFEQ, falsePush, state)
+    Instructions.pushTrue(state)
+    Instructions.goto(end, state)
+    Instructions.visitLabel(falsePush, state)
+    Instructions.pushFalse(state)
+    Instructions.visitLabel(end, state)
   } else if (operation.op == "||") {
     val truePush = Label()
     val end = Label()
 
-    generateExpression(operation.left, methodVisitor, state)
-    methodVisitor.visitLdcInsn(1)
-    methodVisitor.visitJumpInsn(IFEQ, truePush)
-    generateExpression(operation.right, methodVisitor, state)
-    methodVisitor.visitLdcInsn(1)
-    methodVisitor.visitJumpInsn(IFEQ, truePush)
-    methodVisitor.visitLdcInsn(0) // false
-    methodVisitor.visitJumpInsn(GOTO, end)
-    methodVisitor.visitLabel(truePush)
-    methodVisitor.visitLdcInsn(1) //true
-    methodVisitor.visitLabel(end)
-
-    state.popStack(2)
+    generateExpression(operation.left, state)
+    Instructions.pushTrue(state)
+    Instructions.condJump(IFEQ, truePush, state)
+    generateExpression(operation.right, state)
+    Instructions.pushTrue(state)
+    Instructions.condJump(IFEQ, truePush, state)
+    Instructions.pushFalse(state)
+    Instructions.goto(end, state)
+    Instructions.visitLabel(truePush, state)
+    Instructions.pushTrue(state)
+    Instructions.visitLabel(end, state)
   } else {
     val ifInsn = operation.op match {
       case "==" => IFEQ
@@ -124,21 +114,19 @@ private def generateBooleanOperation(operation: BinaryOp, methodVisitor: MethodV
     val truePush = Label()
     val end = Label()
 
-    generateExpression(operation.left, methodVisitor, state)
-    generateExpression(operation.right, methodVisitor, state)
-    methodVisitor.visitJumpInsn(ifInsn, truePush)
-    methodVisitor.visitLdcInsn(0) // false
-    methodVisitor.visitJumpInsn(GOTO, end)
-    methodVisitor.visitLabel(truePush)
-    methodVisitor.visitLdcInsn(1) // true
-    methodVisitor.visitLabel(end)
-
-    state.popStack(2)
+    generateExpression(operation.left, state)
+    generateExpression(operation.right, state)
+    Instructions.condJump(ifInsn, truePush, state)
+    Instructions.pushFalse(state)
+    Instructions.goto(end, state)
+    Instructions.visitLabel(truePush, state)
+    Instructions.pushTrue(state)
+    Instructions.visitLabel(end, state)
   }
 }
 
 // ASSIGNMENT
-private def generateAssignment(left: Expression, right: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateAssignment(left: Expression, right: Expression, state: MethodGeneratorState): Unit = {
   val varName = left match {
     case VarRef(name) => name
     case TypedExpression(VarRef(name), _) => name
@@ -147,42 +135,31 @@ private def generateAssignment(left: Expression, right: Expression, methodVisito
 
   val variableInfo = state.getVariable(varName)
   if (variableInfo.isField) {
-    state.pushStack()
+    generateExpression(right, state)
+    Instructions.loadThis(state)
 
-    methodVisitor.visitVarInsn(ALOAD, 0)
-    generateExpression(right, methodVisitor, state)
+    Instructions.duplicateTopTwo(state) // val | this | val | this
+    Instructions.pop(state) // val | this | val
 
-    state.pushStack()
-    methodVisitor.visitInsn(DUP)
-
-    methodVisitor.visitFieldInsn(PUTFIELD, state.className, varName, asmType(variableInfo.t))
-
-    state.popStack(2)
+    Instructions.storeField(varName, variableInfo.t, state)
   } else {
-    generateExpression(right, methodVisitor, state)
+    generateExpression(right, state)
 
-    state.pushStack()
-    methodVisitor.visitInsn(DUP)
+    Instructions.duplicateTop(state)
 
-    methodVisitor.visitVarInsn(ISTORE, variableInfo.id)
-
-    state.popStack(1)
+    Instructions.storeVar(variableInfo.id, variableInfo.t, state)
   }
 }
 
 // TYPED EXPRESSION
-private def generateTypedExpression(expression: TypedExpression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Type = {
-  generateExpression(expression.expr, methodVisitor, state)
+private def generateTypedExpression(expression: TypedExpression, state: MethodGeneratorState): Type = {
+  generateExpression(expression.expr, state)
   expression.exprType
 }
 
 // METHOD CALL
-private def generateMethodCall(methodCall: MethodCall, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  state.pushStack()
-
-  methodVisitor.visitVarInsn(ALOAD, 0)
-  methodCall.args.foreach(expr => generateExpression(expr, methodVisitor, state))
-  methodVisitor.visitMethodInsn(INVOKEVIRTUAL, state.className, methodCall.methodName, state.methodDescriptors(methodCall.methodName), false)
-
-  state.popStack(1 + methodCall.args.size)
+private def generateMethodCall(methodCall: MethodCall, state: MethodGeneratorState): Unit = {
+  Instructions.loadThis(state)
+  methodCall.args.foreach(expr => generateExpression(expr, state))
+  Instructions.callOwnMethod(methodCall.methodName, methodCall.args.size, state)
 }

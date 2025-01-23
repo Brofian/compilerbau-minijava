@@ -62,7 +62,13 @@ private object Instructions {
     state.pushStack()
   }
 
-   def loadThis(state: MethodGeneratorState) = {
+  def duplicateTopTwo(state: MethodGeneratorState) = {
+    state.methodVisitor.visitInsn(DUP2)
+    state.pushStack()
+    state.pushStack()
+  }
+
+  def loadThis(state: MethodGeneratorState) = {
     state.methodVisitor.visitVarInsn(ALOAD, 0)
     state.pushStack()
   }
@@ -70,13 +76,13 @@ private object Instructions {
   def storeField(name: String, fieldType: Type, state: MethodGeneratorState) = {
     loadThis(state)
     state.methodVisitor.visitFieldInsn(PUTFIELD, state.className, name, asmType(fieldType))
-    // this is popped and field is pushed
+    state.popStack(1)
   }
 
   def loadField(name: String, fieldType: Type, state: MethodGeneratorState) = {
     loadThis(state)
     state.methodVisitor.visitFieldInsn(GETFIELD, state.className, name, asmType(fieldType))
-    state.popStack(1)
+    // this is popped and field is pushed
   }
 
    def binaryOperation(opcode: Int, state: MethodGeneratorState): Unit = {
