@@ -90,7 +90,7 @@ private def generateConstructor(classDecl: ClassDecl, classWriter: ClassWriter, 
   methodVisitor.visitVarInsn(ALOAD, 0) // load this
   methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false) // call Object constructor
 
-  generateStatement(constructorDecl.body, methodVisitor, state)
+  generateStatement(constructorDecl.body, state)
 
   methodVisitor.visitInsn(RETURN)
 
@@ -116,7 +116,7 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
 
   state.localVariableCount = methodDecl.params.size + (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
   state.stackDepth = 0
-  generateStatement(methodDecl.body, methodVisitor, state)
+  generateStatement(methodDecl.body, state)
 
   methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
   methodVisitor.visitEnd()

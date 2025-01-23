@@ -171,7 +171,7 @@ private def generateTypedStatement(statement: TypedStatement, state: MethodGener
 }
 
 private def generateExpressionStatement(statement: StatementExpression, state: MethodGeneratorState): Unit = {
-  val t = generateTypedExpression(statement.expr.asInstanceOf[TypedExpression], methodVisitor, state)
+  val t = generateTypedExpression(statement.expr.asInstanceOf[TypedExpression], state)
 
   // expression result is not used, so the stack must be popped
   if (t != VoidType) {

@@ -96,7 +96,7 @@ private def asmReturnCode(t: Type): Int = t match {
 
 private def makePrintStatement(toPrint: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
-  val t = generateTypedExpression(toPrint.asInstanceOf[TypedExpression], methodVisitor, state)
+  val t = generateTypedExpression(toPrint.asInstanceOf[TypedExpression], state)
   state.stackDepth += 1
   methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", f"(${asmType(t)})V", false)
 }
