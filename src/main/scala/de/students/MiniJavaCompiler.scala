@@ -26,8 +26,8 @@ object MiniJavaCompiler {
     Logger.debug(typedAst)
 
     // Translate the typed AST into bytecode
-    // TODO
-
+    val bytecode = ByteCodeGenerator.generateBytecode(typedAst)
+    bytecode.foreach(classFile => InputOutput.writeToBinFile(classFile.bytecode, "HelloWorld.class"))
   }
 
 }

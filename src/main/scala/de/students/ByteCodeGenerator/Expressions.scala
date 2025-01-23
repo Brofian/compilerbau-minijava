@@ -31,11 +31,10 @@ private def generateVariableReference(varRef: VarRef, methodVisitor: MethodVisit
 
   val variableInfo = state.getVariable(varRef.name)
   if (variableInfo.isField) {
-    methodVisitor.visitVarInsn(ALOAD, 0)
-    methodVisitor.visitFieldInsn(GETFIELD, state.className, varRef.name, asmType(variableInfo.t))
+    Instructions.loadField(varRef.name, variableInfo.t, state)
   } else {
     val varInfo = state.getVariable(varRef.name)
-    methodVisitor.visitVarInsn(asmLoadInsn(varInfo.t), varInfo.id)
+    Instructions.loadVar(varInfo.id, varInfo.t, state)
   }
 
   debugLogStack(state, "end var ref")

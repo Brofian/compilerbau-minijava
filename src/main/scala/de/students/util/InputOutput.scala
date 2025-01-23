@@ -1,6 +1,7 @@
 package de.students.util
 
-import java.io.File
+import java.io.{DataOutputStream, File, FileOutputStream}
+import java.nio.file.{Files, Paths}
 import scala.io.Source
 import scala.util.Using
 
@@ -35,4 +36,15 @@ object InputOutput {
     fileContents
   }
 
+  private val OUT_DIR = Paths.get(".", "out")
+
+  def writeToBinFile(bytecode: Array[Byte], filename: String): Unit = {
+    if (!Files.exists(OUT_DIR)) {
+      Files.createDirectory(OUT_DIR)
+    }
+    val fullFilepath = Paths.get(OUT_DIR.toString, filename).toString
+    val outStream = DataOutputStream(new FileOutputStream(fullFilepath))
+    bytecode.foreach(byte => outStream.writeByte(byte.asInstanceOf[Int]))
+    outStream.close()
+  }
 }

@@ -8,7 +8,14 @@ import de.students.Parser.*
 import scala.collection.mutable;
 import scala.collection.immutable;
 
-type ClassBytecode = Array[Byte]
+case class ClassBytecode(
+                        bytecode: Array[Byte],
+                        fileName: String
+                        )
+
+def generateBytecode(project: Project): List[ClassBytecode] = {
+  project.packages.flatMap(p => generateBytecode(p))
+}
 
 def generateBytecode(pack: Package): List[ClassBytecode] = {
   pack.classes.map(generateClassBytecode)
@@ -17,34 +24,37 @@ def generateBytecode(pack: Package): List[ClassBytecode] = {
 case class ByteCodeGeneratorException(msg: String) extends RuntimeException(msg)
 
 private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
-  val cw = new ClassWriter(0)
+  val classWriter = new ClassWriter(0)
+
+  val javaClassName = classDecl.name.replace('.', '/')
+  val parent = "java/lang/Object" // TODO use real parent
 
   // set class header
-  cw.visit(
+  classWriter.visit(
     V1_4,
     visibilityModifier(classDecl),
-    classDecl.name,
+    javaClassName,
     null, // signature
-    classDecl.parent, // .getOrElse("java/lang/Object"), // superName
+    parent, // super class
     null // interfaces
   )
 
   // set constructors
   classDecl.constructors.foreach(constructorDecl => generateConstructor(
-    cw,
-    constructorDecl,
-    defaultMethodGeneratorState(classDecl, VoidType)
+    classDecl,
+    classWriter,
+    constructorDecl
   ))
   if (classDecl.constructors.isEmpty) {
     generateConstructor(
-      cw,
-      ConstructorDecl("", List(), EMPTY_STATEMENT),
-      defaultMethodGeneratorState(classDecl, VoidType)
+      classDecl,
+      classWriter,
+      ConstructorDecl("", List(), EMPTY_STATEMENT)
     )
   }
 
   // set fields
-  classDecl.fields.foreach(varDecl => cw.visitField(
+  classDecl.fields.foreach(varDecl => classWriter.visitField(
     visibilityModifier(varDecl),
     varDecl.name,
     asmType(varDecl.varType),
@@ -53,43 +63,55 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   ).visitEnd())
 
   // set methods
-  classDecl.methods.foreach(methodDecl => generateMethodBody(methodDecl, cw.visitMethod(
-    visibilityModifier(methodDecl),
-    methodDecl.name,
-    asmType(functionType(methodDecl)),
-    null, // signature
-    null // exceptions
-  ),
-  defaultMethodGeneratorState(classDecl, methodDecl.returnType)))
+  classDecl.methods.foreach(methodDecl => generateMethodBody(classDecl, methodDecl, classWriter))
 
-  cw.visitEnd()
+  classWriter.visitEnd()
 
-  cw.toByteArray
+  ClassBytecode(
+    classWriter.toByteArray,
+    classDecl.name + ".class"
+  )
 }
 
 // default empty constructor for now
-private def generateConstructor(cw: ClassWriter, constructorDecl: ConstructorDecl, state: MethodGeneratorState): Unit = {
-  val mv = cw.visitMethod(
+private def generateConstructor(classDecl: ClassDecl, classWriter: ClassWriter, constructorDecl: ConstructorDecl): Unit = {
+  val methodVisitor = classWriter.visitMethod(
     ACC_PUBLIC,
     "<init>",
     asmType(constructorType(constructorDecl)),
     null,
     null
   )
-  mv.visitCode()
+  val state = defaultMethodGeneratorState(
+    classDecl, methodVisitor, VoidType
+  )
+  methodVisitor.visitCode()
 
-  mv.visitVarInsn(ALOAD, 0) // load this
-  mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false) // call Object constructor
+  methodVisitor.visitVarInsn(ALOAD, 0) // load this
+  methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false) // call Object constructor
 
-  generateStatement(constructorDecl.body, mv, state)
+  generateStatement(constructorDecl.body, methodVisitor, state)
 
-  mv.visitInsn(RETURN)
+  methodVisitor.visitInsn(RETURN)
 
-  mv.visitMaxs(1, 1)
-  mv.visitEnd()
+  methodVisitor.visitMaxs(1, 1) // TODO real sizes
+  methodVisitor.visitEnd()
 }
 
-private def generateMethodBody(methodDecl: MethodDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, classWriter: ClassWriter): Unit = {
+  val methodVisitor = classWriter.visitMethod(
+    visibilityModifier(methodDecl),
+    methodDecl.name,
+    asmType(functionType(methodDecl)),
+    null, // signature
+    null // exceptions
+  )
+  val state = defaultMethodGeneratorState(
+    classDecl,
+    methodVisitor,
+    methodDecl.returnType
+  )
+
   methodVisitor.visitCode()
 
   state.localVariableCount = methodDecl.params.size + (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
@@ -101,6 +123,7 @@ private def generateMethodBody(methodDecl: MethodDecl, methodVisitor: MethodVisi
 }
 
 private case class MethodGeneratorState(
+                                 val methodVisitor: MethodVisitor,
                                  val fields: List[VarDecl],
                                  val methodDescriptors: immutable.HashMap[String, String],
                                  val returnType: Type,
@@ -172,8 +195,9 @@ private case class MethodGeneratorState(
   }
 }
 
-private def defaultMethodGeneratorState(classDecl: ClassDecl, returnType: Type): MethodGeneratorState =
+private def defaultMethodGeneratorState(classDecl: ClassDecl, methodVisitor: MethodVisitor, returnType: Type): MethodGeneratorState =
   MethodGeneratorState(
+    methodVisitor,
     classDecl.fields,
     immutable.HashMap(classDecl.methods.map(methodDecl => (methodDecl.name, asmType(functionType(methodDecl))))*),
     returnType,
