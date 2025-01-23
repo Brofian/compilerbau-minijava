@@ -116,9 +116,30 @@ object ExpressionChecks {
     val typedLeft = ExpressionChecks.checkExpression(binOp.left, context)
     val typedRight = ExpressionChecks.checkExpression(binOp.right, context)
 
-    // TODO: check if binOp.op is defined for the types of the left and right expressions
-    val unionType = UnionTypeFinder.getUnion(typedLeft.exprType, typedRight.exprType, context)
-    TypedExpression(BinaryOp(typedLeft, binOp.op, typedRight), unionType)
+    // TODO: check if the operation is defined for these types of typedLeft and typedRight
+    val opType: Type = binOp.op match {
+      case "&&" => BoolType
+      case "||" => BoolType
+      case "<" => BoolType
+      case ">" => BoolType
+      case "<=" => BoolType
+      case ">=" => BoolType
+      case "!=" => BoolType
+      case "==" => BoolType
+      case "+" => IntType
+      case "-" => IntType
+      case "*" => IntType
+      case "/" => IntType
+      case "%" => IntType
+      case "+=" => IntType
+      case "-=" => IntType
+      case "*=" => IntType
+      case "%=" => IntType
+      case "=" => typedLeft.exprType
+      case _ => throw new SemanticException(s"Binary operator ${binOp.op} is not defined for types ${typedLeft.exprType} and ${typedRight.exprType}")
+    }
+
+    TypedExpression(BinaryOp(typedLeft, binOp.op, typedRight), opType)
   }
 
   private def checkVarRefExpression(varRef: VarRef, context: SemanticContext): TypedExpression = {
