@@ -114,8 +114,14 @@ object ASTBuilder {
       if (ctx.PRIMITIVE_TYPE() != null) {
         ctx.PRIMITIVE_TYPE().getText match {
           case "int" => IntType
-          case "boolean" => UserType("boolean")
-          case "char" => UserType("char")
+          case "boolean" => BoolType
+          case "void" => VoidType
+          case "short" => ShortType
+          case "long" => LongType
+          case "byte" => ByteType
+          case "float" => FloatType
+          case "double" => DoubleType
+          case "char" => CharType
           case _ => throw new RuntimeException(s"Unknown primitive type: ${ctx.PRIMITIVE_TYPE().getText}")
         }
       } else if (ctx.id() != null) {
@@ -369,11 +375,30 @@ object ASTBuilder {
           case "false" => Literal(false)
           case _ => throw new UnsupportedOperationException(s"Unsupported boolean literal: ${ctx.getText}")
         }
+      } else if (ctx.BYTE_LITERAL() != null) {
+        // Handle byte literals
+        Literal(ctx.BYTE_LITERAL().getText.dropRight(1).toByte) // Drop the 'b'/'B' suffix and convert to byte
+      } else if (ctx.SHORT_LITERAL() != null) {
+        // Handle short literals
+        Literal(ctx.SHORT_LITERAL().getText.dropRight(1).toShort) // Drop the 's'/'S' suffix and convert to short
+      } else if (ctx.LONG_LITERAL() != null) {
+        // Handle long literals
+        Literal(ctx.LONG_LITERAL().getText.dropRight(1).toLong) // Drop the 'l'/'L' suffix and convert to long
+      } else if (ctx.FLOAT_LITERAL() != null) {
+        // Handle float literals
+        Literal(ctx.FLOAT_LITERAL().getText.dropRight(1).toFloat) // Drop the 'f'/'F' suffix and convert to float
+      } else if (ctx.DOUBLE_LITERAL() != null) {
+        // Handle double literals
+        Literal(ctx.DOUBLE_LITERAL().getText.toDouble) // Double literals may have 'd'/'D' suffix which is optional
+      } else if (ctx.CHAR_LITERAL() != null) {
+        // Handle double literals
+        Literal(ctx.CHAR_LITERAL().getText) // Char Literal
       } else {
         // If literal is not recognized
         throw new UnsupportedOperationException(s"Unsupported literal: ${ctx.getText}")
       }
     }
+
 
 
     override def visitAttribute(ctx: AttributeContext): VarDecl = {

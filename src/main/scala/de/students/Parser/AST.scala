@@ -46,6 +46,12 @@ sealed trait Type extends ASTNode
 
 case object NoneType extends Type // used for statements that do not evaluate to any type
 case object IntType extends Type
+case object ShortType extends Type
+case object LongType extends Type
+case object ByteType extends Type
+case object FloatType extends Type
+case object DoubleType extends Type
+case object CharType extends Type
 case object BoolType extends Type
 case object VoidType extends Type
 case class ArrayType(baseType: Type) extends Type
