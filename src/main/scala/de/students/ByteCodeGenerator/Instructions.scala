@@ -95,4 +95,13 @@ private object Instructions {
     state.methodVisitor.visitMethodInsn(INVOKEVIRTUAL, state.className, name, state.methodDescriptors(name), false)
     state.popStack(1 + argumentCount)
   }
+
+  def returnVoid(state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitInsn(RETURN)
+  }
+
+  def returnType(descriptor: Type, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitInsn(asmReturnCode(descriptor))
+    state.popStack(1)
+  }
 }

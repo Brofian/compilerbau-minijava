@@ -12,21 +12,21 @@ val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
 //      STATEMENTS      //
 //////////////////////////
 
-private def generateStatement(statement: Statement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateStatement(statement: Statement, state: MethodGeneratorState): Unit = {
   statement match {
-    case block: BlockStatement => generateBlockStatement(block, methodVisitor, state)
-    case returnStatement: ReturnStatement => generateReturnStatement(returnStatement, methodVisitor, state)
-    case expressionStatement: StatementExpression => generateExpressionStatement(expressionStatement, methodVisitor, state)
-    case ifStatement: IfStatement => generateIfStatement(ifStatement, methodVisitor, state)
-    case whileStatement: WhileStatement => generateWhileStatement(whileStatement, methodVisitor, state)
-    case forStatement: ForStatement => generateForStatement(forStatement, methodVisitor, state)
-    case doWhileStatement: DoWhileStatement => generateDoWhileStatement(doWhileStatement, methodVisitor, state)
-    case switchStatement: SwitchStatement => generateSwitchStatement(switchStatement, methodVisitor, state)
-    case breakStatement: BreakStatement => generateBreakStatement(breakStatement, methodVisitor, state)
-    case continueStatement: ContinueStatement => generateContinueStatement(continueStatement, methodVisitor, state)
-    case typedStatement: TypedStatement => generateTypedStatement(typedStatement, methodVisitor, state)
-    case varDecl: VarDecl => generateVariableDeclaration(varDecl, methodVisitor, state)
-    case printStatement: PrintStatement => makePrintStatement(printStatement.toPrint, methodVisitor, state)
+    case block: BlockStatement => generateBlockStatement(block, state)
+    case returnStatement: ReturnStatement => generateReturnStatement(returnStatement, state)
+    case expressionStatement: StatementExpression => generateExpressionStatement(expressionStatement, state)
+    case ifStatement: IfStatement => generateIfStatement(ifStatement, state)
+    case whileStatement: WhileStatement => generateWhileStatement(whileStatement, state)
+    case forStatement: ForStatement => generateForStatement(forStatement, state)
+    case doWhileStatement: DoWhileStatement => generateDoWhileStatement(doWhileStatement, state)
+    case switchStatement: SwitchStatement => generateSwitchStatement(switchStatement, state)
+    case breakStatement: BreakStatement => generateBreakStatement(breakStatement, state)
+    case continueStatement: ContinueStatement => generateContinueStatement(continueStatement, state)
+    case typedStatement: TypedStatement => generateTypedStatement(typedStatement, state)
+    case varDecl: VarDecl => generateVariableDeclaration(varDecl, state)
+    case printStatement: PrintStatement => makePrintStatement(printStatement.toPrint, state.methodVisitor, state)
     case _ => throw NotImplementedError("unknown statement")
   }
 
@@ -34,65 +34,65 @@ private def generateStatement(statement: Statement, methodVisitor: MethodVisitor
 }
 
 // BLOCK STATEMENT
-private def generateBlockStatement(statement: BlockStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  statement.stmts.foreach(stmt => generateStatement(stmt, methodVisitor, state))
+private def generateBlockStatement(statement: BlockStatement, state: MethodGeneratorState): Unit = {
+  statement.stmts.foreach(stmt => generateStatement(stmt, state))
 }
 
 // RETURN
-private def generateReturnStatement(statement: ReturnStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateReturnStatement(statement: ReturnStatement, state: MethodGeneratorState): Unit = {
   statement.expr match {
     case Some(expr) => {
-      generateExpression(expr, methodVisitor, state)
-      methodVisitor.visitInsn(asmReturnCode(state.returnType))
+      generateExpression(expr, state)
+      Instructions.returnType(state.returnType, state)
     }
     case None => {
-      methodVisitor.visitInsn(RETURN)
+      Instructions.returnVoid(state)
     }
   }
 }
 
-private def generateIfStatement(ifStatement: IfStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateIfStatement(ifStatement: IfStatement, state: MethodGeneratorState): Unit = {
   val elseBranch = Label()
   val end = Label()
 
-  generateExpression(ifStatement.cond, methodVisitor, state)
-  methodVisitor.visitLdcInsn(0)
-  methodVisitor.visitJumpInsn(IFEQ, elseBranch)
+  generateExpression(ifStatement.cond, state)
+  Instructions.pushFalse(state)
+  Instructions.condJump(IFEQ, elseBranch, state)
 
-  generateStatement(ifStatement.thenBranch, methodVisitor, state)
+  generateStatement(ifStatement.thenBranch, state)
 
-  methodVisitor.visitJumpInsn(GOTO, end)
-  methodVisitor.visitLabel(elseBranch)
+  Instructions.goto(end, state)
+  Instructions.visitLabel(elseBranch, state)
 
   if (ifStatement.elseBranch.isDefined) {
-    generateStatement(ifStatement.elseBranch.get, methodVisitor, state)
+    generateStatement(ifStatement.elseBranch.get, state)
   }
 
-  methodVisitor.visitLabel(end)
-  generateNop(methodVisitor)
+  Instructions.visitLabel(end, state)
+  Instructions.nop(state)
 }
 
-private def generateWhileStatement(whileStatement: WhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateWhileStatement(whileStatement: WhileStatement, state: MethodGeneratorState): Unit = {
   val start = Label()
   val end = Label()
 
   state.startLoopScope(start, end)
 
-  methodVisitor.visitLabel(start)
-  generateExpression(whileStatement.cond, methodVisitor, state)
-  methodVisitor.visitLdcInsn(0)
-  methodVisitor.visitJumpInsn(IFEQ, end)
+  Instructions.visitLabel(start, state)
+  generateExpression(whileStatement.cond, state)
+  Instructions.pushFalse(state)
+  Instructions.condJump(IFEQ, end, state)
 
-  generateStatement(whileStatement.body, methodVisitor, state)
+  generateStatement(whileStatement.body, state)
 
-  methodVisitor.visitJumpInsn(GOTO, start)
-  methodVisitor.visitLabel(end)
-  generateNop(methodVisitor)
+  Instructions.goto(start, state)
+  Instructions.visitLabel(end, state)
+  Instructions.nop(state)
 
   state.endLoopScope()
 }
 
-private def generateForStatement(forStatement: ForStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateForStatement(forStatement: ForStatement, state: MethodGeneratorState): Unit = {
   generateStatement(
     BlockStatement(
       List(
@@ -106,19 +106,19 @@ private def generateForStatement(forStatement: ForStatement, methodVisitor: Meth
         )
       )
     ),
-    methodVisitor, state
+    state
   )
 }
 
-private def generateDoWhileStatement(doWhileStatement: DoWhileStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
-  generateStatement(doWhileStatement.body, methodVisitor, state)
+private def generateDoWhileStatement(doWhileStatement: DoWhileStatement, state: MethodGeneratorState): Unit = {
+  generateStatement(doWhileStatement.body, state)
   generateWhileStatement(
     WhileStatement(doWhileStatement.cond, doWhileStatement.body),
-    methodVisitor, state
+    state
   )
 }
 
-private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateSwitchStatement(switchStatement: SwitchStatement, state: MethodGeneratorState): Unit = {
   val evaluableCases = switchStatement.cases.filter(c => c.caseLit.isDefined)
   val keys = evaluableCases.map(c => c.caseLit.get.asInstanceOf[Int]).toArray
 
@@ -128,58 +128,53 @@ private def generateSwitchStatement(switchStatement: SwitchStatement, methodVisi
   val defaultLabel = Label()
   val bodyLabels = Array.fill(evaluableCases.size)(Label())
 
-  generateExpression(switchStatement.expr, methodVisitor, state)
-  methodVisitor.visitLookupSwitchInsn(defaultLabel, keys, bodyLabels)
+  generateExpression(switchStatement.expr, state)
+  Instructions.switch(defaultLabel, bodyLabels, keys, state)
 
   evaluableCases.zipWithIndex.foreach((c, i) => {
-    methodVisitor.visitLabel(bodyLabels(i))
-    generateStatement(c.caseBlock, methodVisitor, state)
+    Instructions.visitLabel(bodyLabels(i), state)
+    generateStatement(c.caseBlock, state)
   })
-  methodVisitor.visitLabel(defaultLabel)
-  generateStatement(switchStatement.default.getOrElse(EMPTY_STATEMENT), methodVisitor, state)
-  methodVisitor.visitLabel(end)
-  generateNop(methodVisitor)
+  Instructions.visitLabel(defaultLabel, state)
+  generateStatement(switchStatement.default.getOrElse(EMPTY_STATEMENT), state)
+  Instructions.visitLabel(end, state)
+  Instructions.nop(state)
 
   state.endSimpleScope()
 }
 
-private def generateBreakStatement(breakStatement: BreakStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateBreakStatement(breakStatement: BreakStatement, state: MethodGeneratorState): Unit = {
   if (state.scopeEnds.isEmpty) {
     throw ByteCodeGeneratorException("no scope to break out from")
   }
-  methodVisitor.visitJumpInsn(GOTO, state.scopeEnds.last)
+  Instructions.goto(state.scopeEnds.last, state)
 }
 
-private def generateContinueStatement(statement: ContinueStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateContinueStatement(statement: ContinueStatement, state: MethodGeneratorState): Unit = {
   if (state.loopStarts.isEmpty) {
     throw ByteCodeGeneratorException("can't continue, not in loop")
   }
-  methodVisitor.visitJumpInsn(GOTO, state.loopStarts.last)
+  Instructions.goto(state.loopStarts.last, state)
 }
 
-private def generateVariableDeclaration(varDecl: VarDecl, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateVariableDeclaration(varDecl: VarDecl, state: MethodGeneratorState): Unit = {
   val varId = state.addVariable(varDecl.name, varDecl.varType)
   if (varDecl.initializer.isDefined) {
-    generateExpression(varDecl.initializer.get, methodVisitor, state)
-    methodVisitor.visitVarInsn(ISTORE, varId)
+    generateExpression(varDecl.initializer.get, state)
+    Instructions.storeVar(varId, varDecl.varType, state)
   }
 }
 
-private def generateTypedStatement(statement: TypedStatement, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateTypedStatement(statement: TypedStatement, state: MethodGeneratorState): Unit = {
   // I have no idea why a statement should be typed :D
-  generateStatement(statement.stmt, methodVisitor, state)
+  generateStatement(statement.stmt, state)
 }
 
-private def generateExpressionStatement(statement: StatementExpression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
+private def generateExpressionStatement(statement: StatementExpression, state: MethodGeneratorState): Unit = {
   val t = generateTypedExpression(statement.expr.asInstanceOf[TypedExpression], methodVisitor, state)
 
   // expression result is not used, so the stack must be popped
   if (t != VoidType) {
-    methodVisitor.visitInsn(POP)
-    state.popStack(1)
+    Instructions.pop(state)
   }
-}
-
-private def generateNop(methodVisitor: MethodVisitor): Unit = {
-  methodVisitor.visitInsn(NOP)
 }
