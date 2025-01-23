@@ -56,7 +56,6 @@ private def generateIfStatement(ifStatement: IfStatement, state: MethodGenerator
   val end = Label()
 
   generateExpression(ifStatement.cond, state)
-  Instructions.pushFalse(state)
   Instructions.condJump(IFEQ, elseBranch, state)
 
   generateStatement(ifStatement.thenBranch, state)
@@ -80,7 +79,6 @@ private def generateWhileStatement(whileStatement: WhileStatement, state: Method
 
   Instructions.visitLabel(start, state)
   generateExpression(whileStatement.cond, state)
-  Instructions.pushFalse(state)
   Instructions.condJump(IFEQ, end, state)
 
   generateStatement(whileStatement.body, state)

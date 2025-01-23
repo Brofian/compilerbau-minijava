@@ -31,9 +31,26 @@ private object Instructions {
     state.methodVisitor.visitInsn(NOP)
   }
 
+  /**
+   * generates the bytecode instructions for a conditional jump
+   * this consumes one operand from the stack, it is compared against 0
+   * behaviour from JVM Spec:
+   * {{{
+   * - IFEQ succeeds iff value == 0
+   * - IFNE succeeds iff value != 0
+   * - IFLT succeeds iff value < 0
+   * - IFLE succeeds iff value <= 0
+   * - IFGT succeeds iff value > 0
+   * - IFGE succeeds iff value >= 0
+   * }}}
+   *
+   * @param opcode the branch instruction (see top)
+   * @param label the label to which should be jumped on success
+   * @param state
+   */
    def condJump(opcode: Int, label: Label, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitJumpInsn(opcode, label)
-    state.popStack(2)
+    state.popStack(1)
   }
 
    def switch(default: Label, labels: Array[Label], keys: Array[Int], state: MethodGeneratorState) = {

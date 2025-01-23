@@ -73,33 +73,35 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
     val end = Label()
 
     generateExpression(operation.left, state)
-    Instructions.pushTrue(state)
-    Instructions.condJump(IFEQ, rightEval, state)
+    Instructions.condJump(IFNE, rightEval, state)
     Instructions.goto(falsePush, state)
     Instructions.visitLabel(rightEval, state)
     generateExpression(operation.right, state)
-    Instructions.pushFalse(state)
     Instructions.condJump(IFEQ, falsePush, state)
     Instructions.pushTrue(state)
     Instructions.goto(end, state)
     Instructions.visitLabel(falsePush, state)
     Instructions.pushFalse(state)
     Instructions.visitLabel(end, state)
+
+    // the stack counter has to be manually decreased to account for branching
+    state.popStack(1)
   } else if (operation.op == "||") {
     val truePush = Label()
     val end = Label()
 
     generateExpression(operation.left, state)
-    Instructions.pushTrue(state)
-    Instructions.condJump(IFEQ, truePush, state)
+    Instructions.condJump(IFNE, truePush, state)
     generateExpression(operation.right, state)
-    Instructions.pushTrue(state)
-    Instructions.condJump(IFEQ, truePush, state)
+    Instructions.condJump(IFNE, truePush, state)
     Instructions.pushFalse(state)
     Instructions.goto(end, state)
     Instructions.visitLabel(truePush, state)
     Instructions.pushTrue(state)
     Instructions.visitLabel(end, state)
+
+    // the stack counter has to be manually decreased to account for branching
+    state.popStack(1)
   } else {
     val ifInsn = operation.op match {
       case "==" => IFEQ

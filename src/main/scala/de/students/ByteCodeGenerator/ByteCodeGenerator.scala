@@ -118,7 +118,7 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
   state.stackDepth = 0
   generateStatement(methodDecl.body, state)
 
-  methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
+  methodVisitor.visitMaxs(state.maxStackDepth + 1, state.localVariableCount)
   methodVisitor.visitEnd()
 }
 
