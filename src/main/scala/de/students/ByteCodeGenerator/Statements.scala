@@ -5,8 +5,8 @@ import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
 import de.students.util.Logger
 
-val EMPTY_STATEMENT = BlockStatement(List())
-val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
+private val EMPTY_STATEMENT = BlockStatement(List())
+private val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
 
 //////////////////////////
 //      STATEMENTS      //
