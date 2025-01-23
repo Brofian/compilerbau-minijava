@@ -41,7 +41,7 @@ object InputOutput {
   private val OUT_DIR = Paths.get(".", "out")
   private val CLASS_FILE_ENDING = ".class"
 
-  def writeToBinFile(bytecode: Array[Byte], fullFilepath: String): Unit = {
+  private def writeToBinFile(bytecode: Array[Byte], fullFilepath: String): Unit = {
     val outStream = DataOutputStream(new FileOutputStream(fullFilepath))
     bytecode.foreach(byte => outStream.writeByte(byte.asInstanceOf[Int]))
     outStream.close()
