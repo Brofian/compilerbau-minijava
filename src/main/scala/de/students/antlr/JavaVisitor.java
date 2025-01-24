@@ -47,23 +47,29 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAttribute(JavaParser.AttributeContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link JavaParser#variableDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link JavaParser#constructor}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitConstructor(JavaParser.ConstructorContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#modifier}.
+	 * Visit a parse tree produced by {@link JavaParser#accessModifier}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitModifier(JavaParser.ModifierContext ctx);
+	T visitAccessModifier(JavaParser.AccessModifierContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#optionalModifier}.
+	 * Visit a parse tree produced by {@link JavaParser#classType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOptionalModifier(JavaParser.OptionalModifierContext ctx);
+	T visitClassType(JavaParser.ClassTypeContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaParser#returntype}.
 	 * @param ctx the parse tree
@@ -100,12 +106,6 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStatement(JavaParser.StatementContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link JavaParser#variableDeclaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaParser#expressionStatement}.
 	 * @param ctx the parse tree

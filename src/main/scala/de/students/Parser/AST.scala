@@ -2,12 +2,11 @@ package de.students.Parser
 
 case class Project(packages: List[Package])
 
-
-// basic node for all AST-trees
+// Base trait for all AST nodes
 sealed trait ASTNode
 
 // Program-node
-case class Package(name: String, imports : Imports, classes: List[ClassDecl]) extends ASTNode
+case class Package(name: String, imports: Imports, classes: List[ClassDecl]) extends ASTNode
 
 case class Imports(names: List[String]) extends ASTNode
 
@@ -15,36 +14,48 @@ case class Imports(names: List[String]) extends ASTNode
 case class ClassDecl(
                       name: String,
                       parent: String,
-                      isAbstract: Boolean,
+                      isAbstract: Boolean, // Moved to classType handling
                       methods: List[MethodDecl],
-                      fields: List[VarDecl],
+                      fields: List[FieldDecl],
                       constructors: List[ConstructorDecl]
                     ) extends ASTNode
 
-// method declaration
+// Method declaration
 case class MethodDecl(
+                       accessModifier: Option[String], // Optional (default to package-private)
                        name: String,
-                       static: Boolean,
                        isAbstract: Boolean,
+                       static: Boolean,
+                       isFinal: Boolean,
                        returnType: Type,
                        params: List[VarDecl],
-                       body: Statement
+                       body: Option[Statement] // Optional to handle abstract methods
                      ) extends ASTNode
 
 // Constructor declaration
 case class ConstructorDecl(
+                            accessModifier: Option[String],
                             name: String,
                             params: List[VarDecl],
                             body: Statement
                           ) extends ASTNode
 
-// variable declaration
-case class VarDecl(name: String, varType: Type, initializer : Option[Expression]) extends Statement
+// Field declaration
+case class FieldDecl(
+                      accessModifier: Option[String],
+                      isFinal: Boolean,
+                      name: String,
+                      varType: Type,
+                      initializer: Option[Expression]
+                    ) extends ASTNode
 
-// types
+// Variable declaration
+case class VarDecl(name: String, varType: Type, initializer: Option[Expression]) extends Statement
+
+// Types
 sealed trait Type extends ASTNode
 
-case object NoneType extends Type // used for statements that do not evaluate to any type
+case object NoneType extends Type
 case object IntType extends Type
 case object ShortType extends Type
 case object LongType extends Type
@@ -58,9 +69,7 @@ case class ArrayType(baseType: Type) extends Type
 case class UserType(name: String) extends Type
 case class FunctionType(returnType: Type, parameterTypes: List[Type]) extends Type
 
-
-
-// statements
+// Statements
 sealed trait Statement extends ASTNode
 case class BlockStatement(stmts: List[Statement]) extends Statement
 case class ReturnStatement(expr: Option[Expression]) extends Statement
@@ -79,8 +88,7 @@ case class TypedStatement(stmt: Statement, stmtType: Type) extends Statement
 
 case class PrintStatement(toPrint: Expression) extends Statement
 
-
-// expressions
+// Expressions
 sealed trait Expression extends ASTNode
 case class VarRef(name: String) extends Expression
 case class Literal(value: Any) extends Expression

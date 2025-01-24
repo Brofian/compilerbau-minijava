@@ -5,25 +5,28 @@ package: PACKAGE packageId SC imports class+ ;
 
 imports: (IMPORT packageId SC)* ;
 
-
 // Class Definitions
-class: PUBLIC? CLASS id (EXTENDS id)? classbody
-     | PUBLIC? ABSTRACT id classbody;
+class: accessModifier? classType id (EXTENDS id)? classbody;
 
 classbody: '{' (method | attribute | constructor | class)* '}';
 
 // Methods
-method: modifier STATIC? returntype IDENTIFIER '(' parameterList? ')' block;
+method: accessModifier? STATIC? FINAL? ABSTRACT?  returntype IDENTIFIER '(' parameterList? ')' block;
 
 // Attributes
-attribute: optionalModifier type IDENTIFIER ('=' expression)? SC;
+attribute: accessModifier? FINAL? type IDENTIFIER ('=' expression)? SC;
+
+variableDeclaration: type IDENTIFIER ('=' expression)? SC;
 
 // Constructors
-constructor: PUBLIC? id '(' parameterList? ')' block;
+constructor: accessModifier? id '(' parameterList? ')' block;
 
 // Modifiers
-modifier: PRIVATE | PUBLIC | PROTECTED  | FINAL | ABSTRACT;
-optionalModifier: modifier?;
+accessModifier: PRIVATE | PUBLIC | PROTECTED;  // Only one allowed
+
+
+// Class Type
+classType: CLASS | ABSTRACT CLASS; // Abstract classes must be explicitly defined
 
 // Return Types
 returntype: VOID | type;
@@ -51,7 +54,7 @@ statement: variableDeclaration
          | breakStatement
          | continueStatement;
 
-variableDeclaration: type IDENTIFIER ('=' expression)? SC;
+
 expressionStatement: expression SC;
 returnStatement: RETURN expression? SC;
 
