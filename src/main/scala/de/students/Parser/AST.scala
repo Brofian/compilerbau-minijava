@@ -6,7 +6,7 @@ case class Project(packages: List[Package])
 sealed trait ASTNode
 
 // Program-node
-case class Package(name: String, imports: Imports, classes: List[ClassDecl]) extends ASTNode
+case class Package(name: String, imports : Imports, classes: List[ClassDecl]) extends ASTNode
 
 case class Imports(names: List[String]) extends ASTNode
 
@@ -55,7 +55,7 @@ case class VarDecl(name: String, varType: Type, initializer: Option[Expression])
 // Types
 sealed trait Type extends ASTNode
 
-case object NoneType extends Type  // used for statements that do not evaluate to any type
+case object NoneType extends Type // used for statements that do not evaluate to any type
 case object IntType extends Type
 case object ShortType extends Type
 case object LongType extends Type
