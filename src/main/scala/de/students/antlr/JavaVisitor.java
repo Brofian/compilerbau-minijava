@@ -47,12 +47,6 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAttribute(JavaParser.AttributeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#variableDeclaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link JavaParser#constructor}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -106,6 +100,12 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStatement(JavaParser.StatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link JavaParser#variableDeclaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaParser#expressionStatement}.
 	 * @param ctx the parse tree

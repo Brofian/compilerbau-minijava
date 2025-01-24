@@ -68,16 +68,6 @@ public interface JavaListener extends ParseTreeListener {
 	 */
 	void exitAttribute(JavaParser.AttributeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JavaParser#variableDeclaration}.
-	 * @param ctx the parse tree
-	 */
-	void enterVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link JavaParser#variableDeclaration}.
-	 * @param ctx the parse tree
-	 */
-	void exitVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link JavaParser#constructor}.
 	 * @param ctx the parse tree
 	 */
@@ -167,6 +157,16 @@ public interface JavaListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatement(JavaParser.StatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link JavaParser#variableDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link JavaParser#variableDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitVariableDeclaration(JavaParser.VariableDeclarationContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaParser#expressionStatement}.
 	 * @param ctx the parse tree

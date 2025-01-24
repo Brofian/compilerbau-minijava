@@ -5,6 +5,7 @@ package: PACKAGE packageId SC imports class+ ;
 
 imports: (IMPORT packageId SC)* ;
 
+
 // Class Definitions
 class: accessModifier? classType id (EXTENDS id)? classbody;
 
@@ -15,8 +16,6 @@ method: accessModifier? STATIC? FINAL? ABSTRACT?  returntype IDENTIFIER '(' para
 
 // Attributes
 attribute: accessModifier? FINAL? type IDENTIFIER ('=' expression)? SC;
-
-variableDeclaration: type IDENTIFIER ('=' expression)? SC;
 
 // Constructors
 constructor: accessModifier? id '(' parameterList? ')' block;
@@ -54,6 +53,7 @@ statement: variableDeclaration
          | breakStatement
          | continueStatement;
 
+variableDeclaration: type IDENTIFIER ('=' expression)? SC;
 
 expressionStatement: expression SC;
 returnStatement: RETURN expression? SC;
