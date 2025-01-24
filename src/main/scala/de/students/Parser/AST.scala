@@ -71,11 +71,13 @@ case class DoWhileStatement(cond: Expression, body: Statement) extends Statement
 case class SwitchStatement(expr: Expression, cases: List[SwitchCase], default: Option[DefaultCase]) extends Statement
 case class SwitchCase(caseLit: Option[Literal], caseBlock: Statement) extends Statement
 case class DefaultCase(caseBlock: Statement) extends Statement
-case class StatementExpressions(expr: Expression) extends Statement
+case class StatementExpression(expr: Expression) extends Statement
 case class BreakStatement() extends Statement
 case class ContinueStatement() extends Statement
 
 case class TypedStatement(stmt: Statement, stmtType: Type) extends Statement
+
+case class PrintStatement(toPrint: Expression) extends Statement
 
 
 // expressions

@@ -1,6 +1,9 @@
 package de.students.util
 
-import java.io.File
+import de.students.ByteCodeGenerator.ClassBytecode
+
+import java.io.{DataOutputStream, File, FileOutputStream}
+import java.nio.file.{Files, Paths}
 import scala.io.Source
 import scala.util.Using
 
@@ -35,4 +38,19 @@ object InputOutput {
     fileContents
   }
 
+  private val OUT_DIR = Paths.get(".", "out")
+  private val CLASS_FILE_ENDING = ".class"
+
+  private def writeToBinFile(bytecode: Array[Byte], fullFilepath: String): Unit = {
+    val outStream = DataOutputStream(new FileOutputStream(fullFilepath))
+    bytecode.foreach(byte => outStream.writeByte(byte.asInstanceOf[Int]))
+    outStream.close()
+  }
+
+  def writeClassFile(bytecode: ClassBytecode): Unit = {
+    val folders = bytecode.className.split('.')
+    val fullFolderPath = folders.reverse.tail.reverse.foldLeft(OUT_DIR)((a,b) => Paths.get(a.toString, b))
+    Files.createDirectories(fullFolderPath)
+    writeToBinFile(bytecode.bytecode, Paths.get(fullFolderPath.toString, folders.last + CLASS_FILE_ENDING).toString)
+  }
 }

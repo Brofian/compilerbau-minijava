@@ -11,6 +11,8 @@ lazy val root = project
     scalaVersion := scala3Version,
 
     libraryDependencies += "org.scalameta" %% "munit" % "1.0.0" % Test,
+
+    unmanagedJars in Compile += file(baseDirectory.value + "/lib/asm-9.7.jar")
   )
 
 

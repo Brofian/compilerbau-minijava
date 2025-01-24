@@ -17,7 +17,7 @@ object StatementChecks {
       case s@SwitchStatement(_, _, _) => this.checkSwitchStatement(s, context)
       case c@SwitchCase(_, _) => throw new SemanticException("SwitchCase statements are checked by the switchStatement and should never occur alone")
       case d@DefaultCase(_) => throw new SemanticException("DefaultCase statements are checked by the switchStatement and should never occur alone")
-      case e@StatementExpressions(_) => this.checkExpressionStatement(e, context)
+      case e@StatementExpression(_) => this.checkExpressionStatement(e, context)
       case b@BreakStatement() => this.checkBreakStatement(b, context)
       case c@ContinueStatement() => this.checkContinueStatement(c, context)
       case _ => throw new SemanticException(s"Could not match statement $stmt")
@@ -173,9 +173,9 @@ object StatementChecks {
     TypedStatement(SwitchStatement(typedExpr, typedCases, typedDefault), switchUnionType)
   }
 
-  private def checkExpressionStatement(expressionStmt: StatementExpressions, context: SemanticContext): TypedStatement = {
+  private def checkExpressionStatement(expressionStmt: StatementExpression, context: SemanticContext): TypedStatement = {
     val typedExpr = ExpressionChecks.checkExpression(expressionStmt.expr, context)
-    TypedStatement(StatementExpressions(typedExpr), NoneType)
+    TypedStatement(StatementExpression(typedExpr), NoneType)
   }
 
   private def checkBreakStatement(breakStmt: BreakStatement, context: SemanticContext): TypedStatement = {

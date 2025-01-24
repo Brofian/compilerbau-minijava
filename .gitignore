@@ -32,3 +32,6 @@ metals.sbt
 .idea
 .idea_modules
 /.worksheet/
+
+# our generated out files
+out/

@@ -139,7 +139,7 @@ object ASTBuilder {
         case statementCtx: StatementContext =>
           Some(visitStatement(statementCtx))
         case exprCtx: ExpressionContext =>
-          Some(StatementExpressions(visitExpression(exprCtx)))
+          Some(StatementExpression(visitExpression(exprCtx)))
         case _ =>
           None
       }.toList
@@ -356,7 +356,7 @@ object ASTBuilder {
     override def visitExpressionStatement(ctx: ExpressionStatementContext): Statement = {
       val expr = visitExpression(ctx.expression())
       Logger.debug(s"Visiting expression statement: $expr")
-      StatementExpressions(expr)
+      StatementExpression(expr)
     }
 
     override def visitLiteral(ctx: LiteralContext): Literal = {

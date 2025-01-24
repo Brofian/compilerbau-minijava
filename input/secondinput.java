@@ -20,7 +20,6 @@ public class MyProgram {
             MyProgram prog = new MyProgram();
             (new A()).getB().getNumber(); // this is valid
 
-
             int result = prog.calculate(5, 3);
 
             while(true){
