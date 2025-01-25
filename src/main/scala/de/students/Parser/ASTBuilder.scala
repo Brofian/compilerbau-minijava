@@ -66,7 +66,7 @@ object ASTBuilder {
       val isFinal = ctx.FINAL() != null
       val returnType = visitReturntype(ctx.returntype())
       val params = if ctx.parameterList() == null then List() else ctx.parameterList().parameter().asScala.map(visitParameter).toList
-      val body = if ctx.block != null then  Option(visitBlockStmt(ctx.block())) else None // allowing empty body for abstract methods
+      val body = if ctx.block() != null then  Option(visitBlockStmt(ctx.block())) else None // allowing empty body for abstract methods
       val accesModifier = visitModifiers(ctx.accessModifier())
    
       Logger.debug(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
