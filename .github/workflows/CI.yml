@@ -1,0 +1,39 @@
+name: Scala CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository
+      - uses: actions/checkout@v4
+
+      # Set up JDK (match local Java version)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      # Check Scala formatting
+      # - name: Check Scala formatting
+      #  run: sbt scalafmtCheck
+
+      # Compile the project
+      - name: Compile Scala code
+        run: sbt compile
+
+      # Run tests
+      - name: Run sbt tests
+        run: sbt test
