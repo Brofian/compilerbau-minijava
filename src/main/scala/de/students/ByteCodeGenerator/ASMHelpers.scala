@@ -43,6 +43,7 @@ private def asmType(t: Type): String = t match {
     val parameters = parameterTypes.map(asmType).fold("")((a ,b) => a + b)
     f"($parameters)${asmType(returnType)}"
   }
+  case _ => throw ByteCodeGeneratorException(s"Unknown type $t cannot be converted to ASM-type")
 }
 
 private def asmUserType(t: Type): String = t match {

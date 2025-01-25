@@ -46,7 +46,7 @@ object SyntacticSugarHandler {
       else {
         val splitStatements: ListBuffer[Statement] = ListBuffer()
         // split var declarations with initializer into      
-        method.body.asInstanceOf[BlockStatement].stmts.foreach {
+        method.body.get.asInstanceOf[BlockStatement].stmts.foreach {
           case stmt@(varDeclStmt: VarDecl) =>
             varDeclStmt.initializer match
               case Some(varInitializer) =>
