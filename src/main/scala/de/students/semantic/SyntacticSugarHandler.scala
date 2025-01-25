@@ -19,12 +19,13 @@ object SyntacticSugarHandler {
 
   /**
    * Move the initializer expressions from class fields to the start of every constructor
-   * @param cls The class to check
-   * @param classContext  The current context of the class
+   *
+   * @param cls          The class to check
+   * @param classContext The current context of the class
    * @return
    */
   private def moveFieldInitializerToConstructor(cls: ClassDecl, classContext: SemanticContext): ClassDecl = {
-    
+
     // TODO
     cls
   }
@@ -39,21 +40,28 @@ object SyntacticSugarHandler {
   private def splitVarInitializerFromDeclaration(cls: ClassDecl, classContext: SemanticContext): ClassDecl = {
 
     val fixedMethods = cls.methods.map(method => {
-      val splitStatements: ListBuffer[Statement] = ListBuffer()
-      // split var declarations with initializer into
-      method.body.asInstanceOf[BlockStatement].stmts.foreach {
-        case stmt@(varDeclStmt: VarDecl) =>
-          varDeclStmt.initializer match
-            case Some(varInitializer) =>
-              splitStatements.addOne(VarDecl(varDeclStmt.name, varDeclStmt.varType, None)) // remove initializer
-              splitStatements.addOne(StatementExpression(BinaryOp(VarRef(varDeclStmt.name), "=", varInitializer))) // add initializer as separate statement
-            case None => splitStatements.addOne(stmt) // no initializer, no changes required
-        case stmt => splitStatements.addOne(stmt) // not a var declaration, no changes required
+      if (method.body.isEmpty) {
+         method // keep empty body
       }
-      MethodDecl(method.name, method.static, method.isAbstract, method.returnType, method.params, BlockStatement(splitStatements.toList))
+      else {
+        val splitStatements: ListBuffer[Statement] = ListBuffer()
+        // split var declarations with initializer into      
+        method.body.asInstanceOf[BlockStatement].stmts.foreach {
+          case stmt@(varDeclStmt: VarDecl) =>
+            varDeclStmt.initializer match
+              case Some(varInitializer) =>
+                splitStatements.addOne(VarDecl(varDeclStmt.name, varDeclStmt.varType, None)) // remove initializer
+                splitStatements.addOne(StatementExpression(BinaryOp(VarRef(varDeclStmt.name), "=", varInitializer))) // add initializer as separate statement
+              case None => splitStatements.addOne(stmt) // no initializer, no changes required
+          case stmt => splitStatements.addOne(stmt) // not a var declaration, no changes required
+        }
+
+        // construct new method with updated body
+        MethodDecl(method.accessModifier, method.name, method.isAbstract, method.static, method.isFinal, method.returnType, method.params, Some(BlockStatement(splitStatements.toList))) 
+      }
     })
 
     ClassDecl(cls.name, cls.parent, cls.isAbstract, fixedMethods, cls.fields, cls.constructors)
   }
-  
+
 }
