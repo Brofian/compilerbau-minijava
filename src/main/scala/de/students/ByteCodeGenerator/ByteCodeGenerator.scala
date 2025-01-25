@@ -49,7 +49,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     generateConstructor(
       classDecl,
       classWriter,
-      ConstructorDecl(None, "", List(), EMPTY_STATEMENT)
+      ConstructorDecl(Some("public"), "", List(), EMPTY_STATEMENT)
     )
   }
 

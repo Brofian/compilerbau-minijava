@@ -17,6 +17,7 @@ private def accessModifier(fieldDecl: FieldDecl): Int =
   + (fieldDecl.accessModifier match {
     case None => ACC_PRIVATE
     case Some("public") => ACC_PUBLIC
+    case Some("private") => ACC_PRIVATE
     case Some("protected") => ACC_PROTECTED
     case Some(other) => throw ByteCodeGeneratorException(f"access modifier $other is not recognized")
   })
