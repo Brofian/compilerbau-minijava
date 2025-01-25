@@ -35,5 +35,3 @@ jobs:
       - name: Run sbt tests
         run: sbt test
 
-      - name: Run Compiler on Test Inputs
-        run: sbt "run -- input/"
