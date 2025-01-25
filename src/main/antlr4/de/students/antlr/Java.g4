@@ -12,7 +12,7 @@ class: accessModifier? classType id (EXTENDS id)? classbody;
 classbody: '{' (method | attribute | constructor | class)* '}';
 
 // Methods
-method: accessModifier? STATIC? FINAL? ABSTRACT?  returntype IDENTIFIER '(' parameterList? ')' block;
+method: accessModifier? STATIC? FINAL? ABSTRACT?  returntype IDENTIFIER '(' parameterList? ')' block?;
 
 // Attributes
 attribute: accessModifier? FINAL? type IDENTIFIER ('=' expression)? SC;
