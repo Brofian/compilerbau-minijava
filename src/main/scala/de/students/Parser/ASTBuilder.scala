@@ -67,7 +67,7 @@ object ASTBuilder {
       val returnType = visitReturntype(ctx.returntype()) // A helper function for return type
       val params = if ctx.parameterList() == null then List() else ctx.parameterList().parameter().asScala.map(visitParameter).toList
       val body = visitBlockStmt(ctx.block())
-      val accesModifier = visitAccessModifier(ctx.accessModifier())
+      val accesModifier = visitModifiers(ctx.accessModifier())
    
       Logger.debug(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
 
@@ -77,7 +77,7 @@ object ASTBuilder {
 
     override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
       val name = ctx.id().getText // Get the constructor name
-      val accessModifier = visitAccessModifier(ctx.accessModifier())
+      val accessModifier = visitModifiers(ctx.accessModifier())
 
       // Parse parameters
       val params = if (ctx.parameterList() != null) {
@@ -408,7 +408,7 @@ object ASTBuilder {
       Logger.debug(s"Visiting attribute: ${ctx.IDENTIFIER().getText}")
 
       // Handle modifiers
-      val accessModifiers = visitAccessModifier(ctx.accessModifier())
+      val accessModifiers = visitModifiers(ctx.accessModifier())
       val isFinal = ctx.FINAL() != null
       // Get the type of the attribute
       val varType = visitType(ctx.`type`())
@@ -424,7 +424,7 @@ object ASTBuilder {
     }
 
     // Visit an access modifier (PRIVATE, PUBLIC, PROTECTED)
-    override def visitAccessModifier(ctx: AccessModifierContext): Option[String] = {
+    def visitModifiers(ctx: AccessModifierContext): Option[String] = {
       // Check if the access modifier is present, and return the corresponding string if found
       if (ctx.PRIVATE() != null) {
         Some("private")
