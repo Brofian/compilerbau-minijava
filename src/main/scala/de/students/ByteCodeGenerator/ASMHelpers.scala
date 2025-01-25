@@ -6,7 +6,7 @@ import de.students.util.Logger
 import org.objectweb.asm.MethodVisitor
 
 private def visibilityModifier(classDecl: ClassDecl): Int = 0 // ACC_PUBLIC
-private def visibilityModifier(varDecl: VarDecl): Int = 0 // ACC_PUBLIC
+private def visibilityModifier(fieldDecl: FieldDecl): Int = 0 // ACC_PUBLIC
 private def visibilityModifier(methodDecl: MethodDecl): Int = {
   0
     + (if methodDecl.static then ACC_STATIC else 0)

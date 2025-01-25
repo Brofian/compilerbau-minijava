@@ -49,15 +49,15 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     generateConstructor(
       classDecl,
       classWriter,
-      ConstructorDecl("", List(), EMPTY_STATEMENT)
+      ConstructorDecl(Some("public"), "", List(), EMPTY_STATEMENT)
     )
   }
 
   // set fields
-  classDecl.fields.foreach(varDecl => classWriter.visitField(
-    visibilityModifier(varDecl),
-    varDecl.name,
-    asmType(varDecl.varType),
+  classDecl.fields.foreach(fieldDecl => classWriter.visitField(
+    visibilityModifier(fieldDecl),
+    fieldDecl.name,
+    asmType(fieldDecl.varType),
     null, // signature
     null // initial value, only used for static fields
   ).visitEnd())
@@ -126,7 +126,7 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
 
 private case class MethodGeneratorState(
                                  val methodVisitor: MethodVisitor,
-                                 val fields: List[VarDecl],
+                                 val fields: List[FieldDecl],
                                  val returnType: Type,
                                  val className: String,
                                  var stackDepth: Int,
