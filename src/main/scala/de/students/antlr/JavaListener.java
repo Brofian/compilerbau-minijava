@@ -78,25 +78,25 @@ public interface JavaListener extends ParseTreeListener {
 	 */
 	void exitConstructor(JavaParser.ConstructorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JavaParser#modifier}.
+	 * Enter a parse tree produced by {@link JavaParser#accessModifier}.
 	 * @param ctx the parse tree
 	 */
-	void enterModifier(JavaParser.ModifierContext ctx);
+	void enterAccessModifier(JavaParser.AccessModifierContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link JavaParser#modifier}.
+	 * Exit a parse tree produced by {@link JavaParser#accessModifier}.
 	 * @param ctx the parse tree
 	 */
-	void exitModifier(JavaParser.ModifierContext ctx);
+	void exitAccessModifier(JavaParser.AccessModifierContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JavaParser#optionalModifier}.
+	 * Enter a parse tree produced by {@link JavaParser#classType}.
 	 * @param ctx the parse tree
 	 */
-	void enterOptionalModifier(JavaParser.OptionalModifierContext ctx);
+	void enterClassType(JavaParser.ClassTypeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link JavaParser#optionalModifier}.
+	 * Exit a parse tree produced by {@link JavaParser#classType}.
 	 * @param ctx the parse tree
 	 */
-	void exitOptionalModifier(JavaParser.OptionalModifierContext ctx);
+	void exitClassType(JavaParser.ClassTypeContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JavaParser#returntype}.
 	 * @param ctx the parse tree

@@ -5,8 +5,23 @@ import de.students.Parser.*
 import de.students.util.Logger
 import org.objectweb.asm.MethodVisitor
 
-private def visibilityModifier(classDecl: ClassDecl): Int = 0 // ACC_PUBLIC
-private def visibilityModifier(varDecl: VarDecl): Int = 0 // ACC_PUBLIC
+private def asmFinalModifier(isFinal: Boolean): Int = if isFinal then ACC_FINAL else 0
+private def asmAbstractModifier(isFinal: Boolean): Int = if isFinal then ACC_ABSTRACT else 0
+
+private def accessModifier(classDecl: ClassDecl): Int = asmAbstractModifier(classDecl.isAbstract)
+
+private def accessModifier(varDecl: VarDecl): Int = 0
+
+private def accessModifier(fieldDecl: FieldDecl): Int =
+    asmFinalModifier(fieldDecl.isFinal)
+  + (fieldDecl.accessModifier match {
+    case None => ACC_PRIVATE
+    case Some("public") => ACC_PUBLIC
+    case Some("private") => ACC_PRIVATE
+    case Some("protected") => ACC_PROTECTED
+    case Some(other) => throw ByteCodeGeneratorException(f"access modifier $other is not recognized")
+  })
+
 private def visibilityModifier(methodDecl: MethodDecl): Int = {
   0
     + (if methodDecl.static then ACC_STATIC else 0)
@@ -28,6 +43,7 @@ private def asmType(t: Type): String = t match {
     val parameters = parameterTypes.map(asmType).fold("")((a ,b) => a + b)
     f"($parameters)${asmType(returnType)}"
   }
+  case _ => throw ByteCodeGeneratorException(s"Unknown type $t cannot be converted to ASM-type")
 }
 
 private def asmUserType(t: Type): String = t match {

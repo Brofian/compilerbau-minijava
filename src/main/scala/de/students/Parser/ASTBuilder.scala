@@ -49,7 +49,7 @@ object ASTBuilder {
       val name = ctx.id(0).getText
       val maybeParent = Option(ctx.EXTENDS()).flatMap(_ => Option(ctx.id(1)).map(_.getText))
       val parent = maybeParent.getOrElse("Object")
-      val isAbstract = ctx.ABSTRACT() != null
+      val isAbstract = ctx.classType().ABSTRACT() != null
 
       Logger.debug(s"Visiting class: $name, Parent: $parent, Is Abstract: $isAbstract")
 
@@ -62,19 +62,22 @@ object ASTBuilder {
     override def visitMethod(ctx: MethodContext): MethodDecl = {
       val name = ctx.IDENTIFIER().getText
       val isStatic = ctx.STATIC() != null
-      val isAbstract = ctx.modifier().ABSTRACT() != null
-      // val visibilityModifier = ctx.modifier()
-      val returnType = visitReturntype(ctx.returntype()) // A helper function for return type
+      val isAbstract = ctx.ABSTRACT() != null
+      val isFinal = ctx.FINAL() != null
+      val returnType = visitReturntype(ctx.returntype())
       val params = if ctx.parameterList() == null then List() else ctx.parameterList().parameter().asScala.map(visitParameter).toList
-      val body = visitBlockStmt(ctx.block())
-
+      val body = if ctx.block() != null then  Option(visitBlockStmt(ctx.block())) else None // allowing empty body for abstract methods
+      val accesModifier = visitModifiers(ctx.accessModifier())
+   
       Logger.debug(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
 
-      MethodDecl(name, isStatic, isAbstract, returnType, params, body)
+      MethodDecl(accesModifier,name, isAbstract, isStatic,isFinal, returnType, params, body)
     }
+
 
     override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
       val name = ctx.id().getText // Get the constructor name
+      val accessModifier = visitModifiers(ctx.accessModifier())
 
       // Parse parameters
       val params = if (ctx.parameterList() != null) {
@@ -88,7 +91,7 @@ object ASTBuilder {
 
       Logger.debug(s"Visiting constructor: $name, Parameters: $params, Body: $body")
 
-      ConstructorDecl(name, params, body)
+      ConstructorDecl(accessModifier, name, params, body)
     }
 
 
@@ -400,15 +403,40 @@ object ASTBuilder {
     }
 
 
-
-    override def visitAttribute(ctx: AttributeContext): VarDecl = {
+    override def visitAttribute(ctx: AttributeContext): FieldDecl = {
+      // Log the attribute being visited
       Logger.debug(s"Visiting attribute: ${ctx.IDENTIFIER().getText}")
-      val modifier = Option(ctx.optionalModifier()).flatMap(m => Option(m.getText)).getOrElse("")
+
+      // Handle modifiers
+      val accessModifiers = visitModifiers(ctx.accessModifier())
+      val isFinal = ctx.FINAL() != null
+      // Get the type of the attribute
       val varType = visitType(ctx.`type`())
+
+      // Get the name of the attribute
       val name = ctx.IDENTIFIER().getText
+
+      // Handle the initializer if it exists (optional part of the attribute)
       val initializer = Option(ctx.expression()).map(visitExpression)
 
-      VarDecl(name, varType, initializer)
+      // Create and return the VarDecl node with the modifiers, type, and initializer
+      FieldDecl(accessModifiers,isFinal,name, varType, initializer)
+    }
+
+    // Visit an access modifier (PRIVATE, PUBLIC, PROTECTED)
+    def visitModifiers(ctx: AccessModifierContext): Option[String] = {
+      // Check if the access modifier is present, and return the corresponding string if found
+      if (ctx.PRIVATE() != null) {
+        Some("private")
+      } else if (ctx.PUBLIC() != null) {
+        Some("public")
+      } else if (ctx.PROTECTED() != null) {
+        Some("protected")
+      } else {
+        // If no access modifier is found, return None
+        None
+      }
     }
   }
+
 }

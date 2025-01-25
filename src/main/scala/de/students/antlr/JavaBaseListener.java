@@ -101,25 +101,25 @@ public class JavaBaseListener implements JavaListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterModifier(JavaParser.ModifierContext ctx) { }
+	@Override public void enterAccessModifier(JavaParser.AccessModifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitModifier(JavaParser.ModifierContext ctx) { }
+	@Override public void exitAccessModifier(JavaParser.AccessModifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOptionalModifier(JavaParser.OptionalModifierContext ctx) { }
+	@Override public void enterClassType(JavaParser.ClassTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitOptionalModifier(JavaParser.OptionalModifierContext ctx) { }
+	@Override public void exitClassType(JavaParser.ClassTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

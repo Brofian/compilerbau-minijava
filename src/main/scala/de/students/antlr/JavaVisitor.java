@@ -53,17 +53,17 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConstructor(JavaParser.ConstructorContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#modifier}.
+	 * Visit a parse tree produced by {@link JavaParser#accessModifier}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitModifier(JavaParser.ModifierContext ctx);
+	T visitAccessModifier(JavaParser.AccessModifierContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser#optionalModifier}.
+	 * Visit a parse tree produced by {@link JavaParser#classType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOptionalModifier(JavaParser.OptionalModifierContext ctx);
+	T visitClassType(JavaParser.ClassTypeContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link JavaParser#returntype}.
 	 * @param ctx the parse tree

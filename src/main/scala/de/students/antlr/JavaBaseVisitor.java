@@ -67,14 +67,14 @@ public class JavaBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements J
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitModifier(JavaParser.ModifierContext ctx) { return visitChildren(ctx); }
+	@Override public T visitAccessModifier(JavaParser.AccessModifierContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitOptionalModifier(JavaParser.OptionalModifierContext ctx) { return visitChildren(ctx); }
+	@Override public T visitClassType(JavaParser.ClassTypeContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

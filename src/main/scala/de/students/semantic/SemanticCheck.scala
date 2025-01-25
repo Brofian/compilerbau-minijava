@@ -92,12 +92,24 @@ object SemanticCheck {
         case _ => method.returnType
       }
 
-      val typedBody: TypedStatement = StatementChecks.checkStatement(method.body, methodContext)
-      if (!UnionTypeFinder.isASubtypeOfB(typedBody.stmtType, evaluatedReturnType, methodContext)) {
-        throw new SemanticException(s"Method ${method.name} in ${methodContext.getClassName} with return type ${evaluatedReturnType} cannot return value of type ${typedBody.stmtType}")
+      if (method.body.isEmpty && !method.isAbstract) {
+        throw new SemanticException(s"Non-abstract method ${method.name} must provide a method body!");
+      }
+      if (method.body.nonEmpty && method.isAbstract) {
+        throw new SemanticException(s"Abstract method ${method.name} cannot have a method body!");
       }
 
-      MethodDecl(method.name, method.static, method.isAbstract, evaluatedReturnType, method.params, typedBody)
+      val typedBody: Option[TypedStatement] = method.body match
+        case Some(methodBody) =>
+          val typedMethodBody = StatementChecks.checkStatement(methodBody, methodContext)
+          // check if method body type matches method declaration
+          if (!UnionTypeFinder.isASubtypeOfB(typedMethodBody.stmtType, evaluatedReturnType, methodContext)) {
+            throw new SemanticException(s"Method ${method.name} in ${methodContext.getClassName} with return type $evaluatedReturnType cannot return value of type ${typedMethodBody.stmtType}")
+          }
+          Some(typedMethodBody)
+        case None => /* Abstract method, skip body check */ None
+      
+      MethodDecl(method.accessModifier, method.name, method.isAbstract, method.static, method.isFinal, evaluatedReturnType, method.params, typedBody)
     })
 
 
@@ -114,7 +126,7 @@ object SemanticCheck {
       if (!UnionTypeFinder.isASubtypeOfB(typedBody.stmtType, VoidType, methodContext)) {
         throw new SemanticException(s"Constructor ${constructor.name} cannot return value")
       }
-      ConstructorDecl(constructor.name, constructor.params, typedBody)
+      ConstructorDecl(constructor.accessModifier, constructor.name, constructor.params, typedBody)
     })
 
 

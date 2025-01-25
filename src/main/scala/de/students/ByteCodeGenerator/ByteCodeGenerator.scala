@@ -32,7 +32,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   // set class header
   classWriter.visit(
     V1_4,
-    visibilityModifier(classDecl),
+    accessModifier(classDecl),
     javaClassName,
     null, // signature
     parent, // super class
@@ -49,15 +49,15 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     generateConstructor(
       classDecl,
       classWriter,
-      ConstructorDecl("", List(), EMPTY_STATEMENT)
+      ConstructorDecl(Some("public"), "", List(), EMPTY_STATEMENT)
     )
   }
 
   // set fields
-  classDecl.fields.foreach(varDecl => classWriter.visitField(
-    visibilityModifier(varDecl),
-    varDecl.name,
-    asmType(varDecl.varType),
+  classDecl.fields.foreach(fieldDecl => classWriter.visitField(
+    accessModifier(fieldDecl),
+    fieldDecl.name,
+    asmType(fieldDecl.varType),
     null, // signature
     null // initial value, only used for static fields
   ).visitEnd())
@@ -118,7 +118,9 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
   methodVisitor.visitCode()
 
   state.stackDepth = 0
-  generateStatement(methodDecl.body, state)
+  if (methodDecl.body.isDefined) {
+    generateStatement(methodDecl.body.get, state)
+  }
 
   methodVisitor.visitMaxs(state.maxStackDepth + 1, state.localVariableCount)
   methodVisitor.visitEnd()
@@ -126,7 +128,7 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
 
 private case class MethodGeneratorState(
                                  val methodVisitor: MethodVisitor,
-                                 val fields: List[VarDecl],
+                                 val fields: List[FieldDecl],
                                  val returnType: Type,
                                  val className: String,
                                  var stackDepth: Int,
@@ -166,7 +168,7 @@ private case class MethodGeneratorState(
   }
 
   def addVariable(name: String, t: Type): Int = {
-    val field = fields.find(varDecl => varDecl.name == name)
+    val field = fields.find(fieldDecl => fieldDecl.name == name)
     if (field.isDefined) {
       throw ByteCodeGeneratorException(f"variable $name already exists, it is a field")
     }
@@ -181,7 +183,7 @@ private case class MethodGeneratorState(
 
   def getVariable(name: String): VariableInfo = {
     val res = variables.get(name)
-    val field = fields.find(varDecl => varDecl.name == name)
+    val field = fields.find(fieldDecl => fieldDecl.name == name)
     if (res.isDefined) {
       res.get
     } else if (field.isDefined) {

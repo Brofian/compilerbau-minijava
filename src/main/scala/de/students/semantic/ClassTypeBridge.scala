@@ -98,8 +98,8 @@ class ClassTypeBridge(baseAST: Project) {
 
       val memberType: Type = member match {
         case None => throw new SemanticException(s"Class $fqClassName does not contain a member with name $memberName")
-        case VarDecl(_, varType, _) => varType
-        case MethodDecl(_, _, _, returnType, params, _) => FunctionType(returnType, params.map(param => param.varType))
+        case FieldDecl(_, _, _, varType, _) => varType
+        case MethodDecl(_, _, _, _, _, returnType, params, _) => FunctionType(returnType, params.map(param => param.varType))
       }
 
       Some(this.resolveTypeInClassContext(memberType, classDecl, packageDecl))
