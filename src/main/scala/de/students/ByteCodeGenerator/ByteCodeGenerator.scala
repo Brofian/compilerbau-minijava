@@ -54,10 +54,10 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   }
 
   // set fields
-  classDecl.fields.foreach(varDecl => classWriter.visitField(
-    accessModifier(varDecl),
-    varDecl.name,
-    asmType(varDecl.varType),
+  classDecl.fields.foreach(fieldDecl => classWriter.visitField(
+    accessModifier(fieldDecl),
+    fieldDecl.name,
+    asmType(fieldDecl.varType),
     null, // signature
     null // initial value, only used for static fields
   ).visitEnd())
