@@ -11,25 +11,29 @@ object InputOutput {
 
   def getFileContents(filePaths: List[String]): List[(String, String)] = {
 
-    val files: List[(File, String)] = filePaths.map { path =>
-      val file = new File(path)
-      
-      // process Args into a List of file(paths)
-      if (!file.exists()) {
-        throw new IllegalArgumentException(s"The specified path does not exist: $path")
-      } else if (file.isDirectory) {
-        file.listFiles().filter(_.isFile).toList.map(f => (f, f.getAbsolutePath.stripPrefix(file.getAbsolutePath)))
-      } else {
-        List((file, path))
+    val files: List[(File, String)] = filePaths
+      .map { path =>
+        val file = new File(path)
+
+        // process Args into a List of file(paths)
+        if (!file.exists()) {
+          throw new IllegalArgumentException(s"The specified path does not exist: $path")
+        } else if (file.isDirectory) {
+          file.listFiles().filter(_.isFile).toList.map(f => (f, f.getAbsolutePath.stripPrefix(file.getAbsolutePath)))
+        } else {
+          List((file, path))
+        }
       }
-    }.flatten()
+      .flatten()
 
     // get file contents and concat
     val fileContents: List[(String, String)] = files.map { f =>
       val source = Source.fromFile(f._1)
-      val lines = try source.mkString catch {
-        case e: Exception => throw new RuntimeException(s"Failed to read file: ${f._1.getAbsolutePath}", e)
-      } finally source.close()
+      val lines =
+        try source.mkString
+        catch {
+          case e: Exception => throw new RuntimeException(s"Failed to read file: ${f._1.getAbsolutePath}", e)
+        } finally source.close()
 
       (lines, f._2)
     }
@@ -48,7 +52,7 @@ object InputOutput {
 
   def writeClassFile(bytecode: ClassBytecode): Unit = {
     val folders = bytecode.className.split('.')
-    val fullFolderPath = folders.reverse.tail.reverse.foldLeft(OUT_DIR)((a,b) => Paths.get(a.toString, b))
+    val fullFolderPath = folders.reverse.tail.reverse.foldLeft(OUT_DIR)((a, b) => Paths.get(a.toString, b))
     Files.createDirectories(fullFolderPath)
     writeToBinFile(bytecode.bytecode, Paths.get(fullFolderPath.toString, folders.last + CLASS_FILE_ENDING).toString)
   }

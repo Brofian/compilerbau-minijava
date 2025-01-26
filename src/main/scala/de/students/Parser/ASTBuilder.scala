@@ -24,24 +24,32 @@ object ASTBuilder {
       val packageName = ctx.packageId().getText
       Logger.debug(s"Visiting package: $packageName")
 
-      val classDecls = ctx.class_()
+      val classDecls = ctx
+        .class_()
         .asScala
         .map(visitClass) // Call visitClass for each class in the package
         .toList
 
       val imports = visitImports(ctx.imports())
-      Logger.debug(s"Package: $packageName, Imports: ${imports.names.mkString(", ")}, Classes: ${classDecls.map(_.name).mkString(", ")}")
+      Logger.debug(
+        s"Package: $packageName, Imports: ${imports.names.mkString(", ")}, Classes: ${classDecls.map(_.name).mkString(", ")}"
+      )
       Package(packageName, imports, classDecls)
     }
 
     override def visitImports(ctx: ImportsContext): Imports = {
-       Imports(
-         ctx.packageId().asScala.map { importCtx =>
-           val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
-           Logger.debug(s"Visiting import $importPath ")
-           importPath
-         }.toList
-       )
+      Imports(
+        ctx
+          .packageId()
+          .asScala
+          .map { importCtx =>
+            val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
+            Logger.debug(s"Visiting import $importPath ")
+            importPath
+          }
+          .toList
+      )
+
     }
 
     // Visit a class node, handling its name, inheritance, and body
@@ -56,7 +64,7 @@ object ASTBuilder {
       val methods = ctx.classbody().method().asScala.map(visitMethod).toList
       val fields = ctx.classbody().attribute().asScala.map(visitAttribute).toList
       val constructors = ctx.classbody().constructor().asScala.map(visitConstructor).toList
-      ClassDecl(name, parent, isAbstract, methods , fields, constructors)
+      ClassDecl(name, parent, isAbstract, methods, fields, constructors)
     }
 
     override def visitMethod(ctx: MethodContext): MethodDecl = {
@@ -65,15 +73,18 @@ object ASTBuilder {
       val isAbstract = ctx.ABSTRACT() != null
       val isFinal = ctx.FINAL() != null
       val returnType = visitReturntype(ctx.returntype())
-      val params = if ctx.parameterList() == null then List() else ctx.parameterList().parameter().asScala.map(visitParameter).toList
-      val body = if ctx.block() != null then  Option(visitBlockStmt(ctx.block())) else None // allowing empty body for abstract methods
+      val params =
+        if ctx.parameterList() == null then List()
+        else ctx.parameterList().parameter().asScala.map(visitParameter).toList
+      val body =
+        if ctx.block() != null then Option(visitBlockStmt(ctx.block()))
+        else None // allowing empty body for abstract methods
       val accesModifier = visitModifiers(ctx.accessModifier())
-   
+
       Logger.debug(s"Visiting method: $name, Static: $isStatic, Abstract: $isAbstract")
 
-      MethodDecl(accesModifier,name, isAbstract, isStatic,isFinal, returnType, params, body)
+      MethodDecl(accesModifier, name, isAbstract, isStatic, isFinal, returnType, params, body)
     }
-
 
     override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
       val name = ctx.id().getText // Get the constructor name
@@ -93,8 +104,6 @@ object ASTBuilder {
 
       ConstructorDecl(accessModifier, name, params, body)
     }
-
-
 
     override def visitReturntype(ctx: ReturntypeContext): Type = {
       Logger.debug("Visiting return type")
@@ -116,16 +125,16 @@ object ASTBuilder {
       Logger.debug(s"Visiting type: ${ctx.getText}")
       if (ctx.PRIMITIVE_TYPE() != null) {
         ctx.PRIMITIVE_TYPE().getText match {
-          case "int" => IntType
+          case "int"     => IntType
           case "boolean" => BoolType
-          case "void" => VoidType
-          case "short" => ShortType
-          case "long" => LongType
-          case "byte" => ByteType
-          case "float" => FloatType
-          case "double" => DoubleType
-          case "char" => CharType
-          case _ => throw new RuntimeException(s"Unknown primitive type: ${ctx.PRIMITIVE_TYPE().getText}")
+          case "void"    => VoidType
+          case "short"   => ShortType
+          case "long"    => LongType
+          case "byte"    => ByteType
+          case "float"   => FloatType
+          case "double"  => DoubleType
+          case "char"    => CharType
+          case _         => throw new RuntimeException(s"Unknown primitive type: ${ctx.PRIMITIVE_TYPE().getText}")
         }
       } else if (ctx.id() != null) {
         UserType(ctx.id().getText) // User-defined type
@@ -240,8 +249,6 @@ object ASTBuilder {
       IfStatement(condition, thenBranch, elseBranch)
     }
 
-
-
     def visitElseIf(ctx: ElseifStatementContext): Statement = {
       val condition = visitExpression(ctx.expression())
       val thenBranch = visitBlockStmt(ctx.block())
@@ -249,7 +256,7 @@ object ASTBuilder {
       IfStatement(condition, thenBranch, None)
     }
 
-    def visitElse(ctx: ElseStatementContext): BlockStatement  = {
+    def visitElse(ctx: ElseStatementContext): BlockStatement = {
       Logger.debug("Visiting else statement")
       visitBlockStmt(ctx.block())
     }
@@ -284,8 +291,7 @@ object ASTBuilder {
         visitArrayCreation(ctx.arrayCreation())
       } else if (ctx.arrayAccess() != null) { // Handle array access
         visitArrayAccess(ctx.arrayAccess())
-      }
-      else {
+      } else {
         throw new UnsupportedOperationException(s"Unsupported expression: ${ctx.getText}")
       }
     }
@@ -310,7 +316,6 @@ object ASTBuilder {
       ArrayAccess(arrayExpr, index)
     }
 
-
     override def visitArrayCreation(ctx: ArrayCreationContext): NewArray = {
       val arrayType = visitType(ctx.`type`())
       val dimensions = ctx.expression().asScala.map(visitExpression).toList
@@ -328,12 +333,12 @@ object ASTBuilder {
     }
 
     override def visitMethodCall(ctx: MethodCallContext): Expression = {
-      var target = visitPrimary(ctx.primary())  // Base expression (like `new A()` or a variable)
+      var target = visitPrimary(ctx.primary()) // Base expression (like `new A()` or a variable)
 
       // Get all method calls in the chain (like `.getB()` and `.getNumber()`)
       val methodCalls = ctx.IDENTIFIER().asScala
 
-      var finalTarget: Expression = target  // This will hold the current expression being built
+      var finalTarget: Expression = target // This will hold the current expression being built
 
       // Iterate over each method call in the chain
       methodCalls.foreach { method =>
@@ -342,14 +347,18 @@ object ASTBuilder {
         // If the argumentList exists, iterate over all argumentContexts in the list
         val arguments = if (ctx.argumentList() != null) {
           // Iterate over all argument lists and visit each expression
-          ctx.argumentList().asScala.flatMap { argListCtx =>
-            // For each argument list, we get all its expressions and visit each one
-            argListCtx.expression().asScala.map { exprCtx =>
-              visitExpression(exprCtx)  // Visit each expression context
+          ctx
+            .argumentList()
+            .asScala
+            .flatMap { argListCtx =>
+              // For each argument list, we get all its expressions and visit each one
+              argListCtx.expression().asScala.map { exprCtx =>
+                visitExpression(exprCtx) // Visit each expression context
+              }
             }
-          }.toList
+            .toList
         } else {
-          List()  // No arguments, return an empty list
+          List() // No arguments, return an empty list
         }
 
         Logger.debug(s"Visiting method call: $methodName with arguments: $arguments")
@@ -358,10 +367,8 @@ object ASTBuilder {
         finalTarget = MethodCall(finalTarget, methodName, arguments)
       }
 
-      finalTarget  // Return the final target expression after all method calls
+      finalTarget // Return the final target expression after all method calls
     }
-
-
 
     def visitmyArgumentList(ctx: ArgumentListContext): List[Expression] = {
       Logger.debug("Visiting argument list")
@@ -394,7 +401,6 @@ object ASTBuilder {
         return visitArrayCreation(ctx.arrayCreation())
       }
 
-
       throw new IllegalArgumentException("Unrecognized primary expression: " + ctx.getText)
     }
 
@@ -416,9 +422,9 @@ object ASTBuilder {
       } else if (ctx.BOOLEAN_LITERAL() != null) {
         // Handle boolean literals (true/false)
         ctx.BOOLEAN_LITERAL().getText match {
-          case "true" => Literal(true)
+          case "true"  => Literal(true)
           case "false" => Literal(false)
-          case _ => throw new UnsupportedOperationException(s"Unsupported boolean literal: ${ctx.getText}")
+          case _       => throw new UnsupportedOperationException(s"Unsupported boolean literal: ${ctx.getText}")
         }
       } else if (ctx.BYTE_LITERAL() != null) {
         // Handle byte literals
@@ -444,7 +450,6 @@ object ASTBuilder {
       }
     }
 
-
     override def visitAttribute(ctx: AttributeContext): FieldDecl = {
       // Log the attribute being visited
       Logger.debug(s"Visiting attribute: ${ctx.IDENTIFIER().getText}")
@@ -462,7 +467,7 @@ object ASTBuilder {
       val initializer = Option(ctx.expression()).map(visitExpression)
 
       // Create and return the VarDecl node with the modifiers, type, and initializer
-      FieldDecl(accessModifiers,isFinal,name, varType, initializer)
+      FieldDecl(accessModifiers, isFinal, name, varType, initializer)
     }
 
     // Visit an access modifier (PRIVATE, PUBLIC, PROTECTED)

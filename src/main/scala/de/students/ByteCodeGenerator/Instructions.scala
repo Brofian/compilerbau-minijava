@@ -19,15 +19,15 @@ private object Instructions {
     pushConstant(0, state)
   }
 
-   def goto(label: Label, state: MethodGeneratorState): Unit = {
+  def goto(label: Label, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitJumpInsn(GOTO, label)
   }
 
-   def visitLabel(label: Label, state: MethodGeneratorState): Unit = {
+  def visitLabel(label: Label, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitLabel(label)
   }
 
-   def nop(state: MethodGeneratorState): Unit = {
+  def nop(state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(NOP)
   }
 
@@ -48,33 +48,33 @@ private object Instructions {
    * @param label the label to which should be jumped on success
    * @param state
    */
-   def condJump(opcode: Int, label: Label, state: MethodGeneratorState): Unit = {
+  def condJump(opcode: Int, label: Label, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitJumpInsn(opcode, label)
     state.popStack(1)
   }
 
-   def switch(default: Label, labels: Array[Label], keys: Array[Int], state: MethodGeneratorState) = {
+  def switch(default: Label, labels: Array[Label], keys: Array[Int], state: MethodGeneratorState) = {
     state.methodVisitor.visitLookupSwitchInsn(default, keys, labels)
   }
 
-   def storeVar(varId: Int, varType: Type, state: MethodGeneratorState) = {
+  def storeVar(varId: Int, varType: Type, state: MethodGeneratorState) = {
     // TODO multiple types
     state.methodVisitor.visitVarInsn(asmStoreInsn(varType), varId)
     state.popStack(1)
   }
 
-   def loadVar(varId: Int, varType: Type, state: MethodGeneratorState) = {
+  def loadVar(varId: Int, varType: Type, state: MethodGeneratorState) = {
     // TODO multiple types
     state.methodVisitor.visitVarInsn(asmLoadInsn(varType), varId)
     state.pushStack()
   }
 
-   def pop(state: MethodGeneratorState) = {
+  def pop(state: MethodGeneratorState) = {
     state.methodVisitor.visitInsn(POP)
     state.popStack(1)
   }
 
-   def duplicateTop(state: MethodGeneratorState) = {
+  def duplicateTop(state: MethodGeneratorState) = {
     state.methodVisitor.visitInsn(DUP)
     state.pushStack()
   }
@@ -110,12 +110,18 @@ private object Instructions {
     // object is popped and field is pushed
   }
 
-   def binaryOperation(opcode: Int, state: MethodGeneratorState): Unit = {
+  def binaryOperation(opcode: Int, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(opcode)
     state.popStack(1) // the instruction takes two arguments from the stack and then pushes the result
   }
 
-  def callMethod(className: String, methodName: String, argumentCount: Int, methodDescriptor: String, state: MethodGeneratorState): Unit = {
+  def callMethod(
+    className: String,
+    methodName: String,
+    argumentCount: Int,
+    methodDescriptor: String,
+    state: MethodGeneratorState
+  ): Unit = {
     state.methodVisitor.visitMethodInsn(INVOKEVIRTUAL, javaifyClass(className), methodName, methodDescriptor, false)
     state.popStack(1 + argumentCount)
   }
@@ -135,7 +141,13 @@ private object Instructions {
   }
 
   def callConstructor(className: String, parameterDescriptors: List[Type], state: MethodGeneratorState): Unit = {
-    state.methodVisitor.visitMethodInsn(INVOKESPECIAL, javaifyClass(className), "<init>", asmConstructorType(parameterDescriptors), false)
+    state.methodVisitor.visitMethodInsn(
+      INVOKESPECIAL,
+      javaifyClass(className),
+      "<init>",
+      asmConstructorType(parameterDescriptors),
+      false
+    )
     state.popStack(1 + parameterDescriptors.size)
   }
 }

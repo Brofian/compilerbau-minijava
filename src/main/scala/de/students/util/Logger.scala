@@ -6,7 +6,6 @@ enum Verbosity(val level: Int):
   case NOTICE extends Verbosity(2)
   case ERROR extends Verbosity(3)
 
-
 object Logger {
 
   /**
@@ -45,7 +44,6 @@ object Logger {
     this.log(output, Verbosity.ERROR)
   }
 
-
   /**
    * Universal logging method that respects the current verbosity level before outputting
    *
@@ -58,6 +56,5 @@ object Logger {
       println(output)
     }
   }
-
 
 }
