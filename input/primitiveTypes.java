@@ -13,6 +13,8 @@ public class A {
         boolean flag2 = false;
         boolean flag3 = flag1 && flag2;
 
+        /*
+
         // Byte type
         byte byteVar1 = 127b;
         byte byteVar2 = 0B;
@@ -44,5 +46,6 @@ public class A {
         char charVar2 = 'B';
         char charVar3 = 'C' + 'D';
 
+         */
     }
 }
