@@ -2,32 +2,42 @@ package de.students.semantic
 
 import de.students.Parser.*
 
-
 object StatementChecks {
 
   def checkStatement(stmt: Statement, context: SemanticContext): TypedStatement = {
     stmt match {
-      case v@VarDecl(_,_,_) => this.checkVarDeclarationStatement(v, context)
-      case b@BlockStatement(_) => this.checkBlockStatement(b, context.createChildContext() /* New block, new context */)
-      case r@ReturnStatement(_) => this.checkReturnStatement(r, context)
-      case s@IfStatement(_, _, _) => this.checkIfStatement(s, context)
-      case w@WhileStatement(_, _) => this.checkWhileStatement(w, context)
-      case d@DoWhileStatement(_, _) => this.checkDoWhileStatement(d, context)
-      case f@ForStatement(_, _, _, _) => this.checkForStatement(f, context.createChildContext() /* For loops can declare their own variables before block is entered */)
-      case s@SwitchStatement(_, _, _) => this.checkSwitchStatement(s, context)
-      case c@SwitchCase(_, _) => throw new SemanticException("SwitchCase statements are checked by the switchStatement and should never occur alone")
-      case d@DefaultCase(_) => throw new SemanticException("DefaultCase statements are checked by the switchStatement and should never occur alone")
-      case e@StatementExpression(_) => this.checkExpressionStatement(e, context)
-      case b@BreakStatement() => this.checkBreakStatement(b, context)
-      case c@ContinueStatement() => this.checkContinueStatement(c, context)
-      case _ => throw new SemanticException(s"Could not match statement $stmt")
+      case v @ VarDecl(_, _, _) => this.checkVarDeclarationStatement(v, context)
+      case b @ BlockStatement(_) =>
+        this.checkBlockStatement(b, context.createChildContext() /* New block, new context */ )
+      case r @ ReturnStatement(_)     => this.checkReturnStatement(r, context)
+      case s @ IfStatement(_, _, _)   => this.checkIfStatement(s, context)
+      case w @ WhileStatement(_, _)   => this.checkWhileStatement(w, context)
+      case d @ DoWhileStatement(_, _) => this.checkDoWhileStatement(d, context)
+      case f @ ForStatement(_, _, _, _) =>
+        this.checkForStatement(
+          f,
+          context.createChildContext() /* For loops can declare their own variables before block is entered */
+        )
+      case s @ SwitchStatement(_, _, _) => this.checkSwitchStatement(s, context)
+      case c @ SwitchCase(_, _) =>
+        throw new SemanticException(
+          "SwitchCase statements are checked by the switchStatement and should never occur alone"
+        )
+      case d @ DefaultCase(_) =>
+        throw new SemanticException(
+          "DefaultCase statements are checked by the switchStatement and should never occur alone"
+        )
+      case e @ StatementExpression(_) => this.checkExpressionStatement(e, context)
+      case b @ BreakStatement()       => this.checkBreakStatement(b, context)
+      case c @ ContinueStatement()    => this.checkContinueStatement(c, context)
+      case _                          => throw new SemanticException(s"Could not match statement $stmt")
     }
   }
 
   private def checkVarDeclarationStatement(varDecl: VarDecl, context: SemanticContext): TypedStatement = {
     val evaluatedType = varDecl.varType match {
       case UserType(clsName) => UserType(context.getFullyQualifiedClassName(clsName))
-      case _ => varDecl.varType
+      case _                 => varDecl.varType
     }
     context.addTypeAssumption(varDecl.name, evaluatedType)
     TypedStatement(VarDecl(varDecl.name, evaluatedType, None), NoneType)
@@ -59,7 +69,7 @@ object StatementChecks {
         val typedExpr = ExpressionChecks.checkExpression(expr, context)
         TypedStatement(
           ReturnStatement(Some(typedExpr)),
-          typedExpr.exprType,
+          typedExpr.exprType
         )
     }
   }
@@ -76,12 +86,12 @@ object StatementChecks {
     // else case
     val typedElseBranch: Option[TypedStatement] = ifStmt.elseBranch match {
       case Some(stmt) => Some(this.checkStatement(stmt, context.createChildContext()))
-      case None => None
+      case None       => None
     }
 
     val stmtType: Type = typedElseBranch match {
       case Some(elseBranch) => UnionTypeFinder.getUnion(typedThenBranch.stmtType, elseBranch.stmtType, context)
-      case None => typedThenBranch.stmtType
+      case None             => typedThenBranch.stmtType
     }
 
     TypedStatement(IfStatement(typedCondition, typedThenBranch, typedElseBranch), stmtType)
@@ -115,15 +125,14 @@ object StatementChecks {
 
   private def checkForStatement(forStmt: ForStatement, context: SemanticContext): TypedStatement = {
 
-    val typedInit = if forStmt.init.isEmpty then None else
-      Some(StatementChecks.checkStatement(forStmt.init.get, context))
+    val typedInit =
+      if forStmt.init.isEmpty then None else Some(StatementChecks.checkStatement(forStmt.init.get, context))
 
-    val typedCond = if forStmt.cond.isEmpty then None else
-      Some(ExpressionChecks.checkExpression(forStmt.cond.get, context))
+    val typedCond =
+      if forStmt.cond.isEmpty then None else Some(ExpressionChecks.checkExpression(forStmt.cond.get, context))
 
-    val typedUpdate = if forStmt.update.isEmpty then None else
-      Some(ExpressionChecks.checkExpression(forStmt.update.get, context))
-
+    val typedUpdate =
+      if forStmt.update.isEmpty then None else Some(ExpressionChecks.checkExpression(forStmt.update.get, context))
 
     if (typedCond.isEmpty || (typedCond.get.exprType != BoolType)) {
       throw new SemanticException("For condition does not evaluate to boolean")
@@ -133,7 +142,6 @@ object StatementChecks {
     val typedBody = this.checkStatement(forStmt.body, context)
     TypedStatement(ForStatement(typedInit, typedCond, typedUpdate, typedBody), typedBody.stmtType)
   }
-
 
   private def checkSwitchStatement(switchStmt: SwitchStatement, context: SemanticContext): TypedStatement = {
 
@@ -155,25 +163,39 @@ object StatementChecks {
       )
     )
 
-    val typedDefault = if switchStmt.default.isEmpty then None else
-      Some(DefaultCase(StatementChecks.checkStatement(switchStmt.default.get.caseBlock, context.createChildContext())))
+    val typedDefault =
+      if switchStmt.default.isEmpty then None
+      else
+        Some(
+          DefaultCase(StatementChecks.checkStatement(switchStmt.default.get.caseBlock, context.createChildContext()))
+        )
 
-
-    val caseUnionType: Type = typedCases.map(c => c.caseBlock.asInstanceOf[TypedStatement])
+    val caseUnionType: Type = typedCases
+      .map(c => c.caseBlock.asInstanceOf[TypedStatement])
       .reduce((a: TypedStatement, b: TypedStatement) => {
         TypedStatement(
           BreakStatement(), // placeholder, as we need a statement for the reduce
           UnionTypeFinder.getUnion(a.stmtType, b.stmtType, context)
         )
-      }).stmtType
+      })
+      .stmtType
 
-    val switchUnionType: Type = if typedDefault.isEmpty then caseUnionType else
-      UnionTypeFinder.getUnion(caseUnionType, typedDefault.get.caseBlock.asInstanceOf[TypedStatement].stmtType, context)
+    val switchUnionType: Type =
+      if typedDefault.isEmpty then caseUnionType
+      else
+        UnionTypeFinder.getUnion(
+          caseUnionType,
+          typedDefault.get.caseBlock.asInstanceOf[TypedStatement].stmtType,
+          context
+        )
 
     TypedStatement(SwitchStatement(typedExpr, typedCases, typedDefault), switchUnionType)
   }
 
-  private def checkExpressionStatement(expressionStmt: StatementExpression, context: SemanticContext): TypedStatement = {
+  private def checkExpressionStatement(
+    expressionStmt: StatementExpression,
+    context: SemanticContext
+  ): TypedStatement = {
     val typedExpr = ExpressionChecks.checkExpression(expressionStmt.expr, context)
     TypedStatement(StatementExpression(typedExpr), NoneType)
   }
@@ -185,6 +207,5 @@ object StatementChecks {
   private def checkContinueStatement(continueStmt: ContinueStatement, context: SemanticContext): TypedStatement = {
     TypedStatement(continueStmt, NoneType)
   }
-
 
 }

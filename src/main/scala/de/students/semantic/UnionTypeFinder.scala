@@ -35,33 +35,34 @@ object UnionTypeFinder {
 
             // - check if typeA and typeB have a common parent
             if (typeAParent.nonEmpty && typeBParent.nonEmpty) {
-              try
-                foundUnion = Some(this.getUnion(UserType(typeAParent.get), UserType(typeBParent.get), context))
-              catch
+              try foundUnion = Some(this.getUnion(UserType(typeAParent.get), UserType(typeBParent.get), context))
+              catch {
                 case _ => // do nothing
+              }
             }
 
             // - check if typeA < typeB
             if (typeAParent.nonEmpty && foundUnion.isEmpty) {
               try // recursively check, if a parent of A is of type B
                 foundUnion = Some(this.getUnion(UserType(typeAParent.get), typeB, context))
-              catch
+              catch {
                 case _ => // do nothing
+              }
             }
 
             // - check if typeB < typeA
             if (typeBParent.nonEmpty && foundUnion.isEmpty) {
               try // recursively check, if a parent of A is of type B
                 this.getUnion(typeA, UserType(typeBParent.get), context)
-              catch
+              catch {
                 case _ => // do nothing
+              }
             }
 
             // return any union we found, or throw an error otherwise
             if (foundUnion.nonEmpty) {
               foundUnion.get
-            }
-            else {
+            } else {
               // this branch should not even be possible, as both types must be java/lang/Object
               throw SemanticException(s"Types $typeA and $typeB do not overlap")
             }
@@ -90,16 +91,14 @@ object UnionTypeFinder {
         val typeAParent = context.getClassParent(className)
         if (typeAParent.isEmpty) {
           false // We arrived at java/lang/Object and B is still not equal
-        }
-        else {
+        } else {
           this.isASubtypeOfB(UserType(typeAParent.get), typeB, context) // check if A's parent is a subtype of B
         }
       case NoneType => typeB.equals(VoidType) || typeB.equals(NoneType)
-      case _ => typeA == typeB // the trivial case: two primitive types are either equal or not
+      case _        => typeA == typeB // the trivial case: two primitive types are either equal or not
 
     }
   }
-
 
   /**
    * Get the larger primitive type out of a combination of two types
@@ -126,8 +125,7 @@ object UnionTypeFinder {
 
     if (typeWidening.indexOf(primitiveA) > typeWidening.indexOf(primitiveB)) {
       primitiveA
-    }
-    else {
+    } else {
       primitiveB
     }
   }

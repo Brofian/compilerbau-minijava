@@ -9,9 +9,9 @@ import scala.collection.mutable;
 import scala.collection.immutable;
 
 case class ClassBytecode(
-                        bytecode: Array[Byte],
-                        className: String
-                        )
+  bytecode: Array[Byte],
+  className: String
+)
 
 def generateBytecode(project: Project): List[ClassBytecode] = {
   project.packages.flatMap(p => generateBytecode(p))
@@ -40,11 +40,13 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   )
 
   // set constructors
-  classDecl.constructors.foreach(constructorDecl => generateConstructor(
-    classDecl,
-    classWriter,
-    constructorDecl
-  ))
+  classDecl.constructors.foreach(constructorDecl =>
+    generateConstructor(
+      classDecl,
+      classWriter,
+      constructorDecl
+    )
+  )
   if (classDecl.constructors.isEmpty) {
     generateConstructor(
       classDecl,
@@ -54,13 +56,17 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   }
 
   // set fields
-  classDecl.fields.foreach(fieldDecl => classWriter.visitField(
-    accessModifier(fieldDecl),
-    fieldDecl.name,
-    asmType(fieldDecl.varType),
-    null, // signature
-    null // initial value, only used for static fields
-  ).visitEnd())
+  classDecl.fields.foreach(fieldDecl =>
+    classWriter
+      .visitField(
+        accessModifier(fieldDecl),
+        fieldDecl.name,
+        asmType(fieldDecl.varType),
+        null, // signature
+        null // initial value, only used for static fields
+      )
+      .visitEnd()
+  )
 
   // set methods
   classDecl.methods.foreach(methodDecl => generateMethodBody(classDecl, methodDecl, classWriter))
@@ -74,7 +80,11 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
 }
 
 // default empty constructor for now
-private def generateConstructor(classDecl: ClassDecl, classWriter: ClassWriter, constructorDecl: ConstructorDecl): Unit = {
+private def generateConstructor(
+  classDecl: ClassDecl,
+  classWriter: ClassWriter,
+  constructorDecl: ConstructorDecl
+): Unit = {
   val methodVisitor = classWriter.visitMethod(
     ACC_PUBLIC,
     "<init>",
@@ -83,7 +93,9 @@ private def generateConstructor(classDecl: ClassDecl, classWriter: ClassWriter, 
     null
   )
   val state = defaultMethodGeneratorState(
-    classDecl, methodVisitor, VoidType
+    classDecl,
+    methodVisitor,
+    VoidType
   )
   methodVisitor.visitCode()
 
@@ -127,18 +139,18 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
 }
 
 private case class MethodGeneratorState(
-                                 val methodVisitor: MethodVisitor,
-                                 val fields: List[FieldDecl],
-                                 val returnType: Type,
-                                 val className: String,
-                                 var stackDepth: Int,
-                                 var maxStackDepth: Int,
-                                 var localVariableCount: Int,
-                                 val scopeEnds: ArrayBuffer[Label],
-                                 val loopStarts: ArrayBuffer[Label],
-                                 var currentScope: Int,
-                                 val variables: mutable.HashMap[String, VariableInfo],
-                               ) {
+  val methodVisitor: MethodVisitor,
+  val fields: List[FieldDecl],
+  val returnType: Type,
+  val className: String,
+  var stackDepth: Int,
+  var maxStackDepth: Int,
+  var localVariableCount: Int,
+  val scopeEnds: ArrayBuffer[Label],
+  val loopStarts: ArrayBuffer[Label],
+  var currentScope: Int,
+  val variables: mutable.HashMap[String, VariableInfo]
+) {
   def startSimpleScope(end: Label): Unit = {
     scopeEnds += end
     currentScope += 1
@@ -198,23 +210,28 @@ private case class MethodGeneratorState(
   }
 }
 
-private def defaultMethodGeneratorState(classDecl: ClassDecl, methodVisitor: MethodVisitor, returnType: Type): MethodGeneratorState =
+private def defaultMethodGeneratorState(
+  classDecl: ClassDecl,
+  methodVisitor: MethodVisitor,
+  returnType: Type
+): MethodGeneratorState =
   MethodGeneratorState(
     methodVisitor,
     classDecl.fields,
     returnType,
     classDecl.name,
-    0, 0, 0,
+    0,
+    0,
+    0,
     ArrayBuffer.empty,
     ArrayBuffer.empty,
     0,
-    mutable.HashMap.empty,
+    mutable.HashMap.empty
   )
 
-
 private case class VariableInfo(
-                               id: Int,
-                               scopeId: Int,
-                               t: Type,
-                               isField: Boolean
-                               )
+  id: Int,
+  scopeId: Int,
+  t: Type,
+  isField: Boolean
+)

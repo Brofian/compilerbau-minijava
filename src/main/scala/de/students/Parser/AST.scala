@@ -6,48 +6,48 @@ case class Project(packages: List[Package])
 sealed trait ASTNode
 
 // Program-node
-case class Package(name: String, imports : Imports, classes: List[ClassDecl]) extends ASTNode
+case class Package(name: String, imports: Imports, classes: List[ClassDecl]) extends ASTNode
 
 case class Imports(names: List[String]) extends ASTNode
 
 // Class declaration
 case class ClassDecl(
-                      name: String,
-                      parent: String,
-                      isAbstract: Boolean,
-                      methods: List[MethodDecl],
-                      fields: List[FieldDecl],
-                      constructors: List[ConstructorDecl]
-                    ) extends ASTNode
+  name: String,
+  parent: String,
+  isAbstract: Boolean,
+  methods: List[MethodDecl],
+  fields: List[FieldDecl],
+  constructors: List[ConstructorDecl]
+) extends ASTNode
 
 // method declaration
 case class MethodDecl(
-                       accessModifier: Option[String], // Optional (default to package-private)
-                       name: String,
-                       isAbstract: Boolean,
-                       static: Boolean,
-                       isFinal: Boolean,
-                       returnType: Type,
-                       params: List[VarDecl],
-                       body: Option[Statement] // Optional to handle abstract methods
-                     ) extends ASTNode
+  accessModifier: Option[String], // Optional (default to package-private)
+  name: String,
+  isAbstract: Boolean,
+  static: Boolean,
+  isFinal: Boolean,
+  returnType: Type,
+  params: List[VarDecl],
+  body: Option[Statement] // Optional to handle abstract methods
+) extends ASTNode
 
 // Constructor declaration
 case class ConstructorDecl(
-                            accessModifier: Option[String],
-                            name: String,
-                            params: List[VarDecl],
-                            body: Statement
-                          ) extends ASTNode
+  accessModifier: Option[String],
+  name: String,
+  params: List[VarDecl],
+  body: Statement
+) extends ASTNode
 
 // Field declaration
 case class FieldDecl(
-                      accessModifier: Option[String],
-                      isFinal: Boolean,
-                      name: String,
-                      varType: Type,
-                      initializer: Option[Expression]
-                    ) extends ASTNode
+  accessModifier: Option[String],
+  isFinal: Boolean,
+  name: String,
+  varType: Type,
+  initializer: Option[Expression]
+) extends ASTNode
 
 // Variable declaration
 case class VarDecl(name: String, varType: Type, initializer: Option[Expression]) extends Statement
@@ -75,7 +75,8 @@ case class BlockStatement(stmts: List[Statement]) extends Statement
 case class ReturnStatement(expr: Option[Expression]) extends Statement
 case class IfStatement(cond: Expression, thenBranch: Statement, elseBranch: Option[Statement]) extends Statement
 case class WhileStatement(cond: Expression, body: Statement) extends Statement
-case class ForStatement(init: Option[Statement], cond: Option[Expression], update: Option[Expression], body: Statement) extends Statement
+case class ForStatement(init: Option[Statement], cond: Option[Expression], update: Option[Expression], body: Statement)
+    extends Statement
 case class DoWhileStatement(cond: Expression, body: Statement) extends Statement
 case class SwitchStatement(expr: Expression, cases: List[SwitchCase], default: Option[DefaultCase]) extends Statement
 case class SwitchCase(caseLit: Option[Literal], caseBlock: Statement) extends Statement

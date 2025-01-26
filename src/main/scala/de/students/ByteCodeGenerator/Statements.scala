@@ -14,20 +14,20 @@ private val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
 
 private def generateStatement(statement: Statement, state: MethodGeneratorState): Unit = {
   statement match {
-    case block: BlockStatement => generateBlockStatement(block, state)
-    case returnStatement: ReturnStatement => generateReturnStatement(returnStatement, state)
+    case block: BlockStatement                    => generateBlockStatement(block, state)
+    case returnStatement: ReturnStatement         => generateReturnStatement(returnStatement, state)
     case expressionStatement: StatementExpression => generateExpressionStatement(expressionStatement, state)
-    case ifStatement: IfStatement => generateIfStatement(ifStatement, state)
-    case whileStatement: WhileStatement => generateWhileStatement(whileStatement, state)
-    case forStatement: ForStatement => generateForStatement(forStatement, state)
-    case doWhileStatement: DoWhileStatement => generateDoWhileStatement(doWhileStatement, state)
-    case switchStatement: SwitchStatement => generateSwitchStatement(switchStatement, state)
-    case breakStatement: BreakStatement => generateBreakStatement(breakStatement, state)
-    case continueStatement: ContinueStatement => generateContinueStatement(continueStatement, state)
-    case typedStatement: TypedStatement => generateTypedStatement(typedStatement, state)
-    case varDecl: VarDecl => generateVariableDeclaration(varDecl, state)
+    case ifStatement: IfStatement                 => generateIfStatement(ifStatement, state)
+    case whileStatement: WhileStatement           => generateWhileStatement(whileStatement, state)
+    case forStatement: ForStatement               => generateForStatement(forStatement, state)
+    case doWhileStatement: DoWhileStatement       => generateDoWhileStatement(doWhileStatement, state)
+    case switchStatement: SwitchStatement         => generateSwitchStatement(switchStatement, state)
+    case breakStatement: BreakStatement           => generateBreakStatement(breakStatement, state)
+    case continueStatement: ContinueStatement     => generateContinueStatement(continueStatement, state)
+    case typedStatement: TypedStatement           => generateTypedStatement(typedStatement, state)
+    case varDecl: VarDecl                         => generateVariableDeclaration(varDecl, state)
     case printStatement: PrintStatement => makePrintStatement(printStatement.toPrint, state.methodVisitor, state)
-    case _ => throw NotImplementedError("unknown statement")
+    case _                              => throw NotImplementedError("unknown statement")
   }
 
   debugLogStack(state, f"end of statement ${statement.getClass.toString.split('.').last}")
@@ -97,10 +97,12 @@ private def generateForStatement(forStatement: ForStatement, state: MethodGenera
         forStatement.init.getOrElse(EMPTY_STATEMENT),
         WhileStatement(
           forStatement.cond.getOrElse(TRUE_EXPRESSION),
-          BlockStatement(List(
-            StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION)),
-            forStatement.body
-          ))
+          BlockStatement(
+            List(
+              StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION)),
+              forStatement.body
+            )
+          )
         )
       )
     ),
