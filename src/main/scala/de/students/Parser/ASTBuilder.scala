@@ -40,7 +40,7 @@ object ASTBuilder {
            val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
            Logger.debug(s"Visiting import $importPath ")
            importPath
-         }.toList 
+         }.toList
        )
     }
 
@@ -163,10 +163,37 @@ object ASTBuilder {
       } // Handle while statements
       else if (ctx.whileStatement() != null) {
         visitWhileStatement(ctx.whileStatement())
+      }else if(ctx.forStatement() != null) {
+        visitForStatement(ctx.forStatement())
       } else {
         // Handle other types of statements
         throw new UnsupportedOperationException(s"Unsupported statement: ${ctx.getText}")
       }
+    }
+
+    override def visitForStatement(ctx: ForStatementContext): Statement = {
+        Logger.debug(s"Visiting for statement: ${ctx.getText}")
+
+        // Parse initialization (either a variable declaration, an expression statement, or empty)
+        val init: Option[Statement] =
+          if (ctx.variableDeclaration() != null) Some(visitVariableDeclaration(ctx.variableDeclaration()))
+          else if (ctx.expressionStatement() != null) Some(visitExpressionStatement(ctx.expressionStatement()))
+          else None
+
+        // Parse condition (optional)
+        val cond: Option[Expression] = Option(ctx.expression(0)).map(visitExpression)
+
+        // Parse update expression (optional)
+        val update: Option[Expression] =
+          if (ctx.expression().size() > 1) Option(visitExpression(ctx.expression(1)))
+          else None
+
+        // Parse loop body
+        val body: Statement = visitBlockStmt(ctx.block())
+
+        Logger.debug(s"For loop - Init: $init, Condition: $cond, Update: $update, Body: $body")
+
+        ForStatement(init, cond, update, body)
     }
 
     override def visitWhileStatement(ctx: WhileStatementContext): Statement = {
