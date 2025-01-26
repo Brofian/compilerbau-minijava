@@ -21,10 +21,14 @@ object MiniJavaCompiler {
     // Create the AST from the parse-tree
     val astProject: Project = Parser.main(fileContents)
 
+    Logger.info("Parsed AST:")
+    Logger.info(astProject)
+
     // Run the semantic- and type-check
     val typedAst = SemanticCheck.runCheck(astProject)
 
-    Logger.debug(typedAst)
+    Logger.info("Typed AST:")
+    Logger.info(typedAst)
 
     // Translate the typed AST into bytecode
     val bytecode = ByteCodeGenerator.generateBytecode(typedAst)

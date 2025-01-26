@@ -62,8 +62,11 @@ object ExpressionChecks {
     typedArray.exprType match {
       case ArrayType(baseType) =>
         typedIndex.exprType match {
+          case ByteType => TypedExpression(ArrayAccess(typedArray, typedIndex), baseType)
+          case CharType => TypedExpression(ArrayAccess(typedArray, typedIndex), baseType)
+          case ShortType => TypedExpression(ArrayAccess(typedArray, typedIndex), baseType)
           case IntType => TypedExpression(ArrayAccess(typedArray, typedIndex), baseType)
-          case _ => throw new SemanticException(s"Array can only be indexed with integer values, but encountered array access with type ${typedIndex.exprType}")
+          case _ => throw new SemanticException(s"Array can only be indexed with integer values or smaller, but encountered array access with type ${typedIndex.exprType}")
         }
       case _ => throw new SemanticException(s"Cannot access value of type ${typedArray.exprType} with array indexing")
     }
@@ -126,16 +129,21 @@ object ExpressionChecks {
       case ">=" => BoolType
       case "!=" => BoolType
       case "==" => BoolType
-      case "+" => IntType
-      case "-" => IntType
-      case "*" => IntType
-      case "/" => IntType
-      case "%" => IntType
-      case "+=" => IntType
-      case "-=" => IntType
-      case "*=" => IntType
-      case "%=" => IntType
-      case "=" => typedLeft.exprType
+      case "+" => UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType)
+      case "-" => UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType)
+      case "*" => UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType)
+      case "/" => UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType)
+      case "%" => UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType)
+      case "+=" => typedLeft.exprType
+      case "-=" => typedLeft.exprType
+      case "*=" => typedLeft.exprType
+      case "%=" => typedLeft.exprType
+      case "=" => {
+        if (UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType) != typedLeft.exprType) {
+          throw new SemanticException(s"Implicit conversion of type ${typedRight.exprType} to type ${typedLeft.exprType} could result in data loss")
+        }
+        typedLeft.exprType
+      }
       case _ => throw new SemanticException(s"Binary operator ${binOp.op} is not defined for types ${typedLeft.exprType} and ${typedRight.exprType}")
     }
 
