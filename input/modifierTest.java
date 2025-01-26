@@ -1,4 +1,4 @@
-package de.example;
+package de.modifiertest;
 
 class A {
     final int a = 3;

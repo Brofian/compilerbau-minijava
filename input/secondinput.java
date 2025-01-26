@@ -1,4 +1,4 @@
-package de.example;
+package de.secondinput;
 
 public class MyProgram {
 

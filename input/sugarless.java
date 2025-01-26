@@ -1,4 +1,4 @@
-package de.example;
+package de.sugarless;
 
 
 class Sugarless extends Object {

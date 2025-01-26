@@ -18,7 +18,7 @@ class CompilerTest extends FunSuite {
       val relPath = file.getAbsolutePath.stripPrefix(inputDir.getAbsolutePath)
 
       try {
-        println(s"> Running mini java compiler with file ${file.getAbsolutePath}")
+        // println(s"> Running mini java compiler with file ${file.getAbsolutePath}")
         MiniJavaCompiler.main(Array("--",file.getAbsolutePath))
       }
       catch

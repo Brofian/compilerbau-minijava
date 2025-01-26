@@ -1,4 +1,4 @@
-package de.example;
+package de.minimal;
 
 class Minimal {
 

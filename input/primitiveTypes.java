@@ -1,4 +1,4 @@
-package de.example;
+package de.primitivetypes;
 
 public class A {
 

@@ -1,4 +1,4 @@
-package de.example;
+package de.objecttests;
 
 import java.lang.String;
 
