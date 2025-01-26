@@ -18,29 +18,33 @@ public class A {
         // Byte type
         byte byteVar1 = 127b;
         byte byteVar2 = 0B;
-        byte byteVar3 = 12b;
+        byte byteVar3 = 12b + 24B;
 
 
         // Short type
         short shortVar1 = 32767s;
         short shortVar2 = 0S;
-        short shortVar3 = 12s;
+        short shortVar3 = 15s % 4S;
 
         // Long type
         long longVar1 = 100000L;
         long longVar2 = 0L;
+        long longVar3 = 36l / 4L;
 
         // Float type
         float floatVar1 = 3.14f;
         float floatVar2 = 0.0f;
+        float floatVar3 = 100.1f - 32.4f;
 
         // Double type
         double doubleVar1 = 3.141592653589793;
         double doubleVar2 = 0.0;
+        double doubleVar3 = 123.456 * 78.9;
 
         // Char type
         char charVar1 = 'A';
         char charVar2 = 'B';
+        char charVar3 = 'C' + 'D';
 
          */
     }

@@ -9,8 +9,8 @@ object UnionTypeFinder {
   /**
    * Retrieve the first shared type of two base types or throw an error, if they do not overlap
    *
-   * @param typeA The first type to find the union of
-   * @param typeB The second type to find the union of
+   * @param typeA   The first type to find the union of
+   * @param typeB   The second type to find the union of
    * @param context The current context for resolving class names
    * @return
    */
@@ -100,4 +100,33 @@ object UnionTypeFinder {
     }
   }
 
+  /**
+   * Get the larger primitive type out of a combination of two types
+   *
+   * @param primitiveA First primitive
+   * @param primitiveB Second primitive
+   * @return
+   */
+  def getLargerPrimitive(primitiveA: Type, primitiveB: Type): Type = {
+
+    if (primitiveA.equals(primitiveB)) {
+      return primitiveA
+    }
+
+    // Primitive data types ordered by their size from smallest to largest
+    val typeWidening: Seq[Type] = Seq(
+      ByteType,
+      ShortType,
+      IntType,
+      LongType,
+      FloatType,
+      DoubleType
+    )
+
+    if (typeWidening.indexOf(primitiveA) > typeWidening.indexOf(primitiveB)) {
+      primitiveA
+    } else {
+      primitiveB
+    }
+  }
 }
