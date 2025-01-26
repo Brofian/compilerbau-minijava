@@ -1,4 +1,4 @@
-package out;
+package de.multipleclasses;
 
 import java.lang.String;
 
