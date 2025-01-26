@@ -3,7 +3,7 @@ package de.students.semantic;
 import de.students.Parser.*
 
 import java.lang.Class
-import java.lang.reflect.{Field, Method, Modifier}
+import java.lang.reflect.Modifier
 import scala.collection.mutable
 import scala.util.matching.Regex
 
@@ -80,7 +80,7 @@ class ClassTypeBridge(baseAST: Project) {
     val reflectionClass = this.getReflectionClass(fullyQualifiedClassName)
 
     if (localClass.isEmpty && reflectionClass.isEmpty) {
-      throw new SemanticException(s"Requested class $fullyQualifiedClassName is not defined")
+      throw new SemanticException(s"Referenced class $fullyQualifiedClassName is not defined")
     } else if (localClass.nonEmpty && reflectionClass.nonEmpty) {
       throw new SemanticException(s"Class $fullyQualifiedClassName is already defined and cannot be redeclared")
     } else {
@@ -90,6 +90,7 @@ class ClassTypeBridge(baseAST: Project) {
 
   /**
    * Search for a class defined in out own AST and return it with fully qualified names
+   *
    * @param fullyQualifiedClassName The fully qualified name of the class to search for
    * @return
    */
@@ -155,10 +156,24 @@ class ClassTypeBridge(baseAST: Project) {
       // extract data to our format and fully qualify
       val packageName = reflectionClass.getPackageName
 
+      val parent = reflectionClass.getSuperclass
+      val parentName =
+        if parent != null then parent.getName
+        else {
+          if (reflectionClass.isInterface) {
+            // TODO: replace this workaround for interfaces with an appropriate handling
+            "java.lang.Object"
+          } else if (fullyQualifiedClassName == "java.lang.Object") {
+            "java.lang.Object" // just let Object be its own parent
+          } else { // does this still happen? just to make sure...
+            throw new SemanticException(s"Class $fullyQualifiedClassName does not have a parent class")
+          }
+        }
+
       Some(
         ClassDecl(
           fullyQualifiedClassName, // className
-          reflectionClass.getSuperclass.getName, // parentName
+          parentName, // parentName
           Modifier.isAbstract(reflectionClass.getModifiers), // isAbstract
           reflectionClass.getMethods
             .map(reflectionMethod => {
@@ -224,7 +239,9 @@ class ClassTypeBridge(baseAST: Project) {
             .toList // constructors
         )
       )
-    } catch case _ => None
+    } catch {
+      case e: ClassNotFoundException => None
+    }
   }
 
   /**
@@ -236,9 +253,15 @@ class ClassTypeBridge(baseAST: Project) {
   private def reflectionTypeToCustomType(refType: Class[?]): Type = {
     if refType.isPrimitive then
       refType.getName match {
-        // boolean, byte, char, short, int, long, float, and double.
+        case "void"    => VoidType
         case "boolean" => BoolType
+        case "byte"    => ByteType
+        case "char"    => CharType
+        case "short"   => ShortType
         case "int"     => IntType
+        case "long"    => LongType
+        case "float"   => FloatType
+        case "double"  => DoubleType
         case _         => throw new SemanticException(s"Primitive type $refType is not yet implemented")
       }
     else UserType(refType.getName)

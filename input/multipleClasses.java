@@ -1,7 +1,5 @@
 package de.multipleclasses;
 
-import java.lang.String;
-
 class AClass {
     private int value;
 
@@ -12,14 +10,9 @@ class AClass {
         BClass b = new BClass();
         AClass a = b.createNewInstance();
         a.calc(this.value);
+        b.calc(this.value);
 
         return n;
-    }
-
-    public String getTestString() {
-        String text = "Hello world";
-
-        return text.substring(1, 3);
     }
 }
 
@@ -28,5 +21,12 @@ class BClass extends AClass {
     public AClass createNewInstance() {
         return new BClass();
     }
+
+
+    // Method calls still runs into problems with the parser
+    // public int heavyCalc() {
+    //    calc(10);
+    //    return 1;
+    // }
 
 }

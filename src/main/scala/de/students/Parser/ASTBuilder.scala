@@ -173,7 +173,7 @@ object ASTBuilder {
         visitWhileStatement(ctx.whileStatement())
       } else if (ctx.doWhileStatement() != null) {
         visitDoWhileStatement(ctx.doWhileStatement())
-      } else if(ctx.forStatement() != null) {
+      } else if (ctx.forStatement() != null) {
         visitForStatement(ctx.forStatement())
       } else {
         // Handle other types of statements
@@ -182,28 +182,28 @@ object ASTBuilder {
     }
 
     override def visitForStatement(ctx: ForStatementContext): Statement = {
-        Logger.debug(s"Visiting for statement: ${ctx.getText}")
+      Logger.debug(s"Visiting for statement: ${ctx.getText}")
 
-        // Parse initialization (either a variable declaration, an expression statement, or empty)
-        val init: Option[Statement] =
-          if (ctx.variableDeclaration() != null) Some(visitVariableDeclaration(ctx.variableDeclaration()))
-          else if (ctx.expressionStatement() != null) Some(visitExpressionStatement(ctx.expressionStatement()))
-          else None
+      // Parse initialization (either a variable declaration, an expression statement, or empty)
+      val init: Option[Statement] =
+        if (ctx.variableDeclaration() != null) Some(visitVariableDeclaration(ctx.variableDeclaration()))
+        else if (ctx.expressionStatement() != null) Some(visitExpressionStatement(ctx.expressionStatement()))
+        else None
 
-        // Parse condition (optional)
-        val cond: Option[Expression] = Option(ctx.expression(0)).map(visitExpression)
+      // Parse condition (optional)
+      val cond: Option[Expression] = Option(ctx.expression(0)).map(visitExpression)
 
-        // Parse update expression (optional)
-        val update: Option[Expression] =
-          if (ctx.expression().size() > 1) Option(visitExpression(ctx.expression(1)))
-          else None
+      // Parse update expression (optional)
+      val update: Option[Expression] =
+        if (ctx.expression().size() > 1) Option(visitExpression(ctx.expression(1)))
+        else None
 
-        // Parse loop body
-        val body: Statement = visitBlockStmt(ctx.block())
+      // Parse loop body
+      val body: Statement = visitBlockStmt(ctx.block())
 
-        Logger.debug(s"For loop - Init: $init, Condition: $cond, Update: $update, Body: $body")
+      Logger.debug(s"For loop - Init: $init, Condition: $cond, Update: $update, Body: $body")
 
-        ForStatement(init, cond, update, body)
+      ForStatement(init, cond, update, body)
     }
 
     override def visitDoWhileStatement(ctx: DoWhileStatementContext): Statement = {
@@ -219,7 +219,7 @@ object ASTBuilder {
       // Return the corresponding AST node for a while statement
       DoWhileStatement(condition, body)
     }
-    
+
     override def visitWhileStatement(ctx: WhileStatementContext): Statement = {
       // Get the condition (expression)
       val condition = visitExpression(ctx.expression())

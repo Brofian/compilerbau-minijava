@@ -50,6 +50,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
     memberName: String,
     methodParams: Option[List[Type]]
   ): Type = {
+    // TODO: check access modifiers
 
     val classDecl = bridge.getClass(fullyQualifiedClassName)
 
@@ -105,8 +106,23 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
 
     matchingMemberType match {
       case Some(memberType) => memberType
-      case None =>
-        throw new SemanticException(s"No matching member with name $memberName found in class $fullyQualifiedClassName")
+      case None => // if this class has a parent, check there for a matching member
+        this.getClassParentOrNone(fullyQualifiedClassName) match {
+          case Some(parentClassName) =>
+            try {
+              this.getClassMemberType(parentClassName, memberName, methodParams)
+            } catch
+              case e: Exception => // if no parent has this member either, let the exception bubble back up
+                throw new SemanticException(
+                  s"No matching member with name \"$memberName\" found in class $fullyQualifiedClassName " +
+                    (if methodParams.nonEmpty then s"with parameters of type ${methodParams.get}" else "")
+                )
+          case None =>
+            throw new SemanticException(
+              s"No matching member with name \"$memberName\" found in class $fullyQualifiedClassName " +
+                (if methodParams.nonEmpty then s"with parameters of type ${methodParams.get}" else "")
+            )
+        }
     }
   }
 
@@ -120,6 +136,11 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
   def checkClassConstructorWithParameters(fullyQualifiedClassName: String, constructorParams: List[Type]): Boolean = {
     val classDecl = bridge.getClass(fullyQualifiedClassName)
 
+    // special case: implicit empty constructor
+    if (classDecl.constructors.isEmpty) {
+      return constructorParams.isEmpty // if no params given, the implicit empty constructor is sufficient
+    }
+
     val matchingConstructors: List[ConstructorDecl] = classDecl.constructors.filter(constructor => {
       constructor.params.size == constructorParams.size &&
       constructor.params.zipWithIndex.forall((requiredParam, index) => {
@@ -129,7 +150,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
     })
 
     matchingConstructors.size match {
-      case 0 => false
+      case 0 => false // constructors are not inherited, so we do not have to check the parent
       case 1 => true
       case _ =>
         throw new SemanticException(
