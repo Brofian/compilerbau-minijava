@@ -1,5 +1,3 @@
-import scala.sys.process._
-
 val scala3Version = "3.6.2"
 
 lazy val root = project
@@ -19,30 +17,12 @@ lazy val root = project
     )
   )
 
-val generateAntlrTask = taskKey[Unit]("generateAntlr")
-generateAntlrTask := {
-  println("Generating grammar from g4 file")
 
-  val outputDirectory = "src/main/scala/de/students/antlr"
-  val packageName = "de.students.antlr"
-  val inputGrammarFile = "src/main/antlr4/de/students/antlr/Java.g4"
-
-  val antlr4Command = Seq(
-    "java",
-    "-cp", (dependencyClasspath in Compile).value.map(_.data).mkString(":"),
-    "org.antlr.v4.Tool",
-    "-o", outputDirectory,
-    "-package", packageName,
-    "-listener",
-    "-visitor",
-    "-Xexact-output-dir",
-    inputGrammarFile
-  )
-
-  println(s" > Executing\n > ${antlr4Command.mkString(" ")}")
-  val returnCode = antlr4Command.!
-  println(s"Finished generation with return code: $returnCode")
-}
-
-// Uncomment to make ANTLR generation run before compilation
-// (Compile / compile) := ((Compile / compile) dependsOn generateAntlrTask).value
+// enable and configure AntlrPlugin (compile g4 File with `sbt clean compile`)
+enablePlugins(Antlr4Plugin)
+Antlr4 / antlr4Version := "4.13.2"
+Antlr4 / antlr4GenListener := true
+Antlr4 / antlr4GenVisitor := true
+Antlr4 / antlr4PackageName := Some("de.students.antlr")
+// add the generated files to the compile path, as they are nested in an additional antlr4 directory
+Compile / unmanagedSourceDirectories += baseDirectory.value / "src" / "main" / "antlr4"
