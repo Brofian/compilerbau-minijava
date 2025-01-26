@@ -4,17 +4,17 @@ class LoopTest{
 
     public static void runTests() {
         int a = 0;
-        while(2 > 1){
-            a = 1 + 2;
+        while(a < 10){
+            a = a + 1;
         }
 
-        for(int i = 0; i < 45; i = i + 1){
-            a = 2 + 1;
+        for(int i = 0; i < 42; i = i + 1){
+            a = i;
         }
 
         do {
-            a = 3;
-        } while(2 > 1);
+            a = a - 1;
+        } while(a > 1);
 
 
         return;
