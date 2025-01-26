@@ -36,21 +36,27 @@ object UnionTypeFinder {
             // - check if typeA and typeB have a common parent
             if (typeAParent.nonEmpty && typeBParent.nonEmpty) {
               try foundUnion = Some(this.getUnion(UserType(typeAParent.get), UserType(typeBParent.get), context))
-              catch case _ => // do nothing
+              catch {
+                case _ => // do nothing
+              }
             }
 
             // - check if typeA < typeB
             if (typeAParent.nonEmpty && foundUnion.isEmpty) {
               try // recursively check, if a parent of A is of type B
                 foundUnion = Some(this.getUnion(UserType(typeAParent.get), typeB, context))
-              catch case _ => // do nothing
+              catch {
+                case _ => // do nothing
+              }
             }
 
             // - check if typeB < typeA
             if (typeBParent.nonEmpty && foundUnion.isEmpty) {
               try // recursively check, if a parent of A is of type B
                 this.getUnion(typeA, UserType(typeBParent.get), context)
-              catch case _ => // do nothing
+              catch {
+                case _ => // do nothing
+              }
             }
 
             // return any union we found, or throw an error otherwise
