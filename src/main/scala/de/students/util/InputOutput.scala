@@ -9,30 +9,29 @@ import scala.util.Using
 
 object InputOutput {
 
-  def getFileContents(filePaths: List[String]): List[String] = {
+  def getFileContents(filePaths: List[String]): List[(String, String)] = {
 
-    val files = filePaths.map { path =>
+    val files: List[(File, String)] = filePaths.map { path =>
       val file = new File(path)
-
+      
       // process Args into a List of file(paths)
       if (!file.exists()) {
         throw new IllegalArgumentException(s"The specified path does not exist: $path")
       } else if (file.isDirectory) {
-        file.listFiles().filter(_.isFile).toList
+        file.listFiles().filter(_.isFile).toList.map(f => (f, f.getAbsolutePath.stripPrefix(file.getAbsolutePath)))
       } else {
-        List(file)
+        List((file, path))
       }
     }.flatten()
 
-    
     // get file contents and concat
-    val fileContents: List[String] = files.map { f =>
-      val source = Source.fromFile(f)
+    val fileContents: List[(String, String)] = files.map { f =>
+      val source = Source.fromFile(f._1)
       val lines = try source.mkString catch {
-        case e: Exception => throw new RuntimeException(s"Failed to read file: ${f.getAbsolutePath}", e)
+        case e: Exception => throw new RuntimeException(s"Failed to read file: ${f._1.getAbsolutePath}", e)
       } finally source.close()
 
-      lines
+      (lines, f._2)
     }
 
     fileContents

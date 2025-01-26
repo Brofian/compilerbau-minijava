@@ -154,6 +154,12 @@ object ExpressionChecks {
     literal.value match {
       case _: Boolean => TypedExpression(literal, BoolType)
       case _: Int => TypedExpression(literal, IntType)
+      case _: Short => TypedExpression(literal, ShortType)
+      case _: Long => TypedExpression(literal, LongType)
+      case _: Char => TypedExpression(literal, CharType)
+      case _: Byte => TypedExpression(literal, ByteType)
+      case _: Double => TypedExpression(literal, DoubleType)
+      case _: Float => TypedExpression(literal, FloatType)
       case _: String => TypedExpression(literal, UserType("java.lang.String")) /* throw SemanticException("String is not yet implemented as a type") */
       case _ => throw SemanticException(s"Unknown literal: $literal")
     }

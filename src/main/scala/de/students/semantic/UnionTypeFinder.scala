@@ -94,6 +94,7 @@ object UnionTypeFinder {
         else {
           this.isASubtypeOfB(UserType(typeAParent.get), typeB, context) // check if A's parent is a subtype of B
         }
+      case NoneType => typeB.equals(VoidType) || typeB.equals(NoneType)
       case _ => typeA == typeB // the trivial case: two primitive types are either equal or not
 
     }

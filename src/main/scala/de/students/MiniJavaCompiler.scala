@@ -16,9 +16,10 @@ object MiniJavaCompiler {
     }
 
     // Run the scanner and parser
-    val fileContents = InputOutput.getFileContents(ArgParser.filesToCompile)
+    val fileContents: List[(String, String)] = InputOutput.getFileContents(ArgParser.filesToCompile)
+
     // Create the AST from the parse-tree
-    val astProject: Project = Parser.main(fileContents.zip(ArgParser.filesToCompile))
+    val astProject: Project = Parser.main(fileContents)
 
     // Run the semantic- and type-check
     val typedAst = SemanticCheck.runCheck(astProject)

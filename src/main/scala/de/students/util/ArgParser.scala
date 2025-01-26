@@ -19,11 +19,23 @@ object ArgParser {
   private var argIndex: Int = 0
 
   /**
+   * Reset all values to their default to reuse the ArgParser in multiple test cases per run
+   */
+  private def cleanInit(): Unit = {
+    this.verbosityLevel = Verbosity.ERROR
+    this.outputDirectory = "./out"
+    this.filesToCompile = List()
+    this.args = Array()
+    this.argIndex = 0
+  }
+
+  /**
    * This method should be run at the start of the program to gather the data from the command line arguments
    *
    * @param args Array of command line arguments
    */
   def parseCommandLineArgs(args: Array[String]): Unit = {
+    this.cleanInit()
     // setup arguments for use in this singleton
     this.args = args;
     this.argIndex = 0
