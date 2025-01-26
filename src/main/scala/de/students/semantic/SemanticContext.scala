@@ -4,13 +4,12 @@ import de.students.Parser.*
 
 import scala.collection.mutable
 
-class SemanticContext
-(
+class SemanticContext(
   classTypeBridge: ClassTypeBridge,
   typeAssumptions: mutable.Map[String, Type],
   imports: mutable.Map[String, String],
   packageName: String,
-  className: String,
+  className: String
 ) {
 
   // getter methods to access data
@@ -25,13 +24,16 @@ class SemanticContext
    * @param newClassName   A new class name, of None if there is no change
    * @return
    */
-  def createChildContext(newPackageName: Option[String] = None, newClassName: Option[String] = None): SemanticContext = {
+  def createChildContext(
+    newPackageName: Option[String] = None,
+    newClassName: Option[String] = None
+  ): SemanticContext = {
     SemanticContext(
       classTypeBridge,
       typeAssumptions.clone(), // prevent new type assumptions from bubbling up
       if newPackageName.isEmpty then imports else imports.clone(), // if we enter a new package (aka file) context
       newPackageName.getOrElse(packageName),
-      newClassName.getOrElse(className),
+      newClassName.getOrElse(className)
     )
   }
 
@@ -62,8 +64,7 @@ class SemanticContext
   def getClassParent(fullyQualifiedClassName: String): Option[String] = {
     if (fullyQualifiedClassName == "java.lang.Object") {
       None
-    }
-    else {
+    } else {
       Some(this.classTypeBridge.getClassParent(fullyQualifiedClassName))
     }
   }
