@@ -3,7 +3,7 @@ package de.students.semantic;
 import de.students.Parser.*
 
 import java.lang.Class
-import java.lang.reflect.{Field, Method}
+import java.lang.reflect.{Field, Method, Modifier}
 import scala.collection.mutable
 import scala.util.matching.Regex
 
@@ -16,114 +16,10 @@ import scala.util.matching.Regex
 class ClassTypeBridge(baseAST: Project) {
 
   /**
-   * Get the fully qualified name of the parent of a class with the given fully qualified name
-   *
-   * @param fullyQualifiedClassName The base class, which parent shall be retrieved
-   * @return
-   */
-  def getClassParent(fullyQualifiedClassName: String): String = {
-    // option a: this is our class
-    val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
-    val localPackage = baseAST.packages.find(pckg => pckg.name == packageName)
-    val localClass =
-      if localPackage.isEmpty then None else localPackage.get.classes.find(cls => cls.name == simpleClassName)
-    if (localClass.nonEmpty) {
-      this
-        .resolveTypeInClassContext(UserType(localClass.get.parent), localClass.get, localPackage.get)
-        .asInstanceOf[UserType]
-        .name
-    } else {
-      // option b: this is a predefined class from the JDK
-      val reflectClass =
-        try Some(Class.forName(fullyQualifiedClassName))
-        catch case _ => None
-
-      reflectClass match
-        case Some(refClass) => refClass.getName
-        case None => throw new SemanticException(s"Could not find definition of class ${fullyQualifiedClassName}")
-    }
-  }
-
-  /**
-   * Retrieve the type of specific member of the given class. This method does work for fields and methods
-   * at the same time. ClassNames in the retrieved type will already be fully qualified
-   *
-   * @param fullyQualifiedClassName The class to search in
-   * @param memberName  The name of the field or method to search
-   * @return
-   */
-  def getClassMemberType(fullyQualifiedClassName: String, memberName: String): Type = {
-
-    val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
-
-    val localClassMember =
-      this.getClassMemberTypeFromLocalClass(packageName, simpleClassName, fullyQualifiedClassName, memberName)
-
-    localClassMember match {
-      case Some(memberType) => memberType // we found a local member! Yay!
-      case None =>
-        val reflectClassMember = this.getClassMemberTypeFromReflection(fullyQualifiedClassName, memberName)
-        reflectClassMember match {
-          case Some(memberType) => memberType // we found a member from the JDK! Yay!
-          case None =>
-            throw new SemanticException(
-              s"Could not find definition of member $memberName in class $fullyQualifiedClassName"
-            )
-        }
-    }
-  }
-
-  /**
-   * Search for the class member in the locally compiled classes
-   *
-   * @param packageName     The package to search in
-   * @param simpleClassName The class to search in
-   * @param memberName      The member, which type should be retrieved
-   * @return
-   */
-  private def getClassMemberTypeFromLocalClass(
-    packageName: String,
-    simpleClassName: String,
-    fqClassName: String,
-    memberName: String
-  ): Option[Type] = {
-    // search matching class declarations from baseAST
-    val classDecls = baseAST.packages
-      .filter(pckg => pckg.name == packageName)
-      .flatMap(pckg => pckg.classes.filter(cls => cls.name == simpleClassName).map(cls => (cls, pckg)))
-
-    if (classDecls.size > 1) {
-      throw new SemanticException(s"Encountered multiple definitions of class $fqClassName")
-    }
-
-    if (classDecls.isEmpty) {
-      None // this class is unknown. Maybe a predefined class from the JDK?
-    } else {
-      val classDecl = classDecls.head._1
-      val packageDecl = classDecls.head._2
-
-      val member = classDecl.fields
-        .find(field => field.name == memberName)
-        .getOrElse(
-          classDecl.methods.find(method => method.name == memberName).getOrElse(None)
-        )
-
-      val memberType: Type = member match {
-        case None => throw new SemanticException(s"Class $fqClassName does not contain a member with name $memberName")
-        case FieldDecl(_, _, _, varType, _) => varType
-        case MethodDecl(_, _, _, _, _, returnType, params, _) =>
-          FunctionType(returnType, params.map(param => param.varType))
-      }
-
-      Some(this.resolveTypeInClassContext(memberType, classDecl, packageDecl))
-    }
-  }
-
-  /**
    * Resolve simple class names to their fully qualified form
    *
-   * @param rawType The raw type, which should be made fully qualified
-   * @param classDecl The current class we are in
+   * @param rawType     The raw type, which should be made fully qualified
+   * @param classDecl   The current class we are in
    * @param packageDecl The current package we are in
    * @return
    */
@@ -156,57 +52,6 @@ class ClassTypeBridge(baseAST: Project) {
   }
 
   /**
-   * Search for the class member in the definitions from the JDK
-   *
-   * @param memberName The member, which type should be retrieved
-   * @return
-   */
-  private def getClassMemberTypeFromReflection(fqClassName: String, memberName: String): Option[Type] = {
-
-    // search class in JDK
-    val reflectionClassOption: Option[Class[?]] =
-      try Some(Class.forName(fqClassName))
-      catch case _ => None
-    if (reflectionClassOption.isEmpty) {
-      return None
-    }
-    val reflectionClass = reflectionClassOption.get
-
-    // helper function to convert a reflection type to our custom type case classes
-    def reflectionTypeToCustomType(refType: Class[?]): Type = {
-      if refType.isPrimitive then
-        refType.getName match {
-          // boolean, byte, char, short, int, long, float, and double.
-          case "boolean" => BoolType
-          case "int"     => IntType
-          case _         => throw new SemanticException(s"Primitive type $refType is not yet implemented")
-        }
-      else UserType(refType.getName)
-    }
-
-    // check methods
-    val reflectionMethods: List[Method] = reflectionClass.getDeclaredMethods.toList
-    val matchingMethods = reflectionMethods.filter(method =>
-      method.getName == memberName
-    ) // todo implement parameter matching for overloading
-    if (matchingMethods.nonEmpty) {
-      val matchingMethod = matchingMethods.head
-      val returnType = reflectionTypeToCustomType(matchingMethod.getReturnType)
-      val parameterTypes = matchingMethod.getParameterTypes.map(reflectionTypeToCustomType).toList
-      return Some(FunctionType(returnType, parameterTypes))
-    }
-
-    // check fields
-    val matchingField: Option[Field] =
-      try Some(reflectionClass.getDeclaredField(memberName))
-      catch case _ => None
-    matchingField match {
-      case Some(field) => Some(reflectionTypeToCustomType(field.getType))
-      case None        => None
-    }
-  }
-
-  /**
    * Extract the package name and the simple class name from a fully qualified class name
    *
    * @param fqClassName The fully qualified class name that shall be split
@@ -222,6 +67,181 @@ class ClassTypeBridge(baseAST: Project) {
         val simpleClassName = regMatch.group(2)
         (packageName, simpleClassName)
     }
+  }
+
+  /**
+   * Convenience access to a class by its classname, independent of it being a local class or from the JDK
+   *
+   * @param fullyQualifiedClassName The fully qualified name of the class to search for
+   * @return
+   */
+  def getClass(fullyQualifiedClassName: String): ClassDecl = {
+    val localClass = this.getLocalClass(fullyQualifiedClassName)
+    val reflectionClass = this.getReflectionClass(fullyQualifiedClassName)
+
+    if (localClass.isEmpty && reflectionClass.isEmpty) {
+      throw new SemanticException(s"Requested class $fullyQualifiedClassName is not defined")
+    } else if (localClass.nonEmpty && reflectionClass.nonEmpty) {
+      throw new SemanticException(s"Class $fullyQualifiedClassName is already defined and cannot be redeclared")
+    } else {
+      localClass.getOrElse(reflectionClass.get)
+    }
+  }
+
+  /**
+   * Search for a class defined in out own AST and return it with fully qualified names
+   * @param fullyQualifiedClassName The fully qualified name of the class to search for
+   * @return
+   */
+  private def getLocalClass(fullyQualifiedClassName: String): Option[ClassDecl] = {
+    val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
+
+    val searchResults: List[(ClassDecl, Package)] = baseAST.packages
+      .filter(pckg => pckg.name == packageName)
+      .flatMap(pckg => pckg.classes.filter(cls => cls.name == simpleClassName).map(cls => (cls, pckg)))
+
+    val searchResultOption = searchResults.size match {
+      case 0 => None
+      case 1 => Some(searchResults.head)
+      case _ => throw new SemanticException(s"Encountered multiple definitions for class $fullyQualifiedClassName")
+    }
+
+    searchResultOption match {
+      case Some(searchResult) => {
+        // turn every type in classDecl into its fully qualified form
+        val (classDecl, pckgDecl) = searchResult
+
+        Some(
+          ClassDecl(
+            classDecl.name,
+            this.resolveTypeInClassContext(UserType(classDecl.parent), classDecl, pckgDecl).asInstanceOf[UserType].name,
+            classDecl.isAbstract,
+            classDecl.methods.map(method => {
+              MethodDecl(
+                method.accessModifier,
+                method.name,
+                method.isAbstract,
+                method.static,
+                method.isFinal,
+                this.resolveTypeInClassContext(method.returnType, classDecl, pckgDecl),
+                method.params.map(param => {
+                  VarDecl(
+                    param.name,
+                    this.resolveTypeInClassContext(param.varType, classDecl, pckgDecl),
+                    param.initializer
+                  )
+                }),
+                method.body
+              )
+            }),
+            classDecl.fields,
+            classDecl.constructors
+          )
+        )
+      }
+      case None => None
+    }
+  }
+
+  /**
+   * Search for a class defined in the JDK and return it in our own format with fully qualified names
+   *
+   * @param fullyQualifiedClassName The fully qualified name of the class to search for
+   * @return
+   */
+  private def getReflectionClass(fullyQualifiedClassName: String): Option[ClassDecl] = {
+    try {
+      val reflectionClass = Class.forName(fullyQualifiedClassName)
+      // extract data to our format and fully qualify
+      val packageName = reflectionClass.getPackageName
+
+      Some(
+        ClassDecl(
+          fullyQualifiedClassName, // className
+          reflectionClass.getSuperclass.getName, // parentName
+          Modifier.isAbstract(reflectionClass.getModifiers), // isAbstract
+          reflectionClass.getMethods
+            .map(reflectionMethod => {
+              val accessModifier: String =
+                if Modifier.isPublic(reflectionMethod.getModifiers) then "public"
+                else if Modifier.isProtected(reflectionMethod.getModifiers) then "protected"
+                else "private"
+
+              val isAbstract = Modifier.isAbstract(reflectionMethod.getModifiers)
+
+              MethodDecl(
+                Some(accessModifier),
+                reflectionMethod.getName,
+                isAbstract,
+                Modifier.isStatic(reflectionMethod.getModifiers),
+                Modifier.isFinal(reflectionMethod.getModifiers),
+                this.reflectionTypeToCustomType(reflectionMethod.getReturnType),
+                reflectionMethod.getParameterTypes
+                  .map(reflectionParameter => {
+                    val parameterType = this.reflectionTypeToCustomType(reflectionParameter)
+                    VarDecl(reflectionParameter.getName, parameterType, None)
+                  })
+                  .toList, // methods
+                if isAbstract then None else Some(BlockStatement(List())) // body
+              )
+            })
+            .toList, // methods
+          reflectionClass.getFields
+            .map(reflectionField => {
+              val accessModifier: String =
+                if Modifier.isPublic(reflectionField.getModifiers) then "public"
+                else if Modifier.isProtected(reflectionField.getModifiers) then "protected"
+                else "private"
+
+              FieldDecl(
+                Some(accessModifier),
+                Modifier.isFinal(reflectionField.getModifiers),
+                reflectionField.getName,
+                this.reflectionTypeToCustomType(reflectionField.getType),
+                None
+              )
+            })
+            .toList, // fields
+          reflectionClass.getConstructors
+            .map(reflectionConstructor => {
+              val accessModifier: String =
+                if Modifier.isPublic(reflectionConstructor.getModifiers) then "public"
+                else if Modifier.isProtected(reflectionConstructor.getModifiers) then "protected"
+                else "private"
+
+              ConstructorDecl(
+                Some(accessModifier),
+                reflectionConstructor.getName,
+                reflectionConstructor.getParameters
+                  .map(reflectionParameter => {
+                    val parameterType = this.reflectionTypeToCustomType(reflectionParameter.getType)
+                    VarDecl(reflectionParameter.getName, parameterType, None)
+                  })
+                  .toList,
+                BlockStatement(List()) // body
+              )
+            })
+            .toList // constructors
+        )
+      )
+    } catch case _ => None
+  }
+
+  /**
+   * Helper function to convert a reflection type to our custom type case classes
+   *
+   * @param refType A type retrieved from the reflection data
+   * @return
+   */
+  private def reflectionTypeToCustomType(refType: Class[?]): Type = {
+    if refType.isPrimitive then
+      refType.getName match {
+        // boolean, byte, char, short, int, long, float, and double.
+        case "boolean" => BoolType
+        case "int"     => IntType
+        case _         => throw new SemanticException(s"Primitive type $refType is not yet implemented")
+      }
+    else UserType(refType.getName)
   }
 
 }

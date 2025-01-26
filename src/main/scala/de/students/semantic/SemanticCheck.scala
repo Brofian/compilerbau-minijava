@@ -19,7 +19,7 @@ object SemanticCheck {
 
     // create context and make all classes and their fields known to the whole project
     val globalContext = SemanticContext(
-      ClassTypeBridge(project),
+      ClassAccessHelper(ClassTypeBridge(project)),
       mutable.Map[String, Type](),
       mutable.Map[String, String](),
       "",
@@ -106,7 +106,10 @@ object SemanticCheck {
         case Some(methodBody) =>
           val typedMethodBody = StatementChecks.checkStatement(methodBody, methodContext)
           // check if method body type matches method declaration
-          if (!UnionTypeFinder.isASubtypeOfB(typedMethodBody.stmtType, evaluatedReturnType, methodContext)) {
+          if (
+            !UnionTypeFinder
+              .isASubtypeOfB(typedMethodBody.stmtType, evaluatedReturnType, methodContext.getClassAccessHelper)
+          ) {
             throw new SemanticException(
               s"Method ${method.name} in ${methodContext.getClassName} with return type $evaluatedReturnType cannot return value of type ${typedMethodBody.stmtType}"
             )
@@ -141,7 +144,7 @@ object SemanticCheck {
       )
 
       val typedBody: TypedStatement = StatementChecks.checkStatement(constructor.body, methodContext)
-      if (!UnionTypeFinder.isASubtypeOfB(typedBody.stmtType, VoidType, methodContext)) {
+      if (!UnionTypeFinder.isASubtypeOfB(typedBody.stmtType, VoidType, methodContext.getClassAccessHelper)) {
         throw new SemanticException(s"Constructor ${constructor.name} cannot return value")
       }
       ConstructorDecl(constructor.accessModifier, constructor.name, constructor.params, typedBody)

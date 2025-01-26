@@ -9,12 +9,12 @@ object UnionTypeFinder {
   /**
    * Retrieve the first shared type of two base types or throw an error, if they do not overlap
    *
-   * @param typeA   The first type to find the union of
-   * @param typeB   The second type to find the union of
-   * @param context The current context for resolving class names
+   * @param typeA             The first type to find the union of
+   * @param typeB             The second type to find the union of
+   * @param classAccessHelper The class access helper from your context
    * @return
    */
-  def getUnion(typeA: Type, typeB: Type, context: SemanticContext): Type = {
+  def getUnion(typeA: Type, typeB: Type, classAccessHelper: ClassAccessHelper): Type = {
     // if types are equal or B is of NoneType, return A
     if (typeA == typeB || typeB == NoneType) {
       return typeA
@@ -25,47 +25,31 @@ object UnionTypeFinder {
       case UserType(typeAName) =>
         typeB match {
           case UserType(typeBName) =>
-            val typeAParent = context.getClassParent(typeAName)
-            val typeBParent = context.getClassParent(typeBName)
+            val typeAParent = classAccessHelper.getClassParentOrNone(typeAName)
+            val typeBParent = classAccessHelper.getClassParentOrNone(typeBName)
 
-            // the combination of classes is only possible, if one is a subtype of the other
-            // we will check this recursively
-
-            var foundUnion: Option[Type] = None
-
-            // - check if typeA and typeB have a common parent
-            if (typeAParent.nonEmpty && typeBParent.nonEmpty) {
-              try foundUnion = Some(this.getUnion(UserType(typeAParent.get), UserType(typeBParent.get), context))
-              catch {
-                case _ => // do nothing
-              }
-            }
-
-            // - check if typeA < typeB
-            if (typeAParent.nonEmpty && foundUnion.isEmpty) {
-              try // recursively check, if a parent of A is of type B
-                foundUnion = Some(this.getUnion(UserType(typeAParent.get), typeB, context))
-              catch {
-                case _ => // do nothing
-              }
-            }
-
-            // - check if typeB < typeA
-            if (typeBParent.nonEmpty && foundUnion.isEmpty) {
-              try // recursively check, if a parent of A is of type B
-                this.getUnion(typeA, UserType(typeBParent.get), context)
-              catch {
-                case _ => // do nothing
-              }
-            }
-
-            // return any union we found, or throw an error otherwise
-            if (foundUnion.nonEmpty) {
-              foundUnion.get
+            if (typeAParent.isEmpty || typeBParent.isEmpty) {
+              // if at least one parent is java.lang.Object and both are class types, then this is the union
+              UserType("java.lang.Object")
+            } else if (this.isASubtypeOfB(UserType(typeAParent.get), typeB, classAccessHelper)) {
+              // - check if typeA < typeB
+              typeB
+            } else if (this.isASubtypeOfB(UserType(typeBParent.get), typeA, classAccessHelper)) {
+              // - check if typeA > typeB
+              typeA
             } else {
-              // this branch should not even be possible, as both types must be java/lang/Object
-              throw SemanticException(s"Types $typeA and $typeB do not overlap")
+              // - check if typeA and typeB have a common ancestor
+              try {
+                this.getUnion(UserType(typeAParent.get), UserType(typeBParent.get), classAccessHelper)
+              } catch {
+                case _: Throwable =>
+                  // this branch should not even be possible, as both types must have the shared ancestor java/lang/Object
+                  throw SemanticException(
+                    s"[Achievement unlocked: How did we get here?] Types $typeA and $typeB do not overlap"
+                  )
+              }
             }
+
           case _ => throw SemanticException(s"Types $typeA and $typeB do not overlap")
         }
       case _ => throw SemanticException(s"Types $typeA and $typeB do not overlap")
@@ -75,25 +59,22 @@ object UnionTypeFinder {
   /**
    * Check if type A is in any relation a subtype of type B
    *
-   * @param typeA   Check if this is the subtype
-   * @param typeB   Check if this is the supertype
-   * @param context The context with all class information
+   * @param typeA             Check if this is the subtype
+   * @param typeB             Check if this is the supertype
+   * @param classAccessHelper The class access helper from your context
    * @return
    */
   @tailrec
-  def isASubtypeOfB(typeA: Type, typeB: Type, context: SemanticContext): Boolean = {
+  def isASubtypeOfB(typeA: Type, typeB: Type, classAccessHelper: ClassAccessHelper): Boolean = {
     if (typeA.equals(typeB)) {
       return true
     }
 
     typeA match {
+      case UserType("java.lang.Object") => false // We arrived at java/lang/Object and B is still not equal
       case UserType(className) =>
-        val typeAParent = context.getClassParent(className)
-        if (typeAParent.isEmpty) {
-          false // We arrived at java/lang/Object and B is still not equal
-        } else {
-          this.isASubtypeOfB(UserType(typeAParent.get), typeB, context) // check if A's parent is a subtype of B
-        }
+        val typeAParent = classAccessHelper.getClassParent(className)
+        this.isASubtypeOfB(UserType(typeAParent), typeB, classAccessHelper) // check if A's parent is a subtype of B
       case NoneType => typeB.equals(VoidType) || typeB.equals(NoneType)
       case _        => typeA == typeB // the trivial case: two primitive types are either equal or not
 

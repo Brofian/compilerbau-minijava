@@ -28,16 +28,19 @@ object ExpressionChecks {
       )
     }
 
-    // determine method definition
-    val fqClassName = typedTarget.exprType.asInstanceOf[UserType].name
-    val methodType = context.getMemberType(fqClassName, methodCall.methodName)
-    if (!methodType.isInstanceOf[FunctionType]) {
-      throw new SemanticException(s"Cannot call member ${methodCall.methodName} of type $methodType as method")
-    }
-    val methodTypeF = methodType.asInstanceOf[FunctionType]
-
     // validate arguments
     val typedArguments = methodCall.args.map(argument => ExpressionChecks.checkExpression(argument, context))
+    val argTypes = typedArguments.map(arg => arg.exprType)
+
+    // determine method definition
+    val fqClassName = typedTarget.exprType.asInstanceOf[UserType].name
+    val methodType = context.getClassAccessHelper.getClassMemberType(fqClassName, methodCall.methodName, Some(argTypes))
+    if (!methodType.isInstanceOf[FunctionType]) {
+      throw new SemanticException(
+        s"Cannot call member ${methodCall.methodName} of type $methodType as method with parameters of types $argTypes"
+      )
+    }
+    val methodTypeF = methodType.asInstanceOf[FunctionType]
 
     // check if number of arguments matches number of parameters
     val expectedArgs = methodTypeF.parameterTypes.length
@@ -52,7 +55,7 @@ object ExpressionChecks {
     methodTypeF.parameterTypes
       .zip(typedArguments.map(a => a.exprType))
       .foreach((parameterType, argumentType) => {
-        if (!UnionTypeFinder.isASubtypeOfB(parameterType, argumentType, context)) {
+        if (!UnionTypeFinder.isASubtypeOfB(parameterType, argumentType, context.getClassAccessHelper)) {
           throw new SemanticException(s"Value of type $argumentType cannot be used for argument of type $parameterType")
         }
       })
@@ -108,20 +111,27 @@ object ExpressionChecks {
     val typedArguments = newObj.arguments.map(argument => {
       ExpressionChecks.checkExpression(argument, context)
     })
+    val argTypes = typedArguments.map(arg => arg.exprType)
 
-    // TODO: check if there is a matching constructor for the class
+    // check if a matching constructor exists
+    if (!context.getClassAccessHelper.checkClassConstructorWithParameters(fullyQualifiedClassName, argTypes)) {
+      throw new SemanticException(
+        s"Could not find constructor for class $fullyQualifiedClassName with parameters $argTypes"
+      )
+    }
 
     TypedExpression(NewObject(fullyQualifiedClassName, typedArguments), UserType(fullyQualifiedClassName))
   }
 
   private def checkClassAccessExpression(clsAccess: ClassAccess, context: SemanticContext): TypedExpression = {
     val fullyQualifiedClassName = context.getFullyQualifiedClassName(clsAccess.className)
-    val memberType = context.getMemberType(fullyQualifiedClassName, clsAccess.memberName)
+    val memberType =
+      context.getClassAccessHelper.getClassMemberType(fullyQualifiedClassName, clsAccess.memberName, None)
     TypedExpression(ClassAccess(fullyQualifiedClassName, clsAccess.memberName), memberType)
   }
 
   private def checkThisAccessExpression(thisAccess: ThisAccess, context: SemanticContext): TypedExpression = {
-    val memberType = context.getMemberType(context.getClassName, thisAccess.name)
+    val memberType = context.getClassAccessHelper.getClassMemberType(context.getClassName, thisAccess.name, None)
     TypedExpression(thisAccess, memberType)
   }
 
@@ -129,14 +139,23 @@ object ExpressionChecks {
     val typedLeft = ExpressionChecks.checkExpression(binOp.left, context)
     val typedRight = ExpressionChecks.checkExpression(binOp.right, context)
 
-    // TODO: check if the operation is defined for these types of typedLeft and typedRight
+    def restrictToPrimitive = (op: String, t1: Type, t2: Type, result: Type) => {
+      if (
+        t1.isInstanceOf[UserType] || t2.isInstanceOf[UserType] ||
+        t1.isInstanceOf[ArrayType] || t2.isInstanceOf[ArrayType]
+      ) {
+        throw new SemanticException(s"Operator $op cannot be used with values of type $t1 and $t2")
+      }
+      result
+    }
+
     val opType: Type = binOp.op match {
-      case "&&" => BoolType
-      case "||" => BoolType
-      case "<"  => BoolType
-      case ">"  => BoolType
-      case "<=" => BoolType
-      case ">=" => BoolType
+      case "&&" => restrictToPrimitive("&&", typedLeft.exprType, typedRight.exprType, BoolType)
+      case "||" => restrictToPrimitive("||", typedLeft.exprType, typedRight.exprType, BoolType)
+      case "<"  => restrictToPrimitive("<", typedLeft.exprType, typedRight.exprType, BoolType)
+      case ">"  => restrictToPrimitive(">", typedLeft.exprType, typedRight.exprType, BoolType)
+      case "<=" => restrictToPrimitive("<=", typedLeft.exprType, typedRight.exprType, BoolType)
+      case ">=" => restrictToPrimitive(">=", typedLeft.exprType, typedRight.exprType, BoolType)
       case "!=" => BoolType
       case "==" => BoolType
       case "+"  => UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType)
@@ -148,14 +167,13 @@ object ExpressionChecks {
       case "-=" => typedLeft.exprType
       case "*=" => typedLeft.exprType
       case "%=" => typedLeft.exprType
-      case "=" => {
+      case "=" =>
         if (UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType) != typedLeft.exprType) {
           throw new SemanticException(
             s"Implicit conversion of type ${typedRight.exprType} to type ${typedLeft.exprType} could result in data loss"
           )
         }
         typedLeft.exprType
-      }
       case _ =>
         throw new SemanticException(
           s"Binary operator ${binOp.op} is not defined for types ${typedLeft.exprType} and ${typedRight.exprType}"

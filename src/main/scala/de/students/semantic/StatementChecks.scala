@@ -53,7 +53,7 @@ object StatementChecks {
     // the block type is the combination of all return operations inside the block
     val blockType: Type = typeList.reduce((carry, stmtType) => {
       // combine the new type with the already found types (and throw an error, if not possible)
-      UnionTypeFinder.getUnion(carry, stmtType, context)
+      UnionTypeFinder.getUnion(carry, stmtType, context.getClassAccessHelper)
     })
 
     TypedStatement(
@@ -90,8 +90,9 @@ object StatementChecks {
     }
 
     val stmtType: Type = typedElseBranch match {
-      case Some(elseBranch) => UnionTypeFinder.getUnion(typedThenBranch.stmtType, elseBranch.stmtType, context)
-      case None             => typedThenBranch.stmtType
+      case Some(elseBranch) =>
+        UnionTypeFinder.getUnion(typedThenBranch.stmtType, elseBranch.stmtType, context.getClassAccessHelper)
+      case None => typedThenBranch.stmtType
     }
 
     TypedStatement(IfStatement(typedCondition, typedThenBranch, typedElseBranch), stmtType)
@@ -175,7 +176,7 @@ object StatementChecks {
       .reduce((a: TypedStatement, b: TypedStatement) => {
         TypedStatement(
           BreakStatement(), // placeholder, as we need a statement for the reduce
-          UnionTypeFinder.getUnion(a.stmtType, b.stmtType, context)
+          UnionTypeFinder.getUnion(a.stmtType, b.stmtType, context.getClassAccessHelper)
         )
       })
       .stmtType
@@ -186,7 +187,7 @@ object StatementChecks {
         UnionTypeFinder.getUnion(
           caseUnionType,
           typedDefault.get.caseBlock.asInstanceOf[TypedStatement].stmtType,
-          context
+          context.getClassAccessHelper
         )
 
     TypedStatement(SwitchStatement(typedExpr, typedCases, typedDefault), switchUnionType)

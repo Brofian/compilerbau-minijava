@@ -5,7 +5,7 @@ import de.students.Parser.*
 import scala.collection.mutable
 
 class SemanticContext(
-  classTypeBridge: ClassTypeBridge,
+  classAccessHelper: ClassAccessHelper,
   typeAssumptions: mutable.Map[String, Type],
   imports: mutable.Map[String, String],
   packageName: String,
@@ -16,6 +16,7 @@ class SemanticContext(
   def getPackageName: String = packageName
   def getClassName: String = className
   def getTypeAssumption(varName: String): Option[Type] = typeAssumptions.get(varName)
+  def getClassAccessHelper: ClassAccessHelper = classAccessHelper
 
   /**
    * copy the current data and return a new context, optionally with changed
@@ -29,7 +30,7 @@ class SemanticContext(
     newClassName: Option[String] = None
   ): SemanticContext = {
     SemanticContext(
-      classTypeBridge,
+      classAccessHelper,
       typeAssumptions.clone(), // prevent new type assumptions from bubbling up
       if newPackageName.isEmpty then imports else imports.clone(), // if we enter a new package (aka file) context
       newPackageName.getOrElse(packageName),
@@ -55,18 +56,6 @@ class SemanticContext(
       // assume, the class is related to the current package
       usePackage.getOrElse(packageName) + "." + className
     )
-  }
-
-  def getMemberType(fullyQualifiedClassName: String, memberName: String): Type = {
-    this.classTypeBridge.getClassMemberType(fullyQualifiedClassName, memberName)
-  }
-
-  def getClassParent(fullyQualifiedClassName: String): Option[String] = {
-    if (fullyQualifiedClassName == "java.lang.Object") {
-      None
-    } else {
-      Some(this.classTypeBridge.getClassParent(fullyQualifiedClassName))
-    }
   }
 
 }
