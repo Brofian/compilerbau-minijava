@@ -426,6 +426,7 @@ object ASTBuilder {
     // Visit an access modifier (PRIVATE, PUBLIC, PROTECTED)
     def visitModifiers(ctx: AccessModifierContext): Option[String] = {
       // Check if the access modifier is present, and return the corresponding string if found
+      if ctx == null then return None // Access modifiers are optional
       if (ctx.PRIVATE() != null) {
         Some("private")
       } else if (ctx.PUBLIC() != null) {
