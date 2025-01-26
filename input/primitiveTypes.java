@@ -1,4 +1,4 @@
-package main;
+package de.example;
 
 public class A {
 
@@ -12,6 +12,8 @@ public class A {
         boolean flag1 = true;
         boolean flag2 = false;
         boolean flag3 = flag1 && flag2;
+
+        /*
 
         // Byte type
         byte byteVar1 = 127b;
@@ -40,5 +42,6 @@ public class A {
         char charVar1 = 'A';
         char charVar2 = 'B';
 
+         */
     }
 }

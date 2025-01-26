@@ -1,4 +1,4 @@
-package out;
+package de.example;
 
 import java.lang.String;
 

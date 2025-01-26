@@ -14,7 +14,7 @@ class SemanticTest extends FunSuite {
         List(
           ClassDecl(
             name = "MainClass",
-            parent = "",
+            parent = "java.lang.Object",
             isAbstract = false,
             methods = List(
               MethodDecl(

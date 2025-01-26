@@ -1,9 +1,11 @@
+package de.example;
+
 class A {
     final int a = 3;
     final int b;
     public int c;
     protected int d;
-    final private int e;
+    private final int e;
 
     public static void main(String[] args) { return; }
     private void foo() { return; }
@@ -13,5 +15,5 @@ class A {
 }
 
 abstract class B {
-    abstract void foo();
+    abstract void foo()
 }

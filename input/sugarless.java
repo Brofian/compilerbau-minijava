@@ -1,10 +1,10 @@
-package de.test;
+package de.example;
 
 
 class Sugarless extends Object {
 
     Sugarless() {
-        super();
+        //super(); // TODO: "super" is not implemented yet
     }
 
     int someMethod() {
