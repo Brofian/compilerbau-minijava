@@ -24,7 +24,9 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
     case TypedExpression(classAccess: ClassAccess, fieldType) =>
       generateClassRValue(classAccess, fieldType, state)
     case typedExpression: TypedExpression =>
-      throw ByteCodeGeneratorException("did not expect raw typed expression, this may indicate a bug in the code generator")
+      throw ByteCodeGeneratorException(
+        "did not expect raw typed expression, this may indicate a bug in the code generator"
+      )
     case _ => throw ByteCodeGeneratorException(f"the expression $expression is not supported")
   }
 }
@@ -112,11 +114,11 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
     val ifInsn = operation.op match {
       case "==" => IFEQ
       case "!=" => IFNE
-      case "<" => IFLT
+      case "<"  => IFLT
       case "<=" => IFLE
-      case ">" => IFGT
+      case ">"  => IFGT
       case ">=" => IFGE
-      case _ => throw ByteCodeGeneratorException(f"the operator ${operation.op} is not allowed as boolean operation")
+      case _    => throw ByteCodeGeneratorException(f"the operator ${operation.op} is not allowed as boolean operation")
     }
 
     val truePush = Label()
@@ -136,10 +138,11 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
 // ASSIGNMENT
 private def generateAssignment(lvalue: Expression, rvalue: Expression, state: MethodGeneratorState): Unit = {
   lvalue match {
-    case VarRef(name) => generateVariableAccess(name, rvalue, state)
-    case TypedExpression(VarRef(name), _) => generateVariableAccess(name, rvalue, state)
+    case VarRef(name)                                       => generateVariableAccess(name, rvalue, state)
+    case TypedExpression(VarRef(name), _)                   => generateVariableAccess(name, rvalue, state)
     case TypedExpression(thisAccess: ThisAccess, fieldType) => generateThisLValue(thisAccess, fieldType, rvalue, state)
-    case TypedExpression(classAccess: ClassAccess, fieldType) => generateClassLValue(classAccess, fieldType, rvalue, state)
+    case TypedExpression(classAccess: ClassAccess, fieldType) =>
+      generateClassLValue(classAccess, fieldType, rvalue, state)
     case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $lvalue")
   }
 }
@@ -188,7 +191,11 @@ private def generateNewObject(newObject: NewObject, state: MethodGeneratorState)
   Instructions.newObject(newObject.className, state)
   Instructions.duplicateTop(state)
   newObject.arguments.foreach(expr => generateExpression(expr, state))
-  Instructions.callConstructor(newObject.className, newObject.arguments.map(expr => expr.asInstanceOf[TypedExpression].exprType), state)
+  Instructions.callConstructor(
+    newObject.className,
+    newObject.arguments.map(expr => expr.asInstanceOf[TypedExpression].exprType),
+    state
+  )
 }
 
 // THIS ACCESS
@@ -199,7 +206,12 @@ private def generateNewObject(newObject: NewObject, state: MethodGeneratorState)
  * @param rvalue
  * @param state
  */
-private def generateThisLValue(access: ThisAccess, fieldType: Type, rvalue: Expression, state: MethodGeneratorState): Unit = {
+private def generateThisLValue(
+  access: ThisAccess,
+  fieldType: Type,
+  rvalue: Expression,
+  state: MethodGeneratorState
+): Unit = {
   generateExpression(rvalue, state)
   Instructions.loadThis(state)
 
@@ -208,6 +220,7 @@ private def generateThisLValue(access: ThisAccess, fieldType: Type, rvalue: Expr
 
   Instructions.storeField(access.name, fieldType, state)
 }
+
 /**
  * push field of this on stack
  * @param access
@@ -234,6 +247,7 @@ private def loadLValueObject(className: String, state: MethodGeneratorState): Un
     Instructions.loadVar(variableInfo.id, variableInfo.t, state)
   }
 }
+
 /**
  * set field of object given in classAccess to rvalue and leave value of rvalue on the stack
  * @param classAccess
@@ -241,7 +255,12 @@ private def loadLValueObject(className: String, state: MethodGeneratorState): Un
  * @param rvalue
  * @param state
  */
-private def generateClassLValue(classAccess: ClassAccess, fieldType: Type, rvalue: Expression, state: MethodGeneratorState): Unit = {
+private def generateClassLValue(
+  classAccess: ClassAccess,
+  fieldType: Type,
+  rvalue: Expression,
+  state: MethodGeneratorState
+): Unit = {
   generateExpression(rvalue, state)
   loadLValueObject(classAccess.className, state)
 
@@ -250,6 +269,7 @@ private def generateClassLValue(classAccess: ClassAccess, fieldType: Type, rvalu
 
   Instructions.storeField(classAccess.memberName, fieldType, state)
 }
+
 /**
  * push field of object given in classAccess on stack
  * @param classAccess

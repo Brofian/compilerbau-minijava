@@ -29,8 +29,8 @@ jobs:
         run: sbt compile
 
       # Check Scala formatting
-      # - name: Check Scala formatting
-      #  run: sbt scalafmtCheck
+      - name: Check Scala formatting
+        run: sbt scalafmtCheck
 
 
       - name: Run sbt tests

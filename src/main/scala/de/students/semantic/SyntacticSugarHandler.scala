@@ -5,7 +5,6 @@ import de.students.Parser.*
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer;
 
-
 object SyntacticSugarHandler {
 
   def handleSyntacticSugar(cls: ClassDecl, classContext: SemanticContext): ClassDecl = {
@@ -41,23 +40,33 @@ object SyntacticSugarHandler {
 
     val fixedMethods = cls.methods.map(method => {
       if (method.body.isEmpty) {
-         method // keep empty body
-      }
-      else {
+        method // keep empty body
+      } else {
         val splitStatements: ListBuffer[Statement] = ListBuffer()
-        // split var declarations with initializer into      
+        // split var declarations with initializer into
         method.body.get.asInstanceOf[BlockStatement].stmts.foreach {
-          case stmt@(varDeclStmt: VarDecl) =>
+          case stmt @ (varDeclStmt: VarDecl) =>
             varDeclStmt.initializer match
               case Some(varInitializer) =>
                 splitStatements.addOne(VarDecl(varDeclStmt.name, varDeclStmt.varType, None)) // remove initializer
-                splitStatements.addOne(StatementExpression(BinaryOp(VarRef(varDeclStmt.name), "=", varInitializer))) // add initializer as separate statement
+                splitStatements.addOne(
+                  StatementExpression(BinaryOp(VarRef(varDeclStmt.name), "=", varInitializer))
+                ) // add initializer as separate statement
               case None => splitStatements.addOne(stmt) // no initializer, no changes required
           case stmt => splitStatements.addOne(stmt) // not a var declaration, no changes required
         }
 
         // construct new method with updated body
-        MethodDecl(method.accessModifier, method.name, method.isAbstract, method.static, method.isFinal, method.returnType, method.params, Some(BlockStatement(splitStatements.toList))) 
+        MethodDecl(
+          method.accessModifier,
+          method.name,
+          method.isAbstract,
+          method.static,
+          method.isFinal,
+          method.returnType,
+          method.params,
+          Some(BlockStatement(splitStatements.toList))
+        )
       }
     })
 

@@ -2,21 +2,20 @@ package de.students.semantic
 
 import de.students.Parser.*
 
-
 object ExpressionChecks {
 
   def checkExpression(expr: Expression, context: SemanticContext): TypedExpression = {
     expr match {
-      case m@MethodCall(_, _, _) => this.checkMethodCallExpression(m, context)
-      case a@ArrayAccess(_, _) => this.checkArrayAccessExpression(a, context)
-      case a@NewArray(_, _) => this.checkNewArrayExpression(a, context)
-      case n@NewObject(_, _) => this.checkNewObjectExpression(n, context)
-      case c@ClassAccess(_, _) => this.checkClassAccessExpression(c, context)
-      case t@ThisAccess(_) => this.checkThisAccessExpression(t, context)
-      case b@BinaryOp(_, _, _) => this.checkBinaryOpExpression(b, context)
-      case v@VarRef(_) => this.checkVarRefExpression(v, context)
-      case l@Literal(_) => this.checkLiteralExpression(l, context)
-      case _ => throw new SemanticException(s"Could not match expression $expr")
+      case m @ MethodCall(_, _, _) => this.checkMethodCallExpression(m, context)
+      case a @ ArrayAccess(_, _)   => this.checkArrayAccessExpression(a, context)
+      case a @ NewArray(_, _)      => this.checkNewArrayExpression(a, context)
+      case n @ NewObject(_, _)     => this.checkNewObjectExpression(n, context)
+      case c @ ClassAccess(_, _)   => this.checkClassAccessExpression(c, context)
+      case t @ ThisAccess(_)       => this.checkThisAccessExpression(t, context)
+      case b @ BinaryOp(_, _, _)   => this.checkBinaryOpExpression(b, context)
+      case v @ VarRef(_)           => this.checkVarRefExpression(v, context)
+      case l @ Literal(_)          => this.checkLiteralExpression(l, context)
+      case _                       => throw new SemanticException(s"Could not match expression $expr")
     }
   }
 
@@ -24,7 +23,9 @@ object ExpressionChecks {
     // determine the type, that the method is called on
     val typedTarget = ExpressionChecks.checkExpression(methodCall.target, context)
     if (!typedTarget.exprType.isInstanceOf[UserType]) {
-      throw new SemanticException(s"Cannot call method ${methodCall.methodName} on value of type ${typedTarget.exprType}")
+      throw new SemanticException(
+        s"Cannot call method ${methodCall.methodName} on value of type ${typedTarget.exprType}"
+      )
     }
 
     // determine method definition
@@ -42,15 +43,19 @@ object ExpressionChecks {
     val expectedArgs = methodTypeF.parameterTypes.length
     val providedArgs = typedArguments.length
     if (expectedArgs != providedArgs) {
-      throw new SemanticException(s"Wrong number of arguments provided for method ${methodCall.methodName} in $fqClassName ($expectedArgs expected, but $providedArgs found)")
+      throw new SemanticException(
+        s"Wrong number of arguments provided for method ${methodCall.methodName} in $fqClassName ($expectedArgs expected, but $providedArgs found)"
+      )
     }
 
     // check if arguments have the correct types
-    methodTypeF.parameterTypes.zip(typedArguments.map(a => a.exprType)).foreach((parameterType, argumentType) => {
-      if (!UnionTypeFinder.isASubtypeOfB(parameterType, argumentType, context)) {
-        throw new SemanticException(s"Value of type $argumentType cannot be used for argument of type $parameterType")
-      }
-    })
+    methodTypeF.parameterTypes
+      .zip(typedArguments.map(a => a.exprType))
+      .foreach((parameterType, argumentType) => {
+        if (!UnionTypeFinder.isASubtypeOfB(parameterType, argumentType, context)) {
+          throw new SemanticException(s"Value of type $argumentType cannot be used for argument of type $parameterType")
+        }
+      })
 
     TypedExpression(MethodCall(typedTarget, methodCall.methodName, typedArguments), methodTypeF.returnType)
   }
@@ -63,7 +68,10 @@ object ExpressionChecks {
       case ArrayType(baseType) =>
         typedIndex.exprType match {
           case IntType => TypedExpression(ArrayAccess(typedArray, typedIndex), baseType)
-          case _ => throw new SemanticException(s"Array can only be indexed with integer values, but encountered array access with type ${typedIndex.exprType}")
+          case _ =>
+            throw new SemanticException(
+              s"Array can only be indexed with integer values, but encountered array access with type ${typedIndex.exprType}"
+            )
         }
       case _ => throw new SemanticException(s"Cannot access value of type ${typedArray.exprType} with array indexing")
     }
@@ -73,14 +81,16 @@ object ExpressionChecks {
     val typedDimensions = newArr.dimensions.map(dimensionExpression => {
       val dimType = ExpressionChecks.checkExpression(dimensionExpression, context)
       if (dimType != IntType) {
-        throw new SemanticException(s"Array dimensions can only be set to integer sizes. Size of type ${dimType.exprType} is not allowed")
+        throw new SemanticException(
+          s"Array dimensions can only be set to integer sizes. Size of type ${dimType.exprType} is not allowed"
+        )
       }
       dimType
     })
 
     var stackedArrayType: Type = newArr.arrayType match {
       case UserType(clsName) => UserType(context.getFullyQualifiedClassName(clsName))
-      case _ => newArr.arrayType
+      case _                 => newArr.arrayType
     }
     for (typedDim <- typedDimensions) {
       stackedArrayType = ArrayType(stackedArrayType)
@@ -120,23 +130,26 @@ object ExpressionChecks {
     val opType: Type = binOp.op match {
       case "&&" => BoolType
       case "||" => BoolType
-      case "<" => BoolType
-      case ">" => BoolType
+      case "<"  => BoolType
+      case ">"  => BoolType
       case "<=" => BoolType
       case ">=" => BoolType
       case "!=" => BoolType
       case "==" => BoolType
-      case "+" => IntType
-      case "-" => IntType
-      case "*" => IntType
-      case "/" => IntType
-      case "%" => IntType
+      case "+"  => IntType
+      case "-"  => IntType
+      case "*"  => IntType
+      case "/"  => IntType
+      case "%"  => IntType
       case "+=" => IntType
       case "-=" => IntType
       case "*=" => IntType
       case "%=" => IntType
-      case "=" => typedLeft.exprType
-      case _ => throw new SemanticException(s"Binary operator ${binOp.op} is not defined for types ${typedLeft.exprType} and ${typedRight.exprType}")
+      case "="  => typedLeft.exprType
+      case _ =>
+        throw new SemanticException(
+          s"Binary operator ${binOp.op} is not defined for types ${typedLeft.exprType} and ${typedRight.exprType}"
+        )
     }
 
     TypedExpression(BinaryOp(typedLeft, binOp.op, typedRight), opType)
@@ -146,24 +159,27 @@ object ExpressionChecks {
     val varTypeOption = context.getTypeAssumption(varRef.name)
     varTypeOption match {
       case Some(varType) => TypedExpression(varRef, varType)
-      case None => throw new SemanticException(s"Identifier ${varRef.name} is not defined")
+      case None          => throw new SemanticException(s"Identifier ${varRef.name} is not defined")
     }
   }
 
   private def checkLiteralExpression(literal: Literal, context: SemanticContext): TypedExpression = {
     literal.value match {
       case _: Boolean => TypedExpression(literal, BoolType)
-      case _: Int => TypedExpression(literal, IntType)
-      case _: Short => TypedExpression(literal, ShortType)
-      case _: Long => TypedExpression(literal, LongType)
-      case _: Char => TypedExpression(literal, CharType)
-      case _: Byte => TypedExpression(literal, ByteType)
-      case _: Double => TypedExpression(literal, DoubleType)
-      case _: Float => TypedExpression(literal, FloatType)
-      case _: String => TypedExpression(literal, UserType("java.lang.String")) /* throw SemanticException("String is not yet implemented as a type") */
+      case _: Int     => TypedExpression(literal, IntType)
+      case _: Short   => TypedExpression(literal, ShortType)
+      case _: Long    => TypedExpression(literal, LongType)
+      case _: Char    => TypedExpression(literal, CharType)
+      case _: Byte    => TypedExpression(literal, ByteType)
+      case _: Double  => TypedExpression(literal, DoubleType)
+      case _: Float   => TypedExpression(literal, FloatType)
+      case _: String =>
+        TypedExpression(
+          literal,
+          UserType("java.lang.String")
+        ) /* throw SemanticException("String is not yet implemented as a type") */
       case _ => throw SemanticException(s"Unknown literal: $literal")
     }
   }
-
 
 }

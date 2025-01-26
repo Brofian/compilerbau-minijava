@@ -19,32 +19,39 @@ object Parser {
 
   private def parseTreeFromCode(inputString: String, filePath: String): Package = {
     // convert to CharStream
-    val input = CharStreams.fromString (inputString)
+    val input = CharStreams.fromString(inputString)
     // generate Lexer
-    val lexer = new JavaLexer (input)
+    val lexer = new JavaLexer(input)
 
     // tokenize
-    val tokens = new CommonTokenStream (lexer)
+    val tokens = new CommonTokenStream(lexer)
 
     // generate parser
-    val parser = new JavaParser (tokens)
+    val parser = new JavaParser(tokens)
     // use custom error handler
     parser.removeErrorListeners()
     parser.addErrorListener(new BaseErrorListener() {
-      override def syntaxError(recognizer: Recognizer[?, ?], offendingSymbol: Object, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException): Unit = {
+      override def syntaxError(
+        recognizer: Recognizer[?, ?],
+        offendingSymbol: Object,
+        line: Int,
+        charPositionInLine: Int,
+        msg: String,
+        e: RecognitionException
+      ): Unit = {
         throw new RuntimeException(s"Syntax Error in $filePath at $line:$charPositionInLine: $msg", e)
       }
     })
 
     // generate parsetree
-    val tree = parser.package_ ()
+    val tree = parser.package_()
 
     // print parsetree
-    Logger.debug (tree.toStringTree (parser) )
+    Logger.debug(tree.toStringTree(parser))
 
-    val astBuilder = new ASTBuilder.ASTGenerator ()
-    val ast = astBuilder.generateAST (tree)
-    Logger.debug (ast)
+    val astBuilder = new ASTBuilder.ASTGenerator()
+    val ast = astBuilder.generateAST(tree)
+    Logger.debug(ast)
 
     ast
   }

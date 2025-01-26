@@ -19,10 +19,8 @@ class CompilerTest extends FunSuite {
 
       try {
         // println(s"> Running mini java compiler with file ${file.getAbsolutePath}")
-        MiniJavaCompiler.main(Array("--",file.getAbsolutePath))
-      }
-      catch
-        case e@_ => fail(s"Compilation failed for $relPath with error: " + e)
+        MiniJavaCompiler.main(Array("--", file.getAbsolutePath))
+      } catch case e @ _ => fail(s"Compilation failed for $relPath with error: " + e)
     }
   }
 }

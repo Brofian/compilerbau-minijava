@@ -7,7 +7,6 @@ import java.lang.reflect.{Field, Method}
 import scala.collection.mutable
 import scala.util.matching.Regex
 
-
 /**
  * A bridge between the local type system and the predefined classes from the JDK. This allows to simply retrieve
  * types of classes, methods and fields by a fully qualified name, regardless of it being a local or a predefined type.
@@ -26,14 +25,18 @@ class ClassTypeBridge(baseAST: Project) {
     // option a: this is our class
     val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
     val localPackage = baseAST.packages.find(pckg => pckg.name == packageName)
-    val localClass = if localPackage.isEmpty then None else localPackage.get.classes.find(cls => cls.name == simpleClassName)
+    val localClass =
+      if localPackage.isEmpty then None else localPackage.get.classes.find(cls => cls.name == simpleClassName)
     if (localClass.nonEmpty) {
-      this.resolveTypeInClassContext(UserType(localClass.get.parent), localClass.get, localPackage.get).asInstanceOf[UserType].name
-    }
-    else {
+      this
+        .resolveTypeInClassContext(UserType(localClass.get.parent), localClass.get, localPackage.get)
+        .asInstanceOf[UserType]
+        .name
+    } else {
       // option b: this is a predefined class from the JDK
-      val reflectClass = try Some(Class.forName(fullyQualifiedClassName)) catch
-        case _ => None
+      val reflectClass =
+        try Some(Class.forName(fullyQualifiedClassName))
+        catch case _ => None
 
       reflectClass match
         case Some(refClass) => refClass.getName
@@ -53,7 +56,8 @@ class ClassTypeBridge(baseAST: Project) {
 
     val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
 
-    val localClassMember = this.getClassMemberTypeFromLocalClass(packageName, simpleClassName, fullyQualifiedClassName, memberName)
+    val localClassMember =
+      this.getClassMemberTypeFromLocalClass(packageName, simpleClassName, fullyQualifiedClassName, memberName)
 
     localClassMember match {
       case Some(memberType) => memberType // we found a local member! Yay!
@@ -61,11 +65,13 @@ class ClassTypeBridge(baseAST: Project) {
         val reflectClassMember = this.getClassMemberTypeFromReflection(fullyQualifiedClassName, memberName)
         reflectClassMember match {
           case Some(memberType) => memberType // we found a member from the JDK! Yay!
-          case None => throw new SemanticException(s"Could not find definition of member $memberName in class $fullyQualifiedClassName")
+          case None =>
+            throw new SemanticException(
+              s"Could not find definition of member $memberName in class $fullyQualifiedClassName"
+            )
         }
     }
   }
-
 
   /**
    * Search for the class member in the locally compiled classes
@@ -75,7 +81,12 @@ class ClassTypeBridge(baseAST: Project) {
    * @param memberName      The member, which type should be retrieved
    * @return
    */
-  private def getClassMemberTypeFromLocalClass(packageName: String, simpleClassName: String, fqClassName: String, memberName: String): Option[Type] = {
+  private def getClassMemberTypeFromLocalClass(
+    packageName: String,
+    simpleClassName: String,
+    fqClassName: String,
+    memberName: String
+  ): Option[Type] = {
     // search matching class declarations from baseAST
     val classDecls = baseAST.packages
       .filter(pckg => pckg.name == packageName)
@@ -87,19 +98,21 @@ class ClassTypeBridge(baseAST: Project) {
 
     if (classDecls.isEmpty) {
       None // this class is unknown. Maybe a predefined class from the JDK?
-    }
-    else {
+    } else {
       val classDecl = classDecls.head._1
       val packageDecl = classDecls.head._2
 
-      val member = classDecl.fields.find(field => field.name == memberName).getOrElse(
-        classDecl.methods.find(method => method.name == memberName).getOrElse(None)
-      )
+      val member = classDecl.fields
+        .find(field => field.name == memberName)
+        .getOrElse(
+          classDecl.methods.find(method => method.name == memberName).getOrElse(None)
+        )
 
       val memberType: Type = member match {
         case None => throw new SemanticException(s"Class $fqClassName does not contain a member with name $memberName")
         case FieldDecl(_, _, _, varType, _) => varType
-        case MethodDecl(_, _, _, _, _, returnType, params, _) => FunctionType(returnType, params.map(param => param.varType))
+        case MethodDecl(_, _, _, _, _, returnType, params, _) =>
+          FunctionType(returnType, params.map(param => param.varType))
       }
 
       Some(this.resolveTypeInClassContext(memberType, classDecl, packageDecl))
@@ -142,7 +155,6 @@ class ClassTypeBridge(baseAST: Project) {
     resolveClassTypes(rawType)
   }
 
-
   /**
    * Search for the class member in the definitions from the JDK
    *
@@ -152,27 +164,31 @@ class ClassTypeBridge(baseAST: Project) {
   private def getClassMemberTypeFromReflection(fqClassName: String, memberName: String): Option[Type] = {
 
     // search class in JDK
-    val reflectionClassOption: Option[Class[?]] = try Some(Class.forName(fqClassName)) catch
-      case _ => None
+    val reflectionClassOption: Option[Class[?]] =
+      try Some(Class.forName(fqClassName))
+      catch case _ => None
     if (reflectionClassOption.isEmpty) {
       return None
     }
     val reflectionClass = reflectionClassOption.get
 
-
     // helper function to convert a reflection type to our custom type case classes
     def reflectionTypeToCustomType(refType: Class[?]): Type = {
-      if refType.isPrimitive then refType.getName match {
-        // boolean, byte, char, short, int, long, float, and double.
-        case "boolean" => BoolType
-        case "int" => IntType
-        case _ => throw new SemanticException(s"Primitive type $refType is not yet implemented")
-      } else UserType(refType.getName)
+      if refType.isPrimitive then
+        refType.getName match {
+          // boolean, byte, char, short, int, long, float, and double.
+          case "boolean" => BoolType
+          case "int"     => IntType
+          case _         => throw new SemanticException(s"Primitive type $refType is not yet implemented")
+        }
+      else UserType(refType.getName)
     }
 
     // check methods
     val reflectionMethods: List[Method] = reflectionClass.getDeclaredMethods.toList
-    val matchingMethods = reflectionMethods.filter(method => method.getName == memberName) // todo implement parameter matching for overloading
+    val matchingMethods = reflectionMethods.filter(method =>
+      method.getName == memberName
+    ) // todo implement parameter matching for overloading
     if (matchingMethods.nonEmpty) {
       val matchingMethod = matchingMethods.head
       val returnType = reflectionTypeToCustomType(matchingMethod.getReturnType)
@@ -181,14 +197,14 @@ class ClassTypeBridge(baseAST: Project) {
     }
 
     // check fields
-    val matchingField: Option[Field] = try Some(reflectionClass.getDeclaredField(memberName)) catch
-      case _ => None
+    val matchingField: Option[Field] =
+      try Some(reflectionClass.getDeclaredField(memberName))
+      catch case _ => None
     matchingField match {
       case Some(field) => Some(reflectionTypeToCustomType(field.getType))
-      case None => None
+      case None        => None
     }
   }
-
 
   /**
    * Extract the package name and the simple class name from a fully qualified class name

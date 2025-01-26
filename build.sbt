@@ -15,6 +15,8 @@ lazy val root = project
       "org.ow2.asm" % "asm-tree" % "9.7",              // ASM tree API (optional)
       "org.antlr" % "antlr4-runtime" % "4.13.2"        // ANTLR runtime dependency
     )
+
+
   )
 
 
@@ -26,3 +28,6 @@ Antlr4 / antlr4GenVisitor := true
 Antlr4 / antlr4PackageName := Some("de.students.antlr")
 // add the generated files to the compile path, as they are nested in an additional antlr4 directory
 Compile / unmanagedSourceDirectories += baseDirectory.value / "src" / "main" / "antlr4"
+
+// Enable Scalafmt on Compile
+scalafmtOnCompile := true

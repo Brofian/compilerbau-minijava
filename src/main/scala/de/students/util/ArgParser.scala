@@ -40,7 +40,6 @@ object ArgParser {
     this.args = args;
     this.argIndex = 0
 
-
     // loop over all arguments to extract the information we need
     while (this.argIndex < this.args.length) {
 
@@ -50,16 +49,16 @@ object ArgParser {
         case "--help" =>
           this.printHelpOutput()
           this.argIndex = this.args.length // the help output will end the program execution
-        case "-v" => this.verbosityLevel = Verbosity.NOTICE
-        case "-vv" => this.verbosityLevel = Verbosity.INFO
+        case "-v"   => this.verbosityLevel = Verbosity.NOTICE
+        case "-vv"  => this.verbosityLevel = Verbosity.INFO
         case "-vvv" => this.verbosityLevel = Verbosity.DEBUG
-        case "-o" => this.outputDirectory = this.getNextArgument()
-        case "-i" => this.filesToCompile = this.getNextArgument() :: this.filesToCompile
-        case "--" =>
+        case "-o"   => this.outputDirectory = this.getNextArgument()
+        case "-i"   => this.filesToCompile = this.getNextArgument() :: this.filesToCompile
+        case "--"   =>
           // after the delimiter: treat the rest of the arguments as input files
-          args.slice(this.argIndex, this.args.length).foreach(arg =>
-            this.filesToCompile = this.getNextArgument() :: this.filesToCompile
-          )
+          args
+            .slice(this.argIndex, this.args.length)
+            .foreach(arg => this.filesToCompile = this.getNextArgument() :: this.filesToCompile)
           this.argIndex = this.args.length
         case _ => throw new RuntimeException(s"Encountered unknown or unexpected argument \"$currentArgument\"")
       }
@@ -80,7 +79,6 @@ object ArgParser {
     arg
   }
 
-
   /**
    * Print the help text to the console and set the values to prevent the program from doing any further work
    */
@@ -93,12 +91,18 @@ object ArgParser {
       ("--help", "Show this help and exit the program"),
       ("-v, -vv, -vvv", "Set the verbosity to print more outputs (-vvv for DEBUG level)"),
       ("-o <path>", "Set the output directory for the generated files"),
-      ("-i <path>", "Add a single file into the list of files to compile"),
+      ("-i <path>", "Add a single file into the list of files to compile")
     )
 
     val examples: List[(String, String)] = List(
-      ("sbt \"run -o ~/out -vv -- a.java b.java\"", "Compile the files ./a.java and ./b.java with verbosity level INFO and write the output into the directory ~/out"),
-      ("sbt \"run -i a.java\"", "Compile the file ./a.java with default verbosity level ERROR and write the output into the default directory ./out")
+      (
+        "sbt \"run -o ~/out -vv -- a.java b.java\"",
+        "Compile the files ./a.java and ./b.java with verbosity level INFO and write the output into the directory ~/out"
+      ),
+      (
+        "sbt \"run -i a.java\"",
+        "Compile the file ./a.java with default verbosity level ERROR and write the output into the default directory ./out"
+      )
     )
 
     // calculate width of first columns to align second column
@@ -106,7 +110,6 @@ object ArgParser {
     val getColumnWidth = (l: List[(String, String)]) => l.map(a => a._1.length).reduce((a: Int, b: Int) => a.max(b))
     val optionColWidth = getColumnWidth(options) + columnPadding
     val exampleColWidth = getColumnWidth(examples) + columnPadding
-
 
     // print the program description
     Logger.info("")
