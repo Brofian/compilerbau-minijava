@@ -160,10 +160,11 @@ object ASTBuilder {
         visitReturnStatement(ctx.returnStatement())
       } else if (ctx.ifStatement() != null) {
         visitIfStatement(ctx.ifStatement())
-      } // Handle while statements
-      else if (ctx.whileStatement() != null) {
+      } else if (ctx.whileStatement() != null) {
         visitWhileStatement(ctx.whileStatement())
-      }else if(ctx.forStatement() != null) {
+      } else if (ctx.doWhileStatement() != null) {
+        visitDoWhileStatement(ctx.doWhileStatement())
+      } else if(ctx.forStatement() != null) {
         visitForStatement(ctx.forStatement())
       } else {
         // Handle other types of statements
@@ -196,6 +197,20 @@ object ASTBuilder {
         ForStatement(init, cond, update, body)
     }
 
+    override def visitDoWhileStatement(ctx: DoWhileStatementContext): Statement = {
+      // Get the condition (expression)
+      val condition = visitExpression(ctx.expression())
+
+      // Get the body (block of statements)
+      val body = visitBlockStmt(ctx.block())
+
+      // Print the visited while statement
+      Logger.debug(s"Visiting do-while statement with condition: $condition")
+
+      // Return the corresponding AST node for a while statement
+      DoWhileStatement(condition, body)
+    }
+    
     override def visitWhileStatement(ctx: WhileStatementContext): Statement = {
       // Get the condition (expression)
       val condition = visitExpression(ctx.expression())
