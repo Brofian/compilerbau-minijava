@@ -28,13 +28,19 @@ private def visibilityModifier(methodDecl: MethodDecl): Int = {
     + ACC_PUBLIC
 }
 
-private def javaifyClass(fullName: String) = fullName.replace('.', '/')
+private def javaifyClass(fullName: String) = makeObjectClassName(fullName.replace('.', '/'))
+private def makeObjectClassName(name: String) = if name == "out/Object" then "java/lang/Object" else name // TODO temporary, make issue for type check
 
 private def asmType(t: Type): String = t match {
-  case NoneType            => "" // TODO find out descriptor of NoneType
   case IntType             => "I"
   case BoolType            => "Z"
   case VoidType            => "V"
+  case ShortType           => "S"
+  case LongType            => "L"
+  case ByteType            => "B"
+  case FloatType           => "F"
+  case DoubleType          => "D"
+  case CharType            => "C"
   case ArrayType(baseType) => f"[${asmType(baseType)}"
   case UserType(name) => {
     f"L${javaifyClass(name)};"
@@ -43,6 +49,7 @@ private def asmType(t: Type): String = t match {
     val parameters = parameterTypes.map(asmType).fold("")((a, b) => a + b)
     f"($parameters)${asmType(returnType)}"
   }
+  case NoneType            => "" // NOTE should not happen
   case _ => throw ByteCodeGeneratorException(s"Unknown type $t cannot be converted to ASM-type")
 }
 
@@ -63,8 +70,11 @@ private def constructorType(constructorDecl: ConstructorDecl): FunctionType =
 
 private def binaryOpcode(op: String, t: Type): String = {
   val prefix = t match {
-    case IntType  => "I"
-    case BoolType => "I" // NOTE: this should be Z
+    case IntType | CharType | ShortType | ByteType => "I"
+    case BoolType => "I" // TODO should there be a specific opcode?
+    case LongType => "L"
+    case FloatType => "F"
+    case DoubleType => "D"
     case _        => throw ByteCodeGeneratorException(f"the type $t is not allowed")
   }
   val opName = op match {

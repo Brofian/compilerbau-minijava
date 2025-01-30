@@ -13,13 +13,10 @@ public class A {
         boolean flag2 = false;
         boolean flag3 = flag1 && flag2;
 
-        /*
-
         // Byte type
         byte byteVar1 = 127b;
         byte byteVar2 = 0B;
         byte byteVar3 = 12b + 24B;
-
 
         // Short type
         short shortVar1 = 32767s;
@@ -41,11 +38,11 @@ public class A {
         double doubleVar2 = 0.0;
         double doubleVar3 = 123.456 * 78.9;
 
+	/*
         // Char type
         char charVar1 = 'A';
         char charVar2 = 'B';
         char charVar3 = 'C' + 'D';
-
-         */
+	*/
     }
 }

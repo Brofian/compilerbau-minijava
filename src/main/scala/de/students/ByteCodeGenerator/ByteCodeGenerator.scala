@@ -27,7 +27,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   val classWriter = new ClassWriter(0)
 
   val javaClassName = javaifyClass(classDecl.name)
-  val parent = "java/lang/Object" // TODO use real parent
+  val parent = javaifyClass(classDecl.parent) // "java/lang/Object" // TODO use real parent
 
   // set class header
   classWriter.visit(
@@ -100,7 +100,13 @@ private def generateConstructor(
   methodVisitor.visitCode()
 
   methodVisitor.visitVarInsn(ALOAD, 0) // load this
-  methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false) // call Object constructor
+  methodVisitor.visitMethodInsn(
+    INVOKESPECIAL,
+    javaifyClass(classDecl.parent),
+    "<init>",
+    "()V",
+    false
+  ) // call Object constructor
 
   generateStatement(constructorDecl.body, state)
 
@@ -134,7 +140,7 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
     generateStatement(methodDecl.body.get, state)
   }
 
-  methodVisitor.visitMaxs(state.maxStackDepth + 1, state.localVariableCount)
+  methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
   methodVisitor.visitEnd()
 }
 
