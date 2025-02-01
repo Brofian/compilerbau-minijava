@@ -50,10 +50,7 @@ object Parser {
     Logger.debug(tree.toStringTree(parser))
 
     val astBuilder = new ASTBuilder.ASTGenerator()
-    val ast = astBuilder.generateAST(tree)
-    Logger.debug(ast)
-
-    ast
+    astBuilder.generateAST(tree)
   }
 
 }
