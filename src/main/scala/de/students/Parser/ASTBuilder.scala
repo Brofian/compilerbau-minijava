@@ -234,6 +234,13 @@ object ASTBuilder {
 
     override def visitExpression(ctx: ExpressionContext): Expression = {
       Logger.debug(s"Visiting expression: ${ctx.getText}")
+      // Handle unary operators (!, -)
+      if (ctx.getChildCount == 2 && (ctx.getChild(0).getText == "!" || ctx.getChild(0).getText == "-")) {
+        val op = ctx.getChild(0).getText
+        val expr = visitExpression(ctx.expression(0)) // Get the nested expression
+        return UnaryOp(op, expr)
+      }
+
       if (ctx.literal() != null) {
         visitLiteral(ctx.literal())
       } else if (ctx.primary() != null) {

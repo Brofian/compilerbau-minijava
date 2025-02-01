@@ -94,7 +94,7 @@ sealed trait Expression extends ASTNode
 case class VarRef(name: String) extends Expression
 case class Literal(value: Any) extends Expression
 case class BinaryOp(left: Expression, op: String, right: Expression) extends Expression
-
+case class UnaryOp(op: String, expr: Expression) extends Expression
 case class ThisAccess(name: String) extends Expression
 case class ClassAccess(className: String, memberName: String) extends Expression
 case class NewObject(className: String, arguments: List[Expression]) extends Expression
