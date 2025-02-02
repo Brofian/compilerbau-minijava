@@ -77,7 +77,8 @@ breakStatement: 'break' SC;
 continueStatement: 'continue' SC;
 
 // Expressions
-expression: literal
+expression: ('!' | '-') expression              // Unary operators with higher precedence
+          |literal
           | primary
           | methodCall
           | thisAccess
