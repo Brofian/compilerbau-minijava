@@ -1,4 +1,4 @@
-package operations;
+/*package operations;
 
 class Operations{
         public static void main(String[] args) {
@@ -14,7 +14,7 @@ class Operations{
             // Comparison operators
             boolean isEqual = (a == b); // Equal to
             boolean isNotEqual = (a != b); // Not equal to
-            boolean isLessThan = (a < b); // Less than
+            boolean isLessThan = (a < b); // Less thans
             boolean isLessThanOrEqual = (a <= b); // Less than or equal to
             boolean isGreaterThan = (a > b); // Greater than
             boolean isGreaterThanOrEqual = (a >= b); // Greater than or equal to
@@ -44,3 +44,5 @@ class Operations{
         }
 
 }
+
+ */
