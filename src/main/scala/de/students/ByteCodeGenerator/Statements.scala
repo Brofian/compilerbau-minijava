@@ -175,6 +175,6 @@ private def generateExpressionStatement(statement: StatementExpression, state: M
 
   // expression result is not used, so the stack must be popped
   if (t != VoidType) {
-    Instructions.pop(state)
+    Instructions.popType(state)
   }
 }

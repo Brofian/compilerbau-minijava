@@ -1,30 +1,27 @@
 package de.primitivetypes;
 
-public class A {
-
+public class primitiveTypes {
     public void testTypes() {
         // Integer type
         int a = 5;
         int b = 10;
         int c = a + b;
         int negative = -4;
+
         // Boolean type
         boolean flag1 = true;
         boolean flag2 = false;
         boolean flag3 = flag1 && flag2;
 
-        /*
-
         // Byte type
         byte byteVar1 = 127b;
-        byte byteVar2 = 0B;
-        byte byteVar3 = 12b + 24B;
-
+        byte byteVar2 = 0b;
+        byte byteVar3 = 12b + 24b;
 
         // Short type
         short shortVar1 = 32767s;
-        short shortVar2 = 0S;
-        short shortVar3 = 15s % 4S;
+        short shortVar2 = 0s;
+        short shortVar3 = 15s % 4s;
 
         // Long type
         long longVar1 = 100000L;
@@ -45,7 +42,6 @@ public class A {
         char charVar1 = 'A';
         char charVar2 = 'B';
         char charVar3 = 'C' + 'D';
-
-         */
+        return;
     }
 }
