@@ -1,5 +1,6 @@
 package de.students.semantic
 
+import de.students
 import de.students.Parser.*
 
 object ExpressionChecks {
@@ -12,6 +13,7 @@ object ExpressionChecks {
       case n @ NewObject(_, _)     => this.checkNewObjectExpression(n, context)
       case c @ ClassAccess(_, _)   => this.checkClassAccessExpression(c, context)
       case t @ ThisAccess(_)       => this.checkThisAccessExpression(t, context)
+      case u @ UnaryOp(_, _)       => this.checkUnaryOpExpression(u, context)
       case b @ BinaryOp(_, _, _)   => this.checkBinaryOpExpression(b, context)
       case v @ VarRef(_)           => this.checkVarRefExpression(v, context)
       case l @ Literal(_)          => this.checkLiteralExpression(l, context)
@@ -135,6 +137,25 @@ object ExpressionChecks {
     TypedExpression(thisAccess, memberType)
   }
 
+  private def checkUnaryOpExpression(unaryOp: UnaryOp, context: SemanticContext): TypedExpression = {
+    val typedExpr = ExpressionChecks.checkExpression(unaryOp.expr, context);
+
+    unaryOp.op match {
+      case "!" =>
+        if typedExpr.exprType != BoolType then
+          throw new SemanticException(s"Unary operator \"${unaryOp.op}\" is only allowed for data type $BoolType")
+      case "-" =>
+        if !List(CharType, ByteType, ShortType, IntType, LongType, FloatType, DoubleType).contains(typedExpr.exprType)
+        then
+          throw new SemanticException(
+            s"Unary operator \"${unaryOp.op}\" is not allowed for data type ${typedExpr.exprType}"
+          )
+      case _ => throw new SemanticException(s"Unknown unary operator \"${unaryOp.op}\"")
+    }
+
+    TypedExpression(UnaryOp(unaryOp.op, typedExpr), typedExpr.exprType)
+  }
+
   private def checkBinaryOpExpression(binOp: BinaryOp, context: SemanticContext): TypedExpression = {
     val typedLeft = ExpressionChecks.checkExpression(binOp.left, context)
     val typedRight = ExpressionChecks.checkExpression(binOp.right, context)
@@ -166,6 +187,7 @@ object ExpressionChecks {
       case "+=" => typedLeft.exprType
       case "-=" => typedLeft.exprType
       case "*=" => typedLeft.exprType
+      case "/=" => typedLeft.exprType
       case "%=" => typedLeft.exprType
       case "=" =>
         if (UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType) != typedLeft.exprType) {
@@ -180,7 +202,17 @@ object ExpressionChecks {
         )
     }
 
-    TypedExpression(BinaryOp(typedLeft, binOp.op, typedRight), opType)
+    // if this is an assignment calculation operator, we unbox it into its full form: a += b * c => a = a + (b * c)
+    val expandedOp: Expression = binOp.op match {
+      case "+=" => BinaryOp(typedLeft, "=", TypedExpression(BinaryOp(typedLeft, "+", typedRight), opType))
+      case "-=" => BinaryOp(typedLeft, "=", TypedExpression(BinaryOp(typedLeft, "-", typedRight), opType))
+      case "*=" => BinaryOp(typedLeft, "=", TypedExpression(BinaryOp(typedLeft, "*", typedRight), opType))
+      case "/=" => BinaryOp(typedLeft, "=", TypedExpression(BinaryOp(typedLeft, "/", typedRight), opType))
+      case "%=" => BinaryOp(typedLeft, "=", TypedExpression(BinaryOp(typedLeft, "%", typedRight), opType))
+      case _    => BinaryOp(typedLeft, binOp.op, typedRight)
+    }
+
+    TypedExpression(expandedOp, opType)
   }
 
   private def checkVarRefExpression(varRef: VarRef, context: SemanticContext): TypedExpression = {
