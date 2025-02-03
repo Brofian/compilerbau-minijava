@@ -28,10 +28,25 @@ private def visibilityModifier(methodDecl: MethodDecl): Int = {
     + ACC_PUBLIC
 }
 
-private def javaifyClass(fullName: String) = makeObjectClassName(fullName.replace('.', '/'))
-private def makeObjectClassName(name: String) = if name == "out/Object" then "java/lang/Object" else name // TODO temporary, make issue for type check
+private def typeStackSize(t: Type): Int = t match {
+  case IntType      => 1
+  case BoolType     => 1
+  case ShortType    => 1
+  case LongType     => 2
+  case ByteType     => 1
+  case FloatType    => 1
+  case DoubleType   => 2
+  case CharType     => 1
+  case ArrayType(_) => 1
+  case UserType(_)  => 1
+  case _            => throw ByteCodeGeneratorException(f"type $t can't be pushed onto the stack")
+}
 
-private def asmType(t: Type): String = t match {
+private def javaifyClass(fullName: String) = makeObjectClassName(fullName.replace('.', '/'))
+private def makeObjectClassName(name: String) =
+  if name.contains("Object") then "java/lang/Object" else name // TODO temporary, make issue for type check
+
+private def javaSignature(t: Type): String = t match {
   case IntType             => "I"
   case BoolType            => "Z"
   case VoidType            => "V"
@@ -41,16 +56,16 @@ private def asmType(t: Type): String = t match {
   case FloatType           => "F"
   case DoubleType          => "D"
   case CharType            => "C"
-  case ArrayType(baseType) => f"[${asmType(baseType)}"
+  case ArrayType(baseType) => f"[${javaSignature(baseType)}"
   case UserType(name) => {
     f"L${javaifyClass(name)};"
   }
   case FunctionType(returnType, parameterTypes) => {
-    val parameters = parameterTypes.map(asmType).fold("")((a, b) => a + b)
-    f"($parameters)${asmType(returnType)}"
+    val parameters = parameterTypes.map(javaSignature).fold("")((a, b) => a + b)
+    f"($parameters)${javaSignature(returnType)}"
   }
-  case NoneType            => "" // NOTE should not happen
-  case _ => throw ByteCodeGeneratorException(s"Unknown type $t cannot be converted to ASM-type")
+  case NoneType => "" // NOTE should not happen
+  case _        => throw ByteCodeGeneratorException(s"Unknown type $t cannot be converted to ASM-type")
 }
 
 private def asmUserType(t: Type): String = t match {
@@ -59,7 +74,7 @@ private def asmUserType(t: Type): String = t match {
 }
 
 private def asmConstructorType(parameters: List[Type]): String = {
-  asmType(FunctionType(VoidType, parameters))
+  javaSignature(FunctionType(VoidType, parameters))
 }
 
 private def functionType(methodDecl: MethodDecl): FunctionType =
@@ -68,72 +83,22 @@ private def functionType(methodDecl: MethodDecl): FunctionType =
 private def constructorType(constructorDecl: ConstructorDecl): FunctionType =
   FunctionType(VoidType, constructorDecl.params.map(param => param.varType))
 
-private def binaryOpcode(op: String, t: Type): String = {
-  val prefix = t match {
-    case IntType | CharType | ShortType | ByteType => "I"
-    case BoolType => "I" // TODO should there be a specific opcode?
-    case LongType => "L"
-    case FloatType => "F"
-    case DoubleType => "D"
-    case _        => throw ByteCodeGeneratorException(f"the type $t is not allowed")
-  }
-  val opName = op match {
-    case "+" => "ADD"
-    case "-" => "SUB"
-    case "*" => "MUL"
-    case "/" => "DIV"
-    case "%" => "REM"
-    case _   => throw ByteCodeGeneratorException(f"the operator \"$op\" is not allowed for binary operations")
-  }
-  prefix + opName
-}
-private def asmOpcode(opName: String): Int = opName match {
-  case "IADD" => IADD
-  case "ISUB" => ISUB
-  case "IMUL" => IMUL
-  case "IDIV" => IDIV
-  case "IREM" => IREM
-  case _      => throw NotImplementedError("asm opcode")
-}
-
-private def isBooleanOpcode(op: String): Boolean =
+private def isBooleanOpcode(op: String): Boolean = {
   op == "==" ||
-    op == "!=" ||
-    op == "<" ||
-    op == "<=" ||
-    op == ">" ||
-    op == ">=" ||
-    op == "&&" ||
-    op == "||"
-
-private def asmLoadInsn(t: Type): Int = t match {
-  case IntType             => ILOAD
-  case BoolType            => ILOAD
-  case ArrayType(baseType) => ALOAD
-  case UserType(name)      => ALOAD
-  case _                   => throw ByteCodeGeneratorException(f"type ${asmType(t)} can not be fetched as variable")
-}
-private def asmStoreInsn(t: Type): Int = t match {
-  case IntType             => ISTORE
-  case BoolType            => ISTORE
-  case ArrayType(baseType) => ASTORE
-  case UserType(name)      => ASTORE
-  case _                   => throw ByteCodeGeneratorException(f"type ${asmType(t)} can not be saved as variable")
-}
-
-private def asmReturnCode(t: Type): Int = t match {
-  case IntType             => IRETURN
-  case BoolType            => IRETURN
-  case ArrayType(baseType) => ARETURN
-  case UserType(name)      => ARETURN
-  case _                   => throw ByteCodeGeneratorException(f"return type \"$t\" is not allowed")
+  op == "!=" ||
+  op == "<" ||
+  op == "<=" ||
+  op == ">" ||
+  op == ">=" ||
+  op == "&&" ||
+  op == "||"
 }
 
 private def makePrintStatement(toPrint: Expression, methodVisitor: MethodVisitor, state: MethodGeneratorState): Unit = {
   methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;")
   val t = generateTypedExpression(toPrint.asInstanceOf[TypedExpression], state)
   state.stackDepth += 1
-  methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", f"(${asmType(t)})V", false)
+  methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", f"(${javaSignature(t)})V", false)
 }
 
 private def debugLogStack(state: MethodGeneratorState, where: String): Unit = {

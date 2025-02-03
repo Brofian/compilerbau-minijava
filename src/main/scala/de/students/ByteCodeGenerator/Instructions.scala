@@ -6,17 +6,17 @@ import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
 
 private object Instructions {
-  def pushConstant(constant: Any, state: MethodGeneratorState): Unit = {
-    state.pushStack()
+  def pushConstant(constant: Any, constantType: Type, state: MethodGeneratorState): Unit = {
+    state.pushStack(constantType)
     state.methodVisitor.visitLdcInsn(constant)
   }
 
   def pushTrue(state: MethodGeneratorState): Unit = {
-    pushConstant(1, state)
+    pushConstant(1, BoolType, state)
   }
 
   def pushFalse(state: MethodGeneratorState): Unit = {
-    pushConstant(0, state)
+    pushConstant(0, BoolType, state)
   }
 
   def goto(label: Label, state: MethodGeneratorState): Unit = {
@@ -50,7 +50,7 @@ private object Instructions {
    */
   def condJump(opcode: Int, label: Label, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitJumpInsn(opcode, label)
-    state.popStack(1)
+    state.popStack()
   }
 
   def switch(default: Label, labels: Array[Label], keys: Array[Int], state: MethodGeneratorState) = {
@@ -60,43 +60,57 @@ private object Instructions {
   def storeVar(varId: Int, varType: Type, state: MethodGeneratorState) = {
     // TODO multiple types
     state.methodVisitor.visitVarInsn(asmStoreInsn(varType), varId)
-    state.popStack(1)
+    state.popStack()
   }
 
   def loadVar(varId: Int, varType: Type, state: MethodGeneratorState) = {
     // TODO multiple types
     state.methodVisitor.visitVarInsn(asmLoadInsn(varType), varId)
-    state.pushStack()
+    state.pushStack(varType)
   }
 
+  def popType(state: MethodGeneratorState) = {
+    val size = typeStackSize(state.stackTypes.last)
+    if (size == 2) { popTwo(state) }
+    else { for (i <- 0 until size) { pop(state) } }
+  }
   def pop(state: MethodGeneratorState) = {
     state.methodVisitor.visitInsn(POP)
-    state.popStack(1)
+    state.popStack()
+  }
+  def popTwo(state: MethodGeneratorState) = {
+    state.methodVisitor.visitInsn(POP2)
+    state.popStack()
   }
 
+  def duplicateTopType(state: MethodGeneratorState) = {
+    val size = typeStackSize(state.stackTypes.last)
+    if (size == 2) { duplicateTopTwo(state) }
+    else { for (i <- 0 until size) { duplicateTop(state) } }
+  }
   def duplicateTop(state: MethodGeneratorState) = {
     state.methodVisitor.visitInsn(DUP)
-    state.pushStack()
+    state.pushStack(state.stackTypes.last)
   }
 
   def duplicateTopTwo(state: MethodGeneratorState) = {
     state.methodVisitor.visitInsn(DUP2)
-    state.pushStack()
-    state.pushStack()
+    state.pushStack(state.stackTypes.last)
+    state.pushStack(state.stackTypes.last)
   }
 
   def loadThis(state: MethodGeneratorState) = {
     state.methodVisitor.visitVarInsn(ALOAD, 0)
-    state.pushStack()
+    state.pushStack(UserType(javaifyClass(state.className)))
   }
 
-  def loadClass(className: String, state: MethodGeneratorState) = {
-    state.methodVisitor.visitVarInsn
-  }
+  // def loadClass(className: String, state: MethodGeneratorState) = {
+  //   state.methodVisitor.visitVarInsn
+  // }
 
   def storeField(name: String, fieldType: Type, state: MethodGeneratorState) = {
-    state.methodVisitor.visitFieldInsn(PUTFIELD, javaifyClass(state.className), name, asmType(fieldType))
-    state.popStack(1)
+    state.methodVisitor.visitFieldInsn(PUTFIELD, javaifyClass(state.className), name, javaSignature(fieldType))
+    state.popStack()
   }
 
   /**
@@ -106,13 +120,13 @@ private object Instructions {
    * @param state
    */
   def loadField(name: String, fieldType: Type, state: MethodGeneratorState) = {
-    state.methodVisitor.visitFieldInsn(GETFIELD, javaifyClass(state.className), name, asmType(fieldType))
+    state.methodVisitor.visitFieldInsn(GETFIELD, javaifyClass(state.className), name, javaSignature(fieldType))
     // object is popped and field is pushed
   }
 
   def binaryOperation(opcode: Int, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(opcode)
-    state.popStack(1) // the instruction takes two arguments from the stack and then pushes the result
+    state.popStack() // the instruction takes two arguments from the stack and then pushes the result
   }
 
   def callMethod(
@@ -132,12 +146,13 @@ private object Instructions {
 
   def returnType(descriptor: Type, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(asmReturnCode(descriptor))
-    state.popStack(1)
+    state.popStack()
   }
 
   def newObject(className: String, state: MethodGeneratorState): Unit = {
-    state.methodVisitor.visitTypeInsn(NEW, javaifyClass(className))
-    state.pushStack()
+    val javaifiedClass = javaifyClass(className)
+    state.methodVisitor.visitTypeInsn(NEW, javaifiedClass)
+    state.pushStack(UserType(javaifiedClass))
   }
 
   def callConstructor(className: String, parameterDescriptors: List[Type], state: MethodGeneratorState): Unit = {
