@@ -102,5 +102,20 @@ private def makePrintStatement(toPrint: Expression, methodVisitor: MethodVisitor
 }
 
 private def debugLogStack(state: MethodGeneratorState, where: String): Unit = {
-  Logger.debug(f"stack size ${state.stackDepth} | max stack size ${state.maxStackDepth} | $where")
+  // Logger.debug(f"stack size ${state.stackDepth} | max stack size ${state.maxStackDepth} | $where")
+  Logger.debug(f"s ${state.stackDepth} | smax ${state.maxStackDepth} | ${state.stackTypes} | $where")
+}
+private def stringifyExpression(expr: Expression): String = expr match {
+  case VarRef(name)                       => f"$name"
+  case Literal(value)                     => f"$value"
+  case BinaryOp(left, op, right)          => f"${stringifyExpression(left)} $op ${stringifyExpression(right)}"
+  case ThisAccess(name)                   => f"this.$name"
+  case ClassAccess(className, memberName) => f"$className.$memberName"
+  case NewObject(className, arguments) =>
+    f"new $className(${arguments.foldLeft("")((acc, e) => acc + f", ${stringifyExpression(e)}")})"
+  case NewArray(arrayType, dimensions) => f"new $arrayType[$dimensions]"
+  case ArrayAccess(array, index)       => f"$array[$index]"
+  case MethodCall(target, methodName, args) =>
+    f"${stringifyExpression(target)}.$methodName(${args.foldLeft("")((acc, e) => acc + f", ${stringifyExpression(e)}")})"
+  case TypedExpression(expr, exprType) => stringifyExpression(expr)
 }

@@ -6,7 +6,8 @@ import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
 
 private def generateExpression(expression: Expression, state: MethodGeneratorState): Unit = {
-  debugLogStack(state, f"eval expr $expression")
+  val stringified = stringifyExpression(expression)
+  debugLogStack(state, f"eval expr $stringified")
 
   expression match {
     case TypedExpression(variableReference: VarRef, _) =>
@@ -29,6 +30,8 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
       )
     case _ => throw ByteCodeGeneratorException(f"the expression $expression is not supported")
   }
+
+  debugLogStack(state, f"end of expression $stringified")
 }
 
 // VARIABLE REFERENCE
