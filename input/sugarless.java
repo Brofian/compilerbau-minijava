@@ -1,5 +1,6 @@
 package de.sugarless;
 
+import java.lang.*;
 
 class Sugarless extends Object {
 

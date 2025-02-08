@@ -3,7 +3,7 @@ grammar Java;
 // Package Definition
 package: PACKAGE packageId SC imports class+ ;
 
-imports: (IMPORT packageId SC)* ;
+imports: (IMPORT importPackageId SC)* ;
 
 
 // Class Definitions
@@ -154,6 +154,8 @@ NULL_LITERAL: 'null';
 id: IDENTIFIER;
 IDENTIFIER: [a-zA-Z_$][a-zA-Z0-9_$]*;
 packageId: IDENTIFIER ('.' IDENTIFIER)*;
+importPackageId: IDENTIFIER ('.' IDENTIFIER)* PACKAGE_WILDCARD?;
+PACKAGE_WILDCARD: '.*';
 
 SC: ';';
 

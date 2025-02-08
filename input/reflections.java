@@ -1,7 +1,5 @@
 package de.reflections;
 
-import java.lang.String;
-
 class ReflectionTest {
 
     public String getTestString() {
