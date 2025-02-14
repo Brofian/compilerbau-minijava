@@ -1,8 +1,8 @@
 package de.students.semantic
 
 import de.students.Parser.*
-import scala.util.matching.Regex
-import scala.collection.mutable;
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer;
 
 object SemanticCheck {
 
@@ -19,11 +19,12 @@ object SemanticCheck {
 
     // create context and make all classes and their fields known to the whole project
     val globalContext = SemanticContext(
-      ClassAccessHelper(ClassTypeBridge(project)),
-      mutable.Map[String, Type](),
-      mutable.Map[String, String](),
-      "",
-      ""
+      classAccessHelper = ClassAccessHelper(ClassTypeBridge(project)),
+      typeAssumptions = mutable.Map[String, Type](),
+      imports = mutable.Map[String, String](),
+      importWildcards = ListBuffer(),
+      packageName = "",
+      className = ""
     )
 
     val typedPackages = project.packages.map((pckg: Package) => {
@@ -44,13 +45,17 @@ object SemanticCheck {
   private def checkPackage(pckg: Package, context: SemanticContext): Package = {
 
     // add imports
+    var hasExplicitJavaLangImport = false
     pckg.imports.names.foreach(importName =>
-      val fqParts: Option[Regex.Match] = """(.+\.)*([^.]+)""".r.findFirstMatchIn(importName)
-      fqParts match {
-        case None           => throw new SemanticException("")
-        case Some(regMatch) => context.addImport(regMatch.group(2), importName)
-      }
+      val parts = importName.split("""\.""")
+      context.addImport(parts.last, importName)
+      hasExplicitJavaLangImport ||= importName == "java.lang."
     )
+
+    // add implicit java.lang.* import
+    if (!hasExplicitJavaLangImport) {
+      context.addImport("", "java.lang.")
+    }
 
     // run typeCheck for class and replace with typed class
     val typedClasses = pckg.classes.map((cls: ClassDecl) => {
