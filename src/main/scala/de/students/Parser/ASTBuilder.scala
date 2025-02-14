@@ -263,7 +263,7 @@ object ASTBuilder {
     /**
      * unaryExpression : ('!' | '-') unaryExpression | postfixExpression ;
      */
-    def visitUnaryExpression(ctx: UnaryExpressionContext): Expression = {
+    override def visitUnaryExpression(ctx: UnaryExpressionContext): Expression = {
       Logger.debug(s"Visiting unary expression: ${ctx.getText}")
       if (ctx.getChildCount == 1) {
         visitPostfixExpression(ctx.postfixExpression())
@@ -277,7 +277,7 @@ object ASTBuilder {
     /**
      * postfixExpression : simplePrimary (postfixOp)* ;
      */
-    def visitPostfixExpression(ctx: PostfixExpressionContext): Expression = {
+    override def visitPostfixExpression(ctx: PostfixExpressionContext): Expression = {
       Logger.debug(s"Visiting postfix expression: ${ctx.getText}")
       var expr = visitSimplePrimary(ctx.simplePrimary())
       for (postfixOp <- ctx.postfixOp().asScala) {
@@ -289,7 +289,7 @@ object ASTBuilder {
     /**
      * simplePrimary : IDENTIFIER | THIS | literal | '(' expression ')' | objectCreation | arrayCreation ;
      */
-    def visitSimplePrimary(ctx: SimplePrimaryContext): Expression = {
+    override def visitSimplePrimary(ctx: SimplePrimaryContext): Expression = {
       Logger.debug(s"Visiting simple primary: ${ctx.getText}")
       if (ctx.IDENTIFIER() != null) {
         VarRef(ctx.IDENTIFIER().getText)
@@ -317,10 +317,19 @@ object ASTBuilder {
         case "." =>
           val memberName = ctx.IDENTIFIER().getText
           if (ctx.getChildCount > 2 && ctx.getChild(2).getText == "(") {
-            val args = if (ctx.argumentList() != null) visitArgumentList(ctx.argumentList()) else List()
+            val args = if (ctx.argumentList() != null) visitMyArgumentList(ctx.argumentList()) else List()
             MethodCall(target, memberName, args)
           } else {
-            MemberAccess(target, memberName)
+            target match {
+              case VarRef(name) =>
+                if (name == "this")
+                  ThisAccess(memberName)
+                else
+                  ClassAccess(name, memberName)
+
+              case _ =>
+                ObjectAccess(target, memberName)
+            }
           }
         case "[" =>
           val index = visitExpression(ctx.expression())
@@ -333,7 +342,7 @@ object ASTBuilder {
     /**
      * argumentList : expression (',' expression)* ;
      */
-    def visitArgumentList(ctx: ArgumentListContext): List[Expression] = {
+    def visitMyArgumentList(ctx: ArgumentListContext): List[Expression] = {
       Logger.debug(s"Visiting argument list: ${ctx.getText}")
       ctx.expression().asScala.map(visitExpression).toList
     }
@@ -379,7 +388,7 @@ object ASTBuilder {
 
     override def visitObjectCreation(ctx: ObjectCreationContext): NewObject = {
       val className = ctx.id().getText
-      val arguments = if (ctx.argumentList() != null) visitArgumentList(ctx.argumentList()) else List()
+      val arguments = if (ctx.argumentList() != null) visitMyArgumentList(ctx.argumentList()) else List()
       Logger.debug(s"Visiting object creation: new $className(${arguments.mkString(", ")})")
       NewObject(className, arguments)
     }
@@ -409,6 +418,6 @@ object ASTBuilder {
       else if (ctx.PROTECTED() != null) Some("protected")
       else None
     }
-  }
 
+  }
 }

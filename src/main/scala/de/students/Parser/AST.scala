@@ -12,42 +12,42 @@ case class Imports(names: List[String]) extends ASTNode
 
 // Class declaration
 case class ClassDecl(
-                      name: String,
-                      parent: String,
-                      isAbstract: Boolean,
-                      methods: List[MethodDecl],
-                      fields: List[FieldDecl],
-                      constructors: List[ConstructorDecl]
-                    ) extends ASTNode
+  name: String,
+  parent: String,
+  isAbstract: Boolean,
+  methods: List[MethodDecl],
+  fields: List[FieldDecl],
+  constructors: List[ConstructorDecl]
+) extends ASTNode
 
 // method declaration
 case class MethodDecl(
-                       accessModifier: Option[String], // Optional (default to package-private)
-                       name: String,
-                       isAbstract: Boolean,
-                       static: Boolean,
-                       isFinal: Boolean,
-                       returnType: Type,
-                       params: List[VarDecl],
-                       body: Option[Statement] // Optional to handle abstract methods
-                     ) extends ASTNode
+  accessModifier: Option[String], // Optional (default to package-private)
+  name: String,
+  isAbstract: Boolean,
+  static: Boolean,
+  isFinal: Boolean,
+  returnType: Type,
+  params: List[VarDecl],
+  body: Option[Statement] // Optional to handle abstract methods
+) extends ASTNode
 
 // Constructor declaration
 case class ConstructorDecl(
-                            accessModifier: Option[String],
-                            name: String,
-                            params: List[VarDecl],
-                            body: Statement
-                          ) extends ASTNode
+  accessModifier: Option[String],
+  name: String,
+  params: List[VarDecl],
+  body: Statement
+) extends ASTNode
 
 // Field declaration
 case class FieldDecl(
-                      accessModifier: Option[String],
-                      isFinal: Boolean,
-                      name: String,
-                      varType: Type,
-                      initializer: Option[Expression]
-                    ) extends ASTNode
+  accessModifier: Option[String],
+  isFinal: Boolean,
+  name: String,
+  varType: Type,
+  initializer: Option[Expression]
+) extends ASTNode
 
 // Variable declaration
 case class VarDecl(name: String, varType: Type, initializer: Option[Expression]) extends Statement
@@ -76,7 +76,7 @@ case class ReturnStatement(expr: Option[Expression]) extends Statement
 case class IfStatement(cond: Expression, thenBranch: Statement, elseBranch: Option[Statement]) extends Statement
 case class WhileStatement(cond: Expression, body: Statement) extends Statement
 case class ForStatement(init: Option[Statement], cond: Option[Expression], update: Option[Expression], body: Statement)
-  extends Statement
+    extends Statement
 case class DoWhileStatement(cond: Expression, body: Statement) extends Statement
 case class SwitchStatement(expr: Expression, cases: List[SwitchCase], default: Option[DefaultCase]) extends Statement
 case class SwitchCase(caseLit: Option[Literal], caseBlock: Statement) extends Statement
@@ -98,18 +98,15 @@ case class UnaryOp(op: String, expr: Expression) extends Expression
 // This node represents an access of the form "target.member" (without parentheses).
 // Later in the ASTBuilder we decide whether the target is the literal `this` (to yield a ThisAccess)
 // or a class name (to yield a ClassAccess) if needed.
-sealed trait MemberAccess extends Expression {
-  def memberName: String
-}
+case class ClassAccess(className: String, memberName: String) extends Expression
 
 // Represents `this.member`
-case class ThisAccess(memberName: String) extends MemberAccess
+case class ThisAccess(name: String) extends Expression
 
 // Represents `ClassName.member`
-case class ClassAccess(target: Expression, memberName: String) extends MemberAccess
 
 // Represents generic object member access `object.member`
-case class ObjectAccess(target: Expression, memberName: String) extends MemberAccess
+case class ObjectAccess(target: Expression, memberName: String) extends Expression
 case class NewObject(className: String, arguments: List[Expression]) extends Expression
 case class NewArray(arrayType: Type, dimensions: List[Expression]) extends Expression
 case class ArrayAccess(array: Expression, index: Expression) extends Expression
