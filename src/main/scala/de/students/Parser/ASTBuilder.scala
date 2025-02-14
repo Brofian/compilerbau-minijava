@@ -338,7 +338,7 @@ object ASTBuilder {
                   ClassAccess(name, memberName)
 
               case _ =>
-                ObjectAccess(target, memberName)
+                throw new UnsupportedOperationException("Unsupported postfix usage: " + target)
             }
           }
         case "[" =>

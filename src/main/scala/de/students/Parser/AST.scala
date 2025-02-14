@@ -99,7 +99,6 @@ case class UnaryOp(op: String, expr: Expression) extends Expression
 // Later in the ASTBuilder we decide whether the target is the literal `this` (to yield a ThisAccess)
 // or a class name (to yield a ClassAccess) if needed.
 
-
 // Represents `ClassName.member`
 case class ClassAccess(className: String, memberName: String) extends Expression
 
