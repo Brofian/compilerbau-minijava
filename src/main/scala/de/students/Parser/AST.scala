@@ -20,7 +20,7 @@ case class ClassDecl(
   constructors: List[ConstructorDecl]
 ) extends ASTNode
 
-// method declaration
+// Method declaration
 case class MethodDecl(
   accessModifier: Option[String], // Optional (default to package-private)
   name: String,
@@ -49,7 +49,7 @@ case class FieldDecl(
   initializer: Option[Expression]
 ) extends ASTNode
 
-// Variable declaration
+// Variable declaration (also used as a statement)
 case class VarDecl(name: String, varType: Type, initializer: Option[Expression]) extends Statement
 
 // Types
@@ -69,7 +69,7 @@ case class ArrayType(baseType: Type) extends Type
 case class UserType(name: String) extends Type
 case class FunctionType(returnType: Type, parameterTypes: List[Type]) extends Type
 
-// statements
+// Statements
 sealed trait Statement extends ASTNode
 case class BlockStatement(stmts: List[Statement]) extends Statement
 case class ReturnStatement(expr: Option[Expression]) extends Statement
@@ -84,22 +84,27 @@ case class DefaultCase(caseBlock: Statement) extends Statement
 case class StatementExpression(expr: Expression) extends Statement
 case class BreakStatement() extends Statement
 case class ContinueStatement() extends Statement
-
 case class TypedStatement(stmt: Statement, stmtType: Type) extends Statement
-
 case class PrintStatement(toPrint: Expression) extends Statement
 
-// expressions
+// Expressions
 sealed trait Expression extends ASTNode
 case class VarRef(name: String) extends Expression
 case class Literal(value: Any) extends Expression
 case class BinaryOp(left: Expression, op: String, right: Expression) extends Expression
 case class UnaryOp(op: String, expr: Expression) extends Expression
-case class ThisAccess(name: String) extends Expression
-case class ClassAccess(className: String, memberName: String) extends Expression
+
+// Unified member access node
+// This node represents an access of the form "target.member" (without parentheses).
+// Later in the ASTBuilder we decide whether the target is the literal `this` (to yield a ThisAccess)
+// or a class name (to yield a ClassAccess) if needed.
+case class MemberAccess(target: Expression, memberName: String) extends Expression
+
 case class NewObject(className: String, arguments: List[Expression]) extends Expression
 case class NewArray(arrayType: Type, dimensions: List[Expression]) extends Expression
 case class ArrayAccess(array: Expression, index: Expression) extends Expression
 
+// Method calls (member access with parentheses)
 case class MethodCall(target: Expression, methodName: String, args: List[Expression]) extends Expression
+
 case class TypedExpression(expr: Expression, exprType: Type) extends Expression
