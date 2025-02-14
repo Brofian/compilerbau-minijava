@@ -27,7 +27,7 @@ object ASTBuilder {
       val classDecls = ctx
         .class_()
         .asScala
-        .map(visitClass)
+        .map(visitClass) // Call visitClass for each class in the package
         .toList
 
       val imports = visitImports(ctx.imports())
@@ -44,7 +44,7 @@ object ASTBuilder {
           .asScala
           .map { importCtx =>
             val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
-            Logger.debug(s"Visiting import $importPath")
+            Logger.debug(s"Visiting import $importPath ")
             importPath
           }
           .toList
