@@ -128,10 +128,24 @@ object ExpressionChecks {
   }
 
   private def checkClassAccessExpression(clsAccess: ClassAccess, context: SemanticContext): TypedExpression = {
-    val fullyQualifiedClassName = context.getFullyQualifiedClassName(clsAccess.className)
-    val memberType =
-      context.getClassAccessHelper.getClassMemberType(fullyQualifiedClassName, clsAccess.memberName, None)
-    TypedExpression(ClassAccess(fullyQualifiedClassName, clsAccess.memberName), memberType)
+    val varTypeAssumption = context.getTypeAssumption(clsAccess.className)
+    if (varTypeAssumption.nonEmpty) {
+      varTypeAssumption.get match {
+        case UserType(fullyQualifiedClassName) =>
+          val memberType =
+            context.getClassAccessHelper.getClassMemberType(fullyQualifiedClassName, clsAccess.memberName, None)
+          TypedExpression(ClassAccess(fullyQualifiedClassName, clsAccess.memberName), memberType)
+        case _ =>
+          throw new SemanticException(
+            s"Cannot access member ${clsAccess.memberName} on instance of type ${varTypeAssumption.get}"
+          )
+      }
+    } else {
+      val fullyQualifiedClassName = context.getFullyQualifiedClassName(clsAccess.className)
+      val memberType =
+        context.getClassAccessHelper.getClassMemberType(fullyQualifiedClassName, clsAccess.memberName, None)
+      TypedExpression(ClassAccess(fullyQualifiedClassName, clsAccess.memberName), memberType)
+    }
   }
 
   private def checkThisAccessExpression(thisAccess: ThisAccess, context: SemanticContext): TypedExpression = {

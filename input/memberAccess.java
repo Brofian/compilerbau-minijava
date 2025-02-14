@@ -6,6 +6,7 @@ class MemberAccess {
         // instance member access
         ClassA a = new ClassA();
         a.someMethod();
+        int b = a.someValue;
 
         // static method access
         ClassA.someStaticMethod();
@@ -21,6 +22,8 @@ class ClassA {
     static int someStaticMethod() {
         return 1;
     }
+
+    int someValue = 3;
 
     int someMethod() {
         return 2;
