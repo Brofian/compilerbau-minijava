@@ -90,6 +90,8 @@ case class PrintStatement(toPrint: Expression) extends Statement
 // expressions
 sealed trait Expression extends ASTNode
 case class VarRef(name: String) extends Expression
+// special case for VarRef is the reference of a static class context
+case class StaticClassRef(className: String) extends Expression
 case class Literal(value: Any) extends Expression
 case class BinaryOp(left: Expression, op: String, right: Expression) extends Expression
 case class UnaryOp(op: String, expr: Expression) extends Expression

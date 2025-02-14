@@ -29,6 +29,7 @@ object ExpressionChecks {
         s"Cannot call method ${methodCall.methodName} on value of type ${typedTarget.exprType}"
       )
     }
+    val isStaticTarget = typedTarget.expr.isInstanceOf[StaticClassRef]
 
     // validate arguments
     val typedArguments = methodCall.args.map(argument => ExpressionChecks.checkExpression(argument, context))
@@ -36,6 +37,7 @@ object ExpressionChecks {
 
     // determine method definition
     val fqClassName = typedTarget.exprType.asInstanceOf[UserType].name
+    // TODO: if isStaticTarget == true, then filter for static members only!
     val methodType = context.getClassAccessHelper.getClassMemberType(fqClassName, methodCall.methodName, Some(argTypes))
     if (!methodType.isInstanceOf[FunctionType]) {
       throw new SemanticException(
@@ -219,7 +221,12 @@ object ExpressionChecks {
     val varTypeOption = context.getTypeAssumption(varRef.name)
     varTypeOption match {
       case Some(varType) => TypedExpression(varRef, varType)
-      case None          => throw new SemanticException(s"Identifier ${varRef.name} is not defined")
+      case None =>
+        try {
+          // check if this is not a variable, but a class
+          val fullyQualifiedClassName = context.getFullyQualifiedClassName(varRef.name)
+          TypedExpression(StaticClassRef(fullyQualifiedClassName), UserType(fullyQualifiedClassName))
+        } catch case e: SemanticException => throw new SemanticException(s"Identifier ${varRef.name} is not defined")
     }
   }
 
