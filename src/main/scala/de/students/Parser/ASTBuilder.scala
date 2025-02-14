@@ -340,7 +340,7 @@ object ASTBuilder {
                 if (name == "this")
                   ThisAccess(memberName)
                 else
-                  ClassAccess(name, memberName)
+                  MemberAccess(target, memberName)
 
               case _ =>
                 throw new UnsupportedOperationException("Unsupported postfix usage: " + target)

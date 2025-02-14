@@ -102,7 +102,7 @@ case class UnaryOp(op: String, expr: Expression) extends Expression
 // or a class name (to yield a ClassAccess) if needed.
 
 // Represents `ClassName.member`
-case class ClassAccess(className: String, memberName: String) extends Expression
+case class MemberAccess(target: Expression, memberName: String) extends Expression
 
 // Represents `this.member`
 case class ThisAccess(name: String) extends Expression
