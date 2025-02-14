@@ -1,7 +1,5 @@
 package de.objecttests;
 
-import java.lang.String;
-
 class HelloWorld {
 	int value;
 

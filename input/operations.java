@@ -1,4 +1,4 @@
-package operations;
+package de.operations;
 
 class Operations{
         public static void main(String[] args) {
@@ -14,7 +14,7 @@ class Operations{
             // Comparison operators
             boolean isEqual = (a == b); // Equal to
             boolean isNotEqual = (a != b); // Not equal to
-            boolean isLessThan = (a < b); // Less than
+            boolean isLessThan = (a < b); // Less thans
             boolean isLessThanOrEqual = (a <= b); // Less than or equal to
             boolean isGreaterThan = (a > b); // Greater than
             boolean isGreaterThanOrEqual = (a >= b); // Greater than or equal to
@@ -28,14 +28,15 @@ class Operations{
             // Assignment operators
             int c = 5;
             c += 2; // Equivalent to c = c + 2
-
             c -= 1; // Equivalent to c = c - 1
-
             c *= 3; // Equivalent to c = c * 3
-
             c /= 2; // Equivalent to c = c / 2
-
             c %= 2; // Equivalent to c = c % 2
+
+            // unary operatos
+            // int inverse = -a;
+            // boolean negation = !x;
+
 
             // Mixed example
             int result = (a + b) * (c - 1); // Using arithmetic operators

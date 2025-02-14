@@ -1,8 +1,21 @@
 package de.students.semantic
 
-import de.students.Parser.{ConstructorDecl, FieldDecl, FunctionType, MethodDecl, Type};
+import de.students.Parser.*
 
 class ClassAccessHelper(bridge: ClassTypeBridge) {
+
+  /**
+   * Check if a class with the specified class name exists
+   *
+   * @param fullyQualifiedClassName Name of the class to check
+   * @return
+   */
+  def doesClassExist(fullyQualifiedClassName: String): Boolean = {
+    try {
+      bridge.getClass(fullyQualifiedClassName)
+      true
+    } catch case e: SemanticException => false
+  }
 
   /**
    * Get the fully qualified name of the parent of a class with the given fully qualified name
@@ -15,8 +28,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       throw new SemanticException(s"Forbidden attempt to fetch parent of $fullyQualifiedClassName")
     }
 
-    val classDecl = bridge.getClass(fullyQualifiedClassName)
-    classDecl.parent
+    bridge.getClass(fullyQualifiedClassName).parent
   }
 
   /**
@@ -30,8 +42,9 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
     if (fullyQualifiedClassName == "java.lang.Object") {
       None
     } else {
-      val classDecl = bridge.getClass(fullyQualifiedClassName)
-      Some(classDecl.parent)
+      Some(
+        bridge.getClass(fullyQualifiedClassName).parent
+      )
     }
   }
 

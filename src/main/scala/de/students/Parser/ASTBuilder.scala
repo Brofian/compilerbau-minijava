@@ -40,10 +40,15 @@ object ASTBuilder {
     override def visitImports(ctx: ImportsContext): Imports = {
       Imports(
         ctx
-          .packageId()
+          .importPackageId()
           .asScala
           .map { importCtx =>
-            val importPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
+            val diskreteImportPath = importCtx.IDENTIFIER().asScala.map(_.getText).mkString(".")
+            // mark wildcard imports with a dot at the end
+            val importPath =
+              if importCtx.PACKAGE_WILDCARD() == null
+              then diskreteImportPath
+              else diskreteImportPath + "."
             Logger.debug(s"Visiting import $importPath ")
             importPath
           }
