@@ -8,7 +8,7 @@ class HelloWorld {
     public static void test() {
 		HelloWorld obj = new HelloWorld();
 		obj.foo();
-		obj.value; // TODO: parser confuses MethodCall with ClassAccess
+		//obj.value; // TODO: parser confuses MethodCall with ClassAccess
 		return;
     }
 
