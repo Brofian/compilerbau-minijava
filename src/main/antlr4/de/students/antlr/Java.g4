@@ -95,7 +95,7 @@ postfixExpression
     ;
 
 simplePrimary
-    : IDENTIFIER
+    : IDENTIFIER ('(' argumentList? ')')?    // Implicit method call: e.g. calc(10) Variable reference or class name
     | THIS
     | literal
     | '(' expression ')'
