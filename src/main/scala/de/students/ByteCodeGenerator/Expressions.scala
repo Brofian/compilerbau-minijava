@@ -21,8 +21,8 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
       generateNewObject(newObject, state)
     case TypedExpression(thisAccess: ThisAccess, fieldType) =>
       generateThisRValue(thisAccess, fieldType, state)
-    case TypedExpression(classAccess: ClassAccess, fieldType) =>
-      generateClassRValue(classAccess, fieldType, state)
+    case TypedExpression(memberAccess: MemberAccess, fieldType) =>
+      generateClassRValue(memberAccess, fieldType, state)
     case typedExpression: TypedExpression =>
       throw ByteCodeGeneratorException(
         "did not expect raw typed expression, this may indicate a bug in the code generator"
@@ -141,8 +141,8 @@ private def generateAssignment(lvalue: Expression, rvalue: Expression, state: Me
     case VarRef(name)                                       => generateVariableAccess(name, rvalue, state)
     case TypedExpression(VarRef(name), _)                   => generateVariableAccess(name, rvalue, state)
     case TypedExpression(thisAccess: ThisAccess, fieldType) => generateThisLValue(thisAccess, fieldType, rvalue, state)
-    case TypedExpression(classAccess: ClassAccess, fieldType) =>
-      generateClassLValue(classAccess, fieldType, rvalue, state)
+    case TypedExpression(memberAccess: MemberAccess, fieldType) =>
+      generateClassLValue(memberAccess, fieldType, rvalue, state)
     case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $lvalue")
   }
 }
@@ -250,34 +250,36 @@ private def loadLValueObject(className: String, state: MethodGeneratorState): Un
 
 /**
  * set field of object given in classAccess to rvalue and leave value of rvalue on the stack
- * @param classAccess
+ * @param memberAccess
  * @param fieldType
  * @param rvalue
  * @param state
  */
 private def generateClassLValue(
-  classAccess: ClassAccess,
+  memberAccess: MemberAccess,
   fieldType: Type,
   rvalue: Expression,
   state: MethodGeneratorState
 ): Unit = {
   generateExpression(rvalue, state)
-  loadLValueObject(classAccess.className, state)
+  // TODO: replace old className (string) property with new target (Expression) property
+  // loadLValueObject(memberAccess.className, state)
 
   Instructions.duplicateTopTwo(state) // val | object | val | object
   Instructions.pop(state) // val | object | val
 
-  Instructions.storeField(classAccess.memberName, fieldType, state)
+  Instructions.storeField(memberAccess.memberName, fieldType, state)
 }
 
 /**
  * push field of object given in classAccess on stack
- * @param classAccess
+ * @param memberAccess
  * @param fieldType
  * @param state
  */
-private def generateClassRValue(classAccess: ClassAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
-  loadLValueObject(classAccess.className, state)
+private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
+  // TODO: replace old className (string) property with new target (Expression) property
+  // loadLValueObject(memberAccess.className, state)
 
-  Instructions.loadField(classAccess.memberName, fieldType, state)
+  Instructions.loadField(memberAccess.memberName, fieldType, state)
 }
