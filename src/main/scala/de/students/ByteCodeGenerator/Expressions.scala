@@ -24,6 +24,10 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
       generateThisRValue(thisAccess, fieldType, state)
     case TypedExpression(memberAccess: MemberAccess, fieldType) =>
       generateClassRValue(memberAccess, fieldType, state)
+    case TypedExpression(newArray: NewArray, arrayType) =>
+      generateNewArray(newArray, state)
+    case TypedExpression(arrayAccess: ArrayAccess, arrayType) =>
+      generateArrayRValue(arrayAccess, arrayType, state)
     case typedExpression: TypedExpression =>
       throw ByteCodeGeneratorException(
         "did not expect raw typed expression, this may indicate a bug in the code generator"
@@ -146,7 +150,8 @@ private def generateAssignment(lvalue: Expression, rvalue: Expression, state: Me
     case TypedExpression(thisAccess: ThisAccess, fieldType) => generateThisLValue(thisAccess, fieldType, rvalue, state)
     case TypedExpression(memberAccess: MemberAccess, fieldType) =>
       generateClassLValue(memberAccess, fieldType, rvalue, state)
-    case TypedExpression(ArrayAccess(array, index), arrayType) => generateArrayLValue(array, index, arrayType, state)
+    case TypedExpression(arrayAccess: ArrayAccess, arrayType) =>
+      generateArrayLValue(arrayAccess, arrayType, rvalue, state)
     case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $lvalue")
   }
 }
@@ -268,18 +273,16 @@ private def generateClassLValue(
   rvalue: Expression,
   state: MethodGeneratorState
 ): Unit = {
-  generateExpression(rvalue, state)
   // TODO: replace old className (string) property with new target (Expression) property
   // loadLValueObject(memberAccess.className, state)
+  generateExpression(memberAccess.target, state)
+
+  generateExpression(rvalue, state)
 
   Instructions.duplicateTopTwo(state) // val | object | val | object
   Instructions.pop(state) // val | object | val
 
   Instructions.storeField(memberAccess.memberName, fieldType, state)
-}
-
-private def generateArrayLValue(array: Expression, index: Expression, arrayType: Type, state: MethodGeneratorState): Unit = {
-
 }
 
 /**
@@ -291,6 +294,36 @@ private def generateArrayLValue(array: Expression, index: Expression, arrayType:
 private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
   // TODO: replace old className (string) property with new target (Expression) property
   // loadLValueObject(memberAccess.className, state)
+  generateExpression(memberAccess.target, state)
 
   Instructions.loadField(memberAccess.memberName, fieldType, state)
+}
+
+private def generateNewArray(array: NewArray, state: MethodGeneratorState): Unit = {
+
+  generateExpression(array.dimensions.head, state)
+  Instructions.newArray(javaSignature(array.arrayType), state)
+}
+
+private def generateArrayLValue(
+  arrayAccess: ArrayAccess,
+  arrayType: Type,
+  rvalue: Expression,
+  state: MethodGeneratorState
+): Unit = {
+  generateExpression(arrayAccess.array, state)
+  generateExpression(arrayAccess.index, state)
+  generateExpression(rvalue, state)
+
+  Instructions.storeArray(arrayType, state)
+}
+
+private def generateArrayRValue(
+  arrayAccess: ArrayAccess,
+  arrayType: Type,
+  state: MethodGeneratorState
+): Unit = {
+  generateExpression(arrayAccess.array, state)
+  generateExpression(arrayAccess.index, state)
+  Instructions.accessArray(arrayType, state)
 }

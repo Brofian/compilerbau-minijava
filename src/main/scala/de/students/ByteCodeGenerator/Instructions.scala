@@ -165,4 +165,16 @@ private object Instructions {
     )
     state.popStack(1 + parameterDescriptors.size)
   }
+
+  def newArray(arrayType: String, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitTypeInsn(ANEWARRAY, arrayType)
+  }
+
+  def accessArray(arrayType: Type, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitInsn(asmArrayLoadInsn(arrayType))
+  }
+
+  def storeArray(arrayType: Type, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitInsn(asmArrayStoreInsn(arrayType))
+  }
 }
