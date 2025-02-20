@@ -143,6 +143,7 @@ private def generateAssignment(lvalue: Expression, rvalue: Expression, state: Me
     case TypedExpression(thisAccess: ThisAccess, fieldType) => generateThisLValue(thisAccess, fieldType, rvalue, state)
     case TypedExpression(memberAccess: MemberAccess, fieldType) =>
       generateClassLValue(memberAccess, fieldType, rvalue, state)
+    case TypedExpression(ArrayAccess(array, index), arrayType) => generateArrayLValue(array, index, arrayType, state)
     case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $lvalue")
   }
 }
@@ -269,6 +270,10 @@ private def generateClassLValue(
   Instructions.pop(state) // val | object | val
 
   Instructions.storeField(memberAccess.memberName, fieldType, state)
+}
+
+private def generateArrayLValue(array: Expression, index: Expression, arrayType: Type, state: MethodGeneratorState): Unit = {
+
 }
 
 /**
