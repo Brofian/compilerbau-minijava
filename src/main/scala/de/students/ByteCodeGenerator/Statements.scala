@@ -13,6 +13,7 @@ private val TRUE_EXPRESSION = TypedExpression(Literal(1), BoolType)
 //////////////////////////
 
 private def generateStatement(statement: Statement, state: MethodGeneratorState): Unit = {
+  debugLogStack(state, f"eval statement $statement")
   statement match {
     case block: BlockStatement                    => generateBlockStatement(block, state)
     case returnStatement: ReturnStatement         => generateReturnStatement(returnStatement, state)
@@ -175,6 +176,6 @@ private def generateExpressionStatement(statement: StatementExpression, state: M
 
   // expression result is not used, so the stack must be popped
   if (t != VoidType) {
-    Instructions.pop(state)
+    Instructions.popType(state)
   }
 }

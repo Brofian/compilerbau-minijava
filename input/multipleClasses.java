@@ -1,4 +1,4 @@
-package de.multipleclasses;
+package out;
 
 class AClass {
     private int value;
