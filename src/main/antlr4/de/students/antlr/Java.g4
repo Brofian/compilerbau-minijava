@@ -17,8 +17,9 @@ method: accessModifier? STATIC? FINAL? ABSTRACT?  returntype IDENTIFIER '(' para
 // Attributes
 attribute: accessModifier? FINAL? type IDENTIFIER ('=' expression)? SC;
 
-// Constructors
-constructor: accessModifier? id '(' parameterList? ')' block;
+constructor: accessModifier? id '(' parameterList? ')' '{' superCall? statement* '}';
+
+superCall: SUPER '(' argumentList? ')' SC;  // Allows calling superclass constructor
 
 // Modifiers
 accessModifier: PRIVATE | PUBLIC | PROTECTED;  // Only one allowed
@@ -77,41 +78,54 @@ breakStatement: 'break' SC;
 continueStatement: 'continue' SC;
 
 // Expressions
-expression: ('!' | '-') expression              // Unary operators with higher precedence
-          |literal
-          | primary
-          | methodCall
-          | thisAccess
-          | arrayAccess
-          | objectCreation
-          | arrayCreation
-          | '(' expression ')'
-          | expression operator expression;
+// Here we split expressions into unary and binary forms, and then
+// build a unified chain of member accesses (dot and array accesses)
+expression
+    : unaryExpression (operator unaryExpression)*
+    ;
+
+unaryExpression
+    : ('!' | '-') unaryExpression
+    | postfixExpression
+    ;
+
+// A postfix expression starts with a simple primary (identifier, literal, etc.)
+// and then is followed by zero or more postfix operators (dot access or array access).
+postfixExpression
+    : simplePrimary (postfixOp)*
+    ;
+
+simplePrimary
+    : IDENTIFIER ('(' argumentList? ')')?    // Implicit method call: e.g. calc(10) Variable reference or class name
+    | THIS
+    | SUPER '.' IDENTIFIER ('(' argumentList? ')')?  // super.methodName() or super.fieldName
+    | literal
+    | '(' expression ')'
+    | objectCreation
+    | arrayCreation
+    ;
+
+// Postfix operators: either a dot operator (with optional argument list for method calls)
+// or an array access.
+postfixOp
+    : '.' IDENTIFIER ( '(' argumentList? ')' )?
+    | '[' expression ']'
+    ;
 
 // Object creation
-objectCreation: 'new' id '(' argumentList? ')';
+objectCreation
+    : 'new' id '(' argumentList? ')'
+    ;
 
 // Array creation
-arrayCreation: 'new' type ('[' expression ']')+; // Updated for multi-dimensional arrays
+arrayCreation
+    : 'new' type ('[' expression ']')+
+    ;
 
-// Array access
-arrayAccess: primary '[' expression ']'; // Accessing elements in arrays
-
-// A primary expression can be an identifier, 'this', a class access, or a method call
-primary: IDENTIFIER
-       | thisAccess
-       | classAccess
-       | '(' expression ')'
-       | objectCreation
-       | arrayCreation;
-
-// Method calls, allowing chaining without left recursion
-methodCall: primary ('.' IDENTIFIER '(' argumentList? ')')*;
-
-thisAccess: 'this' '.' IDENTIFIER;
-classAccess: IDENTIFIER '.' IDENTIFIER;
-
-argumentList: expression (',' expression)*;
+// Argument List
+argumentList
+    : expression (',' expression)*
+    ;
 
 // Operators
 operator: '+' | '-' | '*' | '/' | '%'
@@ -134,6 +148,9 @@ ABSTRACT: 'abstract';
 VOID: 'void';
 RETURN: 'return';
 IMPORT: 'import';
+THIS : 'this';
+SUPER: 'super';
+
 // Primitive Types
 PRIMITIVE_TYPE: 'int' | 'char' | 'boolean' | 'byte' | 'double' | 'float' | 'short' | 'long';
 
