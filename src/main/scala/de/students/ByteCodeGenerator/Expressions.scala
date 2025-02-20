@@ -187,6 +187,9 @@ private def generateMethodCall(methodCall: MethodCall, returnType: Type, state: 
   val parameterTypes = methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
   val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
   Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, methodDescriptor, state)
+
+  // virtual element
+  Instructions.pushConstant(0, IntType, state)
 }
 
 // NEW OBJECT
