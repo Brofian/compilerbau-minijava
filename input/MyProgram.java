@@ -1,5 +1,3 @@
-package de.secondinput;
-
 public class MyProgram {
 
       private int count = 10;
@@ -16,12 +14,7 @@ public class MyProgram {
             }
       }
 
-      public static void main(String[] args) {
-            MyProgram prog = new MyProgram();
-            // (new A()).getB().getNumber(); // this is valid if class A is defined
-
-            int result = prog.calculate(5, 3);
-
+      public void test() {
             while(true){
                   this.count = this.count + 1;
                   int[] arr = new int[2];
@@ -32,7 +25,15 @@ public class MyProgram {
                   }else if(this.count > 10){
                         arr[1] = this.count;
                   }
-                   /**/
+                  /**/
             }
+      }
+
+      public static void main(String[] args) {
+            MyProgram prog = new MyProgram();
+            // (new A()).getB().getNumber(); // this is valid if class A is defined
+
+            int result = prog.calculate(5, 3);
+            prog.test();
       }
 }
