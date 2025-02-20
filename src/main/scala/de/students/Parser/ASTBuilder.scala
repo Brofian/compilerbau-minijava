@@ -90,23 +90,28 @@ object ASTBuilder {
       MethodDecl(accesModifier, name, isAbstract, isStatic, isFinal, returnType, params, body)
     }
 
-    override def visitConstructor(ctx: ConstructorContext): ConstructorDecl = {
-      val name = ctx.id().getText // Get the constructor name
-      val accessModifier = visitModifiers(ctx.accessModifier())
+    override def visitConstructor(ctx: JavaParser.ConstructorContext): ConstructorDecl = {
+      val accessModifier = Option(ctx.accessModifier()).map(_.getText)
+      val name = ctx.id().getText
+      val params =
+        if ctx.parameterList() == null then List()
+        else ctx.parameterList().parameter().asScala.map(visitParameter).toList
+      // Extract `superCall` if it exists
+      val superConstructor = Option(ctx.superCall()).map(visitSuperCall)
 
-      // Parse parameters
-      val params = if (ctx.parameterList() != null) {
-        ctx.parameterList().parameter().asScala.map(visitParameter).toList
-      } else {
-        List() // No parameters
-      }
+      // Extract remaining statements
+      val statements = ctx.statement().asScala.toList.map(visitStatement)
 
-      // Parse the method body: Iterate over each block and collect statements
-      val body = visitBlockStmt(ctx.block())
+      // Body contains only the remaining statements (excluding `superCall`)
+      val body = BlockStatement(statements)
 
-      Logger.debug(s"Visiting constructor: $name, Parameters: $params, Body: $body")
+      ConstructorDecl(accessModifier, superConstructor, name, params, body)
+    }
 
-      ConstructorDecl(accessModifier, name, params, body)
+    override def visitSuperCall(ctx: JavaParser.SuperCallContext): SuperConstructorCall = {
+      val args = if (ctx.argumentList() != null) visitMyArgumentList(ctx.argumentList()) else List()
+
+      SuperConstructorCall(args)
     }
 
     override def visitReturntype(ctx: ReturntypeContext): Type = {
@@ -310,6 +315,8 @@ object ASTBuilder {
         }
       } else if (ctx.THIS() != null) {
         VarRef("this")
+      } else if (ctx.SUPER() != null) {
+        SuperAccess(None) // Handle as "super" without member access
       } else if (ctx.literal() != null) {
         visitLiteral(ctx.literal())
       } else if (ctx.expression() != null) {
@@ -326,29 +333,27 @@ object ASTBuilder {
     /**
      * postfixOp : '.' IDENTIFIER ( '(' argumentList? ')' )? | '[' expression ']' ;
      */
+    // Handle "super.method()" and "super.field"
     def visitPostfixOp(target: Expression, ctx: PostfixOpContext): Expression = {
       Logger.debug(s"Visiting postfix operator: ${ctx.getText} on target: $target")
       ctx.getChild(0).getText match {
         case "." =>
           val memberName = ctx.IDENTIFIER().getText
-          if (ctx.getChildCount > 2 && ctx.getChild(2).getText == "(") {
-            val args = if (ctx.argumentList() != null) visitMyArgumentList(ctx.argumentList()) else List()
-            MethodCall(target, memberName, args)
-          } else {
-            target match {
-              case VarRef(name) =>
-                if (name == "this")
-                  ThisAccess(memberName)
-                else
-                  MemberAccess(target, memberName)
-
-              case _ =>
-                throw new UnsupportedOperationException("Unsupported postfix usage: " + target)
+          if (target == VarRef("super")) {
+            if (ctx.getChildCount > 2 && ctx.getChild(2).getText == "(") {
+              val args = if (ctx.argumentList() != null) visitMyArgumentList(ctx.argumentList()) else List()
+              SuperMethodCall(memberName, args)
+            } else {
+              SuperAccess(Some(memberName))
             }
+          } else {
+            MemberAccess(target, memberName)
           }
+
         case "[" =>
           val index = visitExpression(ctx.expression())
           ArrayAccess(target, index)
+
         case other =>
           throw new UnsupportedOperationException("Unsupported postfix operator: " + other)
       }
