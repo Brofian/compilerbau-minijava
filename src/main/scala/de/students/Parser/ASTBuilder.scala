@@ -430,7 +430,8 @@ object ASTBuilder {
         Literal(ctx.INTEGER_LITERAL().getText.toInt)
       } else if (ctx.STRING_LITERAL() != null) {
         // Handle string literals
-        Literal(ctx.STRING_LITERAL().getText)
+        val stringLiteralText = ctx.STRING_LITERAL().getText
+        Literal(stringLiteralText.substring(1, stringLiteralText.length - 1))
       } else if (ctx.BOOLEAN_LITERAL() != null) {
         // Handle boolean literals (true/false)
         ctx.BOOLEAN_LITERAL().getText match {
@@ -454,8 +455,15 @@ object ASTBuilder {
         // Handle double literals
         Literal(ctx.DOUBLE_LITERAL().getText.toDouble) // Double literals may have 'd'/'D' suffix which is optional
       } else if (ctx.CHAR_LITERAL() != null) {
-        // Handle double literals
-        Literal(ctx.CHAR_LITERAL().getText) // Char Literal
+        // Handle char literals
+        if (ctx.CHAR_LITERAL().getText.length != 3) {
+          throw new UnsupportedOperationException(
+            s"Char literals must specify exactly one character, but found: ${ctx.getText}"
+          )
+        }
+        Literal(
+          ctx.CHAR_LITERAL().getText.charAt(1)
+        ) // Char Literals are only the one character between two single quotes
       } else {
         // If literal is not recognized
         throw new UnsupportedOperationException(s"Unsupported literal: ${ctx.getText}")

@@ -6,13 +6,14 @@ import org.objectweb.asm.Opcodes.*
 import de.students.Parser.*
 
 private def generateExpression(expression: Expression, state: MethodGeneratorState): Unit = {
-  debugLogStack(state, f"eval expr $expression")
+  val stringified = stringifyExpression(expression)
+  debugLogStack(state, f"eval expr $stringified")
 
   expression match {
     case TypedExpression(variableReference: VarRef, _) =>
       generateVariableReference(variableReference, state)
-    case TypedExpression(literal: Literal, _) =>
-      generateLiteral(literal, state)
+    case TypedExpression(literal: Literal, t) =>
+      generateLiteral(literal, t, state)
     case TypedExpression(binaryOperation: BinaryOp, _) =>
       generateBinaryOperation(binaryOperation, state)
     case TypedExpression(methodCall: MethodCall, returnType) =>
@@ -29,6 +30,8 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
       )
     case _ => throw ByteCodeGeneratorException(f"the expression $expression is not supported")
   }
+
+  debugLogStack(state, f"end of expression $stringified")
 }
 
 // VARIABLE REFERENCE
@@ -47,8 +50,8 @@ private def generateVariableReference(varRef: VarRef, state: MethodGeneratorStat
 }
 
 // LITERAL
-private def generateLiteral(literal: Literal, state: MethodGeneratorState): Unit = {
-  Instructions.pushConstant(literal.value, state)
+private def generateLiteral(literal: Literal, literalType: Type, state: MethodGeneratorState): Unit = {
+  Instructions.pushConstant(literal.value, literalType, state)
 
   debugLogStack(state, f"pushed $literal")
 }
@@ -65,7 +68,7 @@ private def generateBinaryOperation(operation: BinaryOp, state: MethodGeneratorS
     val expressionType = generateTypedExpression(operation.left.asInstanceOf[TypedExpression], state)
     generateExpression(operation.right, state) // should be same type, this is not our problem if not
 
-    val opcode = asmOpcode(binaryOpcode(operation.op, expressionType))
+    val opcode = binaryOpcode(operation.op, expressionType)
     Instructions.binaryOperation(opcode, state)
   }
 
@@ -93,7 +96,7 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
     Instructions.visitLabel(end, state)
 
     // the stack counter has to be manually decreased to account for branching
-    state.popStack(1)
+    state.popStack()
   } else if (operation.op == "||") {
     val truePush = Label()
     val end = Label()
@@ -109,7 +112,7 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
     Instructions.visitLabel(end, state)
 
     // the stack counter has to be manually decreased to account for branching
-    state.popStack(1)
+    state.popStack()
   } else {
     val ifInsn = operation.op match {
       case "==" => IFEQ
@@ -166,7 +169,7 @@ private def generateVariableAccess(varName: String, rvalue: Expression, state: M
   } else {
     generateExpression(rvalue, state)
 
-    Instructions.duplicateTop(state)
+    Instructions.duplicateTopType(state)
 
     Instructions.storeVar(variableInfo.id, variableInfo.t, state)
   }
@@ -182,8 +185,11 @@ private def generateTypedExpression(expression: TypedExpression, state: MethodGe
 private def generateMethodCall(methodCall: MethodCall, returnType: Type, state: MethodGeneratorState): Unit = {
   val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
   val parameterTypes = methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
-  val methodDescriptor = asmType(FunctionType(returnType, parameterTypes))
+  val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
   Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, methodDescriptor, state)
+
+  // virtual element
+  Instructions.pushConstant(0, IntType, state)
 }
 
 // NEW OBJECT
