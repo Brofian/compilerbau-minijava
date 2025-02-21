@@ -88,17 +88,11 @@ object SemanticCheck {
       method.params.foreach(param =>
         methodContext.addTypeAssumption(
           param.name,
-          param.varType match {
-            case UserType(clsName) => UserType(methodContext.getFullyQualifiedClassName(clsName))
-            case _                 => param.varType
-          }
+          context.simpleTypeToQualified(param.varType)
         )
       )
 
-      val evaluatedReturnType = method.returnType match {
-        case UserType(clsName) => UserType(methodContext.getFullyQualifiedClassName(clsName))
-        case _                 => method.returnType
-      }
+      val evaluatedReturnType = context.simpleTypeToQualified(method.returnType)
 
       if (method.body.isEmpty && !method.isAbstract) {
         throw new SemanticException(s"Non-abstract method ${method.name} must provide a method body!");
@@ -141,10 +135,7 @@ object SemanticCheck {
       constructor.params.foreach(param =>
         methodContext.addTypeAssumption(
           param.name,
-          param.varType match {
-            case UserType(clsName) => UserType(methodContext.getFullyQualifiedClassName(clsName))
-            case _                 => param.varType
-          }
+          context.simpleTypeToQualified(param.varType)
         )
       )
 

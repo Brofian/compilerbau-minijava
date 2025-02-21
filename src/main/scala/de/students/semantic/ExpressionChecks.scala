@@ -90,7 +90,7 @@ object ExpressionChecks {
   private def checkNewArrayExpression(newArr: NewArray, context: SemanticContext): TypedExpression = {
     val typedDimensions = newArr.dimensions.map(dimensionExpression => {
       val dimType = ExpressionChecks.checkExpression(dimensionExpression, context)
-      if (dimType != IntType) {
+      if (dimType.exprType != IntType) {
         throw new SemanticException(
           s"Array dimensions can only be set to integer sizes. Size of type ${dimType.exprType} is not allowed"
         )
@@ -98,10 +98,7 @@ object ExpressionChecks {
       dimType
     })
 
-    var stackedArrayType: Type = newArr.arrayType match {
-      case UserType(clsName) => UserType(context.getFullyQualifiedClassName(clsName))
-      case _                 => newArr.arrayType
-    }
+    var stackedArrayType: Type = context.simpleTypeToQualified(newArr.arrayType)
     for (typedDim <- typedDimensions) {
       stackedArrayType = ArrayType(stackedArrayType)
     }
