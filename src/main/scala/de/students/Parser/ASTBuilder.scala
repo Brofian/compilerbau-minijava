@@ -316,7 +316,7 @@ object ASTBuilder {
       } else if (ctx.THIS() != null) {
         VarRef("this")
       } else if (ctx.SUPER() != null) {
-        SuperAccess(None) // Handle as "super" without member access
+        VarRef("super") // Handle as "super" without member access
       } else if (ctx.literal() != null) {
         visitLiteral(ctx.literal())
       } else if (ctx.expression() != null) {

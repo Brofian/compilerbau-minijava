@@ -98,7 +98,7 @@ postfixExpression
 simplePrimary
     : IDENTIFIER ('(' argumentList? ')')?    // Implicit method call: e.g. calc(10) Variable reference or class name
     | THIS
-    | SUPER '.' IDENTIFIER ('(' argumentList? ')')?  // super.methodName() or super.fieldName
+    | SUPER  // super.methodName() or super.fieldName
     | literal
     | '(' expression ')'
     | objectCreation
