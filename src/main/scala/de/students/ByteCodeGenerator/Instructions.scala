@@ -160,6 +160,17 @@ private object Instructions {
     state.popStack(1 + argumentCount)
   }
 
+  def callStaticMethod(
+    className: String,
+    methodName: String,
+    argumentCount: Int,
+    methodDescriptor: String,
+    state: MethodGeneratorState
+  ): Unit = {
+    state.methodVisitor.visitMethodInsn(INVOKESTATIC, javaifyClass(className), methodName, methodDescriptor, false)
+    state.popStack(argumentCount)
+  }
+
   def returnVoid(state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(RETURN)
   }
