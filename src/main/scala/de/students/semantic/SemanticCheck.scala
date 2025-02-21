@@ -146,13 +146,23 @@ object SemanticCheck {
       ConstructorDecl(constructor.accessModifier, constructor.name, constructor.params, typedBody)
     })
 
+    val typedFields: List[FieldDecl] = cls.fields.map((field: FieldDecl) => {
+      val fieldType = context.simpleTypeToQualified(field.varType)
+      val typedInitializer = field.initializer match {
+        case Some(initializer) => Some(ExpressionChecks.checkExpression(field.initializer.get, context))
+        case None              => None
+      }
+      FieldDecl(field.accessModifier, field.isFinal, field.name, fieldType, typedInitializer)
+    })
+
     val fullyQualifiedParentName = context.getFullyQualifiedClassName(cls.parent)
+
     ClassDecl(
       context.getClassName,
       fullyQualifiedParentName,
       cls.isAbstract,
       typedMethods,
-      cls.fields,
+      typedFields,
       typedConstructors
     )
   }

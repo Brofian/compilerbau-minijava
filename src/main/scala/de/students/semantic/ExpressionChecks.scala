@@ -200,10 +200,22 @@ object ExpressionChecks {
       case "/=" => typedLeft.exprType
       case "%=" => typedLeft.exprType
       case "=" =>
-        if (UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType) != typedLeft.exprType) {
-          throw new SemanticException(
-            s"Implicit conversion of type ${typedRight.exprType} to type ${typedLeft.exprType} could result in data loss"
-          )
+        val isLeftPrimitive = UnionTypeFinder.isPrimitive(typedLeft.exprType)
+        val isRightPrimitive = UnionTypeFinder.isPrimitive(typedRight.exprType)
+        if (!isLeftPrimitive || !isRightPrimitive) {
+          // at least one is an object
+          if (!UnionTypeFinder.isASubtypeOfB(typedLeft.exprType, typedLeft.exprType, context.getClassAccessHelper)) {
+            throw new SemanticException(
+              s"Cannot assign value of type ${typedRight.exprType} to type ${typedLeft.exprType}"
+            )
+          }
+        } else {
+          // both are primitives
+          if (UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType) != typedLeft.exprType) {
+            throw new SemanticException(
+              s"Implicit conversion of type ${typedRight.exprType} to type ${typedLeft.exprType} could result in data loss"
+            )
+          }
         }
         typedLeft.exprType
       case _ =>
