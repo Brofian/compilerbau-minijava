@@ -79,6 +79,16 @@ private object Instructions {
     state.pushStack(memberType)
   }
 
+  def storeStaticClassMember(
+    staticClassName: String,
+    memberName: String,
+    memberType: Type,
+    state: MethodGeneratorState
+  ) = {
+    state.methodVisitor.visitFieldInsn(PUTSTATIC, javaifyClass(staticClassName), memberName, javaSignature(memberType))
+    state.pushStack(memberType)
+  }
+
   def popType(state: MethodGeneratorState) = {
     val size = typeStackSize(state.stackTypes.last)
     if (size == 2) { popTwo(state) }

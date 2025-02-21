@@ -1,5 +1,9 @@
 package de;
 
+class Test {
+    public static int i;
+}
+
 class minimal {
 
     public static void main(String[] args) {
@@ -10,6 +14,7 @@ class minimal {
         String s = args[1 + 0];
         System.out.println(s);*/
 	System.out.println(args[0]);
+	Test.i = 3;
     }
 
 }

@@ -54,7 +54,7 @@ private def generateVariableReference(varRef: VarRef, state: MethodGeneratorStat
 }
 
 // STATIC CLASS REFERENCE
-private def generateStaticClassMemberReference(
+private def generateRValueStaticClassMemberReference(
   staticClassRef: StaticClassRef,
   classType: Type,
   memberName: String,
@@ -62,6 +62,21 @@ private def generateStaticClassMemberReference(
   state: MethodGeneratorState
 ): Unit = {
   Instructions.loadStaticClassMember(staticClassRef.className, memberName, memberType, state)
+}
+
+private def generateLValueStaticClassMemberReference(
+  staticClassRef: StaticClassRef,
+  classType: Type,
+  memberName: String,
+  memberType: Type,
+  rvalue: Expression,
+  state: MethodGeneratorState
+): Unit = {
+  generateExpression(rvalue, state)
+
+  Instructions.duplicateTop(state)
+
+  Instructions.storeStaticClassMember(staticClassRef.className, memberName, memberType, state)
 }
 
 // LITERAL
@@ -284,16 +299,28 @@ private def generateClassLValue(
   rvalue: Expression,
   state: MethodGeneratorState
 ): Unit = {
-  // TODO: replace old className (string) property with new target (Expression) property
-  // loadLValueObject(memberAccess.className, state)
-  generateExpression(memberAccess.target, state)
+  // TODO refactor _ case into own function
+  memberAccess.target match {
+    case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
+      generateLValueStaticClassMemberReference(
+        staticClassRef,
+        classType,
+        memberAccess.memberName,
+        fieldType,
+        rvalue,
+        state
+      )
+    case _ => {
+      generateExpression(memberAccess.target, state)
 
-  generateExpression(rvalue, state)
+      generateExpression(rvalue, state)
 
-  Instructions.duplicateTopTwo(state) // val | object | val | object
-  Instructions.pop(state) // val | object | val
+      Instructions.duplicateTopTwo(state) // val | object | val | object
+      Instructions.pop(state) // val | object | val
 
-  Instructions.storeField(memberAccess.memberName, fieldType, state)
+      Instructions.storeField(memberAccess.memberName, fieldType, state)
+    }
+  }
 }
 
 /**
@@ -303,15 +330,15 @@ private def generateClassLValue(
  * @param state
  */
 private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
-  // TODO: replace old className (string) property with new target (Expression) property
-  // loadLValueObject(memberAccess.className, state)
+  // TODO refactor _ case into own function
   memberAccess.target match {
     case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
-      generateStaticClassMemberReference(staticClassRef, classType, memberAccess.memberName, fieldType, state)
-    case _ => generateExpression(memberAccess.target, state)
+      generateRValueStaticClassMemberReference(staticClassRef, classType, memberAccess.memberName, fieldType, state)
+    case _ => {
+      generateExpression(memberAccess.target, state)
+      Instructions.loadField(memberAccess.memberName, fieldType, state)
+    }
   }
-
-  Instructions.loadField(memberAccess.memberName, fieldType, state)
 }
 
 private def generateNewArray(array: NewArray, state: MethodGeneratorState): Unit = {
