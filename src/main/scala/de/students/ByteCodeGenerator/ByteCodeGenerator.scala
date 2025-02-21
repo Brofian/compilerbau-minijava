@@ -27,7 +27,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   val classWriter = new ClassWriter(0)
 
   val javaClassName = javaifyClass(classDecl.name)
-  val parent = "java/lang/Object" // TODO use real parent
+  val parent = javaifyClass(classDecl.parent) // "java/lang/Object" // TODO use real parent
 
   // set class header
   classWriter.visit(
@@ -61,7 +61,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
       .visitField(
         accessModifier(fieldDecl),
         fieldDecl.name,
-        asmType(fieldDecl.varType),
+        javaSignature(fieldDecl.varType),
         null, // signature
         null // initial value, only used for static fields
       )
@@ -88,7 +88,7 @@ private def generateConstructor(
   val methodVisitor = classWriter.visitMethod(
     ACC_PUBLIC,
     "<init>",
-    asmType(constructorType(constructorDecl)),
+    javaSignature(constructorType(constructorDecl)),
     null,
     null
   )
@@ -100,7 +100,13 @@ private def generateConstructor(
   methodVisitor.visitCode()
 
   methodVisitor.visitVarInsn(ALOAD, 0) // load this
-  methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false) // call Object constructor
+  methodVisitor.visitMethodInsn(
+    INVOKESPECIAL,
+    javaifyClass(classDecl.parent),
+    "<init>",
+    "()V",
+    false
+  ) // call Object constructor
 
   generateStatement(constructorDecl.body, state)
 
@@ -114,7 +120,7 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
   val methodVisitor = classWriter.visitMethod(
     visibilityModifier(methodDecl),
     methodDecl.name,
-    asmType(functionType(methodDecl)),
+    javaSignature(functionType(methodDecl)),
     null, // signature
     null // exceptions
   )
@@ -129,12 +135,12 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
 
   methodVisitor.visitCode()
 
-  state.stackDepth = 0
+  state.stackDepth = state.localVariableCount
   if (methodDecl.body.isDefined) {
     generateStatement(methodDecl.body.get, state)
   }
 
-  methodVisitor.visitMaxs(state.maxStackDepth + 1, state.localVariableCount)
+  methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
   methodVisitor.visitEnd()
 }
 
@@ -149,7 +155,8 @@ private case class MethodGeneratorState(
   val scopeEnds: ArrayBuffer[Label],
   val loopStarts: ArrayBuffer[Label],
   var currentScope: Int,
-  val variables: mutable.HashMap[String, VariableInfo]
+  val variables: mutable.HashMap[String, VariableInfo],
+  val stackTypes: ArrayBuffer[Type]
 ) {
   def startSimpleScope(end: Label): Unit = {
     scopeEnds += end
@@ -171,12 +178,27 @@ private case class MethodGeneratorState(
     endSimpleScope()
   }
 
-  def pushStack(): Unit = {
-    stackDepth += 1
+  def pushStack(t: Type): Unit = {
+    stackTypes.append(t)
+    pushStack(typeStackSize(t))
+  }
+  private def pushStack(count: Int): Unit = {
+    stackDepth += count
     maxStackDepth = Math.max(stackDepth, maxStackDepth)
   }
+  def popStack(): Unit = {
+    if (stackTypes.isEmpty) {
+      throw ByteCodeGeneratorException("empty stack cannot be popped, this is a bug in the bytecode generator")
+    }
+    val typeSize = typeStackSize(stackTypes.last)
+
+    stackDepth -= typeSize
+    stackTypes.remove(stackTypes.size - 1)
+  }
   def popStack(count: Int): Unit = {
-    stackDepth -= count
+    for (i <- 0 until count) {
+      popStack()
+    }
   }
 
   def addVariable(name: String, t: Type): Int = {
@@ -189,8 +211,9 @@ private case class MethodGeneratorState(
     if (res.isDefined) {
       throw ByteCodeGeneratorException(f"variable $name already exists")
     }
-    localVariableCount += 1
-    localVariableCount - 1
+    val typeSize = typeStackSize(t)
+    localVariableCount += typeSize
+    localVariableCount - typeSize
   }
 
   def getVariable(name: String): VariableInfo = {
@@ -226,7 +249,8 @@ private def defaultMethodGeneratorState(
     ArrayBuffer.empty,
     ArrayBuffer.empty,
     0,
-    mutable.HashMap.empty
+    mutable.HashMap.empty,
+    ArrayBuffer(UserType("this")) // TODO use own type
   )
 
 private case class VariableInfo(
