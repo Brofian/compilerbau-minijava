@@ -39,9 +39,9 @@ public class primitiveTypes {
         double doubleVar3 = 123.456 * 78.9;
 
         // Char type
-        char charVar1 = 'A';
-        char charVar2 = 'B';
-        char charVar3 = 'C' + 'D';
+        // char charVar1 = 'A';
+        // char charVar2 = 'B';
+        // char charVar3 = 'C' + 'D';
         return;
     }
 }
