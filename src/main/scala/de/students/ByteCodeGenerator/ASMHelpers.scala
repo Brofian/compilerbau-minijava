@@ -118,4 +118,7 @@ private def stringifyExpression(expr: Expression): String = expr match {
   case MethodCall(target, methodName, args) =>
     f"${stringifyExpression(target)}.$methodName(${args.foldLeft("")((acc, e) => acc + f", ${stringifyExpression(e)}")})"
   case TypedExpression(expr, exprType) => stringifyExpression(expr)
+  case StaticClassRef(name)            => f"$name<static>"
+  case UnaryOp(op, expr)               => f"$op ${stringifyExpression(expr)}"
+
 }

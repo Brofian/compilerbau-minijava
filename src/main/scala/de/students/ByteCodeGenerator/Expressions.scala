@@ -53,6 +53,17 @@ private def generateVariableReference(varRef: VarRef, state: MethodGeneratorStat
   debugLogStack(state, "end var ref")
 }
 
+// STATIC CLASS REFERENCE
+private def generateStaticClassMemberReference(
+  staticClassRef: StaticClassRef,
+  classType: Type,
+  memberName: String,
+  memberType: Type,
+  state: MethodGeneratorState
+): Unit = {
+  Instructions.loadStaticClassMember(staticClassRef.className, memberName, memberType, state)
+}
+
 // LITERAL
 private def generateLiteral(literal: Literal, literalType: Type, state: MethodGeneratorState): Unit = {
   Instructions.pushConstant(literal.value, literalType, state)
@@ -294,7 +305,11 @@ private def generateClassLValue(
 private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
   // TODO: replace old className (string) property with new target (Expression) property
   // loadLValueObject(memberAccess.className, state)
-  generateExpression(memberAccess.target, state)
+  memberAccess.target match {
+    case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
+      generateStaticClassMemberReference(staticClassRef, classType, memberAccess.memberName, fieldType, state)
+    case _ => generateExpression(memberAccess.target, state)
+  }
 
   Instructions.loadField(memberAccess.memberName, fieldType, state)
 }
