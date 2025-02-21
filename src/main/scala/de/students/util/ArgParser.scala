@@ -43,7 +43,7 @@ object ArgParser {
     // loop over all arguments to extract the information we need
     while (this.argIndex < this.args.length) {
 
-      val currentArgument = this.getNextArgument()
+      val currentArgument = this.getNextArgument
 
       currentArgument match {
         case "--help" =>
@@ -52,16 +52,22 @@ object ArgParser {
         case "-v"   => this.verbosityLevel = Verbosity.NOTICE
         case "-vv"  => this.verbosityLevel = Verbosity.INFO
         case "-vvv" => this.verbosityLevel = Verbosity.DEBUG
-        case "-o"   => this.outputDirectory = this.getNextArgument()
-        case "-i"   => this.filesToCompile = this.getNextArgument() :: this.filesToCompile
+        case "-o"   => this.outputDirectory = this.getNextArgument
+        case "-i"   => this.filesToCompile = this.getNextArgument :: this.filesToCompile
         case "--"   =>
           // after the delimiter: treat the rest of the arguments as input files
           args
             .slice(this.argIndex, this.args.length)
-            .foreach(arg => this.filesToCompile = this.getNextArgument() :: this.filesToCompile)
+            .foreach(arg => this.filesToCompile = this.getNextArgument :: this.filesToCompile)
           this.argIndex = this.args.length
         case _ => throw new RuntimeException(s"Encountered unknown or unexpected argument \"$currentArgument\"")
       }
+    }
+
+    // fix some inputs to make them compatible across platforms
+    if (this.outputDirectory.startsWith("~/")) {
+      val userHomeDir = System.getProperty("user.home")
+      this.outputDirectory = userHomeDir + this.outputDirectory.drop(1)
     }
   }
 
@@ -70,9 +76,9 @@ object ArgParser {
    *
    * @return The next argument in the input sequence
    */
-  private def getNextArgument(): String = {
+  private def getNextArgument: String = {
     if (this.argIndex >= this.args.length) {
-      throw InputMismatchException("Expected more command line arguments, but got encountered end of input")
+      throw InputMismatchException("Expected more command line arguments, but encountered end of input")
     }
     val arg = this.args(this.argIndex)
     this.argIndex += 1
