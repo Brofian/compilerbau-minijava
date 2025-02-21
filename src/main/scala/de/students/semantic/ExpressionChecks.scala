@@ -11,7 +11,7 @@ object ExpressionChecks {
       case a @ ArrayAccess(_, _)   => this.checkArrayAccessExpression(a, context)
       case a @ NewArray(_, _)      => this.checkNewArrayExpression(a, context)
       case n @ NewObject(_, _)     => this.checkNewObjectExpression(n, context)
-      case c @ ClassAccess(_, _)   => this.checkClassAccessExpression(c, context)
+      case m @ MemberAccess(_, _)  => this.checkMemberAccessExpression(m, context)
       case t @ ThisAccess(_)       => this.checkThisAccessExpression(t, context)
       case u @ UnaryOp(_, _)       => this.checkUnaryOpExpression(u, context)
       case b @ BinaryOp(_, _, _)   => this.checkBinaryOpExpression(b, context)
@@ -29,6 +29,7 @@ object ExpressionChecks {
         s"Cannot call method ${methodCall.methodName} on value of type ${typedTarget.exprType}"
       )
     }
+    val isStaticTarget = typedTarget.expr.isInstanceOf[StaticClassRef]
 
     // validate arguments
     val typedArguments = methodCall.args.map(argument => ExpressionChecks.checkExpression(argument, context))
@@ -36,6 +37,7 @@ object ExpressionChecks {
 
     // determine method definition
     val fqClassName = typedTarget.exprType.asInstanceOf[UserType].name
+    // TODO: if isStaticTarget == true, then filter for static members only!
     val methodType = context.getClassAccessHelper.getClassMemberType(fqClassName, methodCall.methodName, Some(argTypes))
     if (!methodType.isInstanceOf[FunctionType]) {
       throw new SemanticException(
@@ -88,7 +90,7 @@ object ExpressionChecks {
   private def checkNewArrayExpression(newArr: NewArray, context: SemanticContext): TypedExpression = {
     val typedDimensions = newArr.dimensions.map(dimensionExpression => {
       val dimType = ExpressionChecks.checkExpression(dimensionExpression, context)
-      if (dimType != IntType) {
+      if (dimType.exprType != IntType) {
         throw new SemanticException(
           s"Array dimensions can only be set to integer sizes. Size of type ${dimType.exprType} is not allowed"
         )
@@ -96,10 +98,7 @@ object ExpressionChecks {
       dimType
     })
 
-    var stackedArrayType: Type = newArr.arrayType match {
-      case UserType(clsName) => UserType(context.getFullyQualifiedClassName(clsName))
-      case _                 => newArr.arrayType
-    }
+    var stackedArrayType: Type = context.simpleTypeToQualified(newArr.arrayType)
     for (typedDim <- typedDimensions) {
       stackedArrayType = ArrayType(stackedArrayType)
     }
@@ -125,11 +124,22 @@ object ExpressionChecks {
     TypedExpression(NewObject(fullyQualifiedClassName, typedArguments), UserType(fullyQualifiedClassName))
   }
 
-  private def checkClassAccessExpression(clsAccess: ClassAccess, context: SemanticContext): TypedExpression = {
-    val fullyQualifiedClassName = context.getFullyQualifiedClassName(clsAccess.className)
-    val memberType =
-      context.getClassAccessHelper.getClassMemberType(fullyQualifiedClassName, clsAccess.memberName, None)
-    TypedExpression(ClassAccess(fullyQualifiedClassName, clsAccess.memberName), memberType)
+  private def checkMemberAccessExpression(memberAccess: MemberAccess, context: SemanticContext): TypedExpression = {
+    val typedTarget = ExpressionChecks.checkExpression(memberAccess.target, context)
+    val isStatic = typedTarget.expr.isInstanceOf[StaticClassRef]
+
+    typedTarget.exprType match {
+      case UserType(qualifiedClassName) =>
+        // TODO: filter for static class members, if isStatic
+        val memberType =
+          context.getClassAccessHelper.getClassMemberType(qualifiedClassName, memberAccess.memberName, None)
+        TypedExpression(MemberAccess(typedTarget, memberAccess.memberName), memberType)
+      case _ =>
+        val iName = if isStatic then "static instance" else "instance"
+        throw new SemanticException(
+          s"Cannot access member ${memberAccess.memberName} on $iName of type ${typedTarget.exprType}"
+        )
+    }
   }
 
   private def checkThisAccessExpression(thisAccess: ThisAccess, context: SemanticContext): TypedExpression = {
@@ -190,10 +200,22 @@ object ExpressionChecks {
       case "/=" => typedLeft.exprType
       case "%=" => typedLeft.exprType
       case "=" =>
-        if (UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType) != typedLeft.exprType) {
-          throw new SemanticException(
-            s"Implicit conversion of type ${typedRight.exprType} to type ${typedLeft.exprType} could result in data loss"
-          )
+        val isLeftPrimitive = UnionTypeFinder.isPrimitive(typedLeft.exprType)
+        val isRightPrimitive = UnionTypeFinder.isPrimitive(typedRight.exprType)
+        if (!isLeftPrimitive || !isRightPrimitive) {
+          // at least one is an object
+          if (!UnionTypeFinder.isASubtypeOfB(typedLeft.exprType, typedLeft.exprType, context.getClassAccessHelper)) {
+            throw new SemanticException(
+              s"Cannot assign value of type ${typedRight.exprType} to type ${typedLeft.exprType}"
+            )
+          }
+        } else {
+          // both are primitives
+          if (UnionTypeFinder.getLargerPrimitive(typedLeft.exprType, typedRight.exprType) != typedLeft.exprType) {
+            throw new SemanticException(
+              s"Implicit conversion of type ${typedRight.exprType} to type ${typedLeft.exprType} could result in data loss"
+            )
+          }
         }
         typedLeft.exprType
       case _ =>
@@ -216,10 +238,19 @@ object ExpressionChecks {
   }
 
   private def checkVarRefExpression(varRef: VarRef, context: SemanticContext): TypedExpression = {
-    val varTypeOption = context.getTypeAssumption(varRef.name)
-    varTypeOption match {
-      case Some(varType) => TypedExpression(varRef, varType)
-      case None          => throw new SemanticException(s"Identifier ${varRef.name} is not defined")
+    val qualifiedClass: Option[String] =
+      try Some(context.getFullyQualifiedClassName(varRef.name))
+      catch case e => None
+
+    if (qualifiedClass.nonEmpty) {
+      // is reference to static class context
+      TypedExpression(StaticClassRef(qualifiedClass.get), UserType(qualifiedClass.get))
+    } else {
+      // is either a variable or unknown
+      context.getTypeAssumption(varRef.name) match {
+        case Some(varType) => TypedExpression(varRef, varType)
+        case None          => throw new SemanticException(s"Identifier ${varRef.name} is not defined")
+      }
     }
   }
 

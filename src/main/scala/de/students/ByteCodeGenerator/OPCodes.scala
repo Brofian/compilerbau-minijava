@@ -6,19 +6,31 @@ import de.students.Parser.*
 private def asmLoadInsn(t: Type): Int = try {
   stringToOpcode(typePrefix(t) + "LOAD")
 } catch {
-  case ByteCodeGeneratorException(_) => throw ByteCodeGeneratorException(f"type $t can not be fetched as variable")
+  case ByteCodeGeneratorException(e) => throw ByteCodeGeneratorException(f"type $t can not be fetched as variable: $e")
 }
 
 private def asmStoreInsn(t: Type): Int = try {
   stringToOpcode(typePrefix(t) + "STORE")
 } catch {
-  case ByteCodeGeneratorException(_) => throw ByteCodeGeneratorException(f"type $t can not be saved as variable")
+  case ByteCodeGeneratorException(e) => throw ByteCodeGeneratorException(f"type $t can not be saved as variable: $e")
+}
+
+private def asmArrayLoadInsn(t: Type): Int = try {
+  stringToOpcode(typePrefix(t) + "ALOAD")
+} catch {
+  case ByteCodeGeneratorException(e) => throw ByteCodeGeneratorException(f"type $t can not be fetched from array: $e")
+}
+
+private def asmArrayStoreInsn(t: Type): Int = try {
+  stringToOpcode(typePrefix(t) + "ASTORE")
+} catch {
+  case ByteCodeGeneratorException(e) => throw ByteCodeGeneratorException(f"type $t can not be stored in array: $e")
 }
 
 private def asmReturnCode(t: Type): Int = try {
   stringToOpcode(typePrefix(t) + "RETURN")
 } catch {
-  case ByteCodeGeneratorException(_) => throw ByteCodeGeneratorException(f"type $t is not allowed as return type")
+  case ByteCodeGeneratorException(e) => throw ByteCodeGeneratorException(f"type $t is not allowed as return type")
 }
 
 private def typePrefix(t: Type): String = t match {
@@ -54,6 +66,18 @@ private def stringToOpcode(name: String): Int = name match {
   case "FSTORE" => FSTORE
   case "DSTORE" => DSTORE
   case "ASTORE" => ASTORE
+
+  case "IALOAD" => IALOAD
+  case "LALOAD" => LALOAD
+  case "FALOAD" => FALOAD
+  case "DALOAD" => DALOAD
+  case "AALOAD" => AALOAD
+
+  case "IASTORE" => IASTORE
+  case "LASTORE" => LASTORE
+  case "FASTORE" => FASTORE
+  case "DASTORE" => DASTORE
+  case "AASTORE" => AASTORE
 
   case "IRETURN" => IRETURN
   case "LRETURN" => LRETURN

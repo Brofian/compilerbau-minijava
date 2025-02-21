@@ -1,4 +1,4 @@
-package de.secondinput;
+package my;
 
 public class MyProgram {
 
@@ -16,13 +16,9 @@ public class MyProgram {
             }
       }
 
-      public static void main(String[] args) {
-            MyProgram prog = new MyProgram();
-            // (new A()).getB().getNumber(); // this is valid if class A is defined
-
-            int result = prog.calculate(5, 3);
-
+      public void test() {
             while(true){
+                  this.count = 3;
                   this.count = this.count + 1;
                   int[] arr = new int[2];
 
@@ -32,7 +28,21 @@ public class MyProgram {
                   }else if(this.count > 10){
                         arr[1] = this.count;
                   }
-                   /**/
+                  /**/
             }
+      }
+
+      public static void main(String[] args) {
+            MyProgram prog = new MyProgram();
+            // (new A()).getB().getNumber(); // this is valid if class A is defined
+
+            int result = prog.calculate(5, 3);
+            prog.test();
+
+            MyProgram[] ms = new MyProgram[42];
+            int[] arr = new int[1337];
+            MyProgram m = ms[12];
+            int i = arr[10];
+            arr[11] = 10000;
       }
 }

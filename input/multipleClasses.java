@@ -19,14 +19,16 @@ class AClass {
 class BClass extends AClass {
 
     public AClass createNewInstance() {
+        //System.Out.Println("Im creating a new Instance!!");
         return new BClass();
+
     }
 
 
     // Method calls still runs into problems with the parser
-    // public int heavyCalc() {
-    //    calc(10);
-    //    return 1;
-    // }
+     /*public int heavyCalc() {
+      calc(10);
+       return 1;
+    }*/
 
 }

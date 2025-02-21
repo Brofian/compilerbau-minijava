@@ -93,4 +93,12 @@ class SemanticContext(
     }
   }
 
+  def simpleTypeToQualified(simpleType: Type): Type = {
+    simpleType match {
+      case UserType(clsName)   => UserType(this.getFullyQualifiedClassName(clsName))
+      case ArrayType(baseType) => ArrayType(simpleTypeToQualified(baseType))
+      case _                   => simpleType
+    }
+  }
+
 }

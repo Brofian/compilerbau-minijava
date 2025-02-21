@@ -1,5 +1,5 @@
 package de.minimal;
 
-class Minimal {
+class minimal {
 
 }

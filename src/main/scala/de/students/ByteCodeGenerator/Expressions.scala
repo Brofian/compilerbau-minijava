@@ -22,11 +22,15 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
       generateNewObject(newObject, state)
     case TypedExpression(thisAccess: ThisAccess, fieldType) =>
       generateThisRValue(thisAccess, fieldType, state)
-    case TypedExpression(classAccess: ClassAccess, fieldType) =>
-      generateClassRValue(classAccess, fieldType, state)
+    case TypedExpression(memberAccess: MemberAccess, fieldType) =>
+      generateClassRValue(memberAccess, fieldType, state)
+    case TypedExpression(newArray: NewArray, arrayType) =>
+      generateNewArray(newArray, state)
+    case TypedExpression(arrayAccess: ArrayAccess, arrayType) =>
+      generateArrayRValue(arrayAccess, arrayType, state)
     case typedExpression: TypedExpression =>
       throw ByteCodeGeneratorException(
-        "did not expect raw typed expression, this may indicate a bug in the code generator"
+        f"did not expect raw typed expression ($typedExpression), this may indicate a bug in the code generator"
       )
     case _ => throw ByteCodeGeneratorException(f"the expression $expression is not supported")
   }
@@ -47,6 +51,52 @@ private def generateVariableReference(varRef: VarRef, state: MethodGeneratorStat
   }
 
   debugLogStack(state, "end var ref")
+}
+
+// STATIC CLASS REFERENCE
+private def generateRValueStaticClassMemberReference(
+  staticClassRef: StaticClassRef,
+  classType: Type,
+  memberName: String,
+  memberType: Type,
+  state: MethodGeneratorState
+): Unit = {
+  Instructions.loadStaticClassMember(staticClassRef.className, memberName, memberType, state)
+}
+
+private def generateLValueStaticClassMemberReference(
+  staticClassRef: StaticClassRef,
+  classType: Type,
+  memberName: String,
+  memberType: Type,
+  rvalue: Expression,
+  state: MethodGeneratorState
+): Unit = {
+  generateExpression(rvalue, state)
+
+  Instructions.duplicateTop(state)
+
+  Instructions.storeStaticClassMember(staticClassRef.className, memberName, memberType, state)
+}
+
+// STATIC METHOD CALL
+private def generateStaticMethodCall(
+  staticClass: StaticClassRef,
+  classType: Type,
+  methodCall: MethodCall,
+  returnType: Type,
+  state: MethodGeneratorState
+): Unit = {
+  val parameterTypes = methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
+  val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
+  Instructions.callStaticMethod(
+    javaifyClass(staticClass.className),
+    methodCall.methodName,
+    methodCall.args.size,
+    methodDescriptor,
+    state
+  )
+  Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, methodDescriptor, state)
 }
 
 // LITERAL
@@ -144,8 +194,10 @@ private def generateAssignment(lvalue: Expression, rvalue: Expression, state: Me
     case VarRef(name)                                       => generateVariableAccess(name, rvalue, state)
     case TypedExpression(VarRef(name), _)                   => generateVariableAccess(name, rvalue, state)
     case TypedExpression(thisAccess: ThisAccess, fieldType) => generateThisLValue(thisAccess, fieldType, rvalue, state)
-    case TypedExpression(classAccess: ClassAccess, fieldType) =>
-      generateClassLValue(classAccess, fieldType, rvalue, state)
+    case TypedExpression(memberAccess: MemberAccess, fieldType) =>
+      generateClassLValue(memberAccess, fieldType, rvalue, state)
+    case TypedExpression(arrayAccess: ArrayAccess, arrayType) =>
+      generateArrayLValue(arrayAccess, arrayType, rvalue, state)
     case _ => throw ByteCodeGeneratorException(f"lvalue expected, instead got $lvalue")
   }
 }
@@ -183,11 +235,24 @@ private def generateTypedExpression(expression: TypedExpression, state: MethodGe
 
 // METHOD CALL
 private def generateMethodCall(methodCall: MethodCall, returnType: Type, state: MethodGeneratorState): Unit = {
-  val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
-  val parameterTypes = methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
-  val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
-  Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, methodDescriptor, state)
-
+  // TODO refactor _ case into own function
+  methodCall.target match {
+    case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
+      generateStaticMethodCall(staticClassRef, classType, methodCall, returnType, state)
+    case _ => {
+      val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
+      val parameterTypes =
+        methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
+      val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
+      Instructions.callMethod(
+        asmUserType(classType),
+        methodCall.methodName,
+        methodCall.args.size,
+        methodDescriptor,
+        state
+      )
+    }
+  }
   // virtual element
   Instructions.pushConstant(0, IntType, state)
 }
@@ -256,34 +321,84 @@ private def loadLValueObject(className: String, state: MethodGeneratorState): Un
 
 /**
  * set field of object given in classAccess to rvalue and leave value of rvalue on the stack
- * @param classAccess
+ * @param memberAccess
  * @param fieldType
  * @param rvalue
  * @param state
  */
 private def generateClassLValue(
-  classAccess: ClassAccess,
+  memberAccess: MemberAccess,
   fieldType: Type,
   rvalue: Expression,
   state: MethodGeneratorState
 ): Unit = {
-  generateExpression(rvalue, state)
-  loadLValueObject(classAccess.className, state)
+  // TODO refactor _ case into own function
+  memberAccess.target match {
+    case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
+      generateLValueStaticClassMemberReference(
+        staticClassRef,
+        classType,
+        memberAccess.memberName,
+        fieldType,
+        rvalue,
+        state
+      )
+    case _ => {
+      generateExpression(memberAccess.target, state)
 
-  Instructions.duplicateTopTwo(state) // val | object | val | object
-  Instructions.pop(state) // val | object | val
+      generateExpression(rvalue, state)
 
-  Instructions.storeField(classAccess.memberName, fieldType, state)
+      Instructions.duplicateTopTwo(state) // val | object | val | object
+      Instructions.pop(state) // val | object | val
+
+      Instructions.storeField(memberAccess.memberName, fieldType, state)
+    }
+  }
 }
 
 /**
  * push field of object given in classAccess on stack
- * @param classAccess
+ * @param memberAccess
  * @param fieldType
  * @param state
  */
-private def generateClassRValue(classAccess: ClassAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
-  loadLValueObject(classAccess.className, state)
+private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
+  // TODO refactor _ case into own function
+  memberAccess.target match {
+    case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
+      generateRValueStaticClassMemberReference(staticClassRef, classType, memberAccess.memberName, fieldType, state)
+    case _ => {
+      generateExpression(memberAccess.target, state)
+      Instructions.loadField(memberAccess.memberName, fieldType, state)
+    }
+  }
+}
 
-  Instructions.loadField(classAccess.memberName, fieldType, state)
+private def generateNewArray(array: NewArray, state: MethodGeneratorState): Unit = {
+
+  generateExpression(array.dimensions.head, state)
+  Instructions.newArray(javaSignature(array.arrayType), state)
+}
+
+private def generateArrayLValue(
+  arrayAccess: ArrayAccess,
+  arrayType: Type,
+  rvalue: Expression,
+  state: MethodGeneratorState
+): Unit = {
+  generateExpression(arrayAccess.array, state)
+  generateExpression(arrayAccess.index, state)
+  generateExpression(rvalue, state)
+
+  Instructions.storeArray(arrayType, state)
+}
+
+private def generateArrayRValue(
+  arrayAccess: ArrayAccess,
+  arrayType: Type,
+  state: MethodGeneratorState
+): Unit = {
+  generateExpression(arrayAccess.array, state)
+  generateExpression(arrayAccess.index, state)
+  Instructions.accessArray(arrayType, state)
 }

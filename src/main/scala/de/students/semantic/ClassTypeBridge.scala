@@ -63,7 +63,11 @@ class ClassTypeBridge(baseAST: Project) {
     fqParts match {
       case None => throw new SemanticException(s"Encountered malformed fully qualified class name: $fqClassName")
       case Some(regMatch) =>
-        val packageName = if regMatch.group(1).endsWith(".") then regMatch.group(1).dropRight(1) else regMatch.group(1)
+        val rawPackageName = regMatch.group(1)
+        if (rawPackageName == null) {
+          throw new SemanticException(s"Encountered malformed fully qualified class name: $fqClassName")
+        }
+        val packageName = if rawPackageName.endsWith(".") then rawPackageName.dropRight(1) else rawPackageName
         val simpleClassName = regMatch.group(2)
         (packageName, simpleClassName)
     }
@@ -210,6 +214,7 @@ class ClassTypeBridge(baseAST: Project) {
 
               FieldDecl(
                 Some(accessModifier),
+                Modifier.isStatic(reflectionField.getModifiers),
                 Modifier.isFinal(reflectionField.getModifiers),
                 reflectionField.getName,
                 this.reflectionTypeToCustomType(reflectionField.getType),
@@ -264,6 +269,7 @@ class ClassTypeBridge(baseAST: Project) {
         case "double"  => DoubleType
         case _         => throw new SemanticException(s"Primitive type $refType is not yet implemented")
       }
+    else if refType.isArray then ArrayType(this.reflectionTypeToCustomType(refType.getComponentType))
     else UserType(refType.getName)
   }
 

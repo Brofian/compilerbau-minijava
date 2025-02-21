@@ -69,6 +69,26 @@ private object Instructions {
     state.pushStack(varType)
   }
 
+  def loadStaticClassMember(
+    staticClassName: String,
+    memberName: String,
+    memberType: Type,
+    state: MethodGeneratorState
+  ) = {
+    state.methodVisitor.visitFieldInsn(GETSTATIC, javaifyClass(staticClassName), memberName, javaSignature(memberType))
+    state.pushStack(memberType)
+  }
+
+  def storeStaticClassMember(
+    staticClassName: String,
+    memberName: String,
+    memberType: Type,
+    state: MethodGeneratorState
+  ) = {
+    state.methodVisitor.visitFieldInsn(PUTSTATIC, javaifyClass(staticClassName), memberName, javaSignature(memberType))
+    state.pushStack(memberType)
+  }
+
   def popType(state: MethodGeneratorState) = {
     val size = typeStackSize(state.stackTypes.last)
     if (size == 2) { popTwo(state) }
@@ -140,6 +160,17 @@ private object Instructions {
     state.popStack(1 + argumentCount)
   }
 
+  def callStaticMethod(
+    className: String,
+    methodName: String,
+    argumentCount: Int,
+    methodDescriptor: String,
+    state: MethodGeneratorState
+  ): Unit = {
+    state.methodVisitor.visitMethodInsn(INVOKESTATIC, javaifyClass(className), methodName, methodDescriptor, false)
+    state.popStack(argumentCount)
+  }
+
   def returnVoid(state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(RETURN)
   }
@@ -164,5 +195,17 @@ private object Instructions {
       false
     )
     state.popStack(1 + parameterDescriptors.size)
+  }
+
+  def newArray(arrayType: String, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitTypeInsn(ANEWARRAY, arrayType)
+  }
+
+  def accessArray(arrayType: Type, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitInsn(asmArrayLoadInsn(arrayType))
+  }
+
+  def storeArray(arrayType: Type, state: MethodGeneratorState): Unit = {
+    state.methodVisitor.visitInsn(asmArrayStoreInsn(arrayType))
   }
 }

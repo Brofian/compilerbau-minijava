@@ -75,6 +75,12 @@ object UnionTypeFinder {
       case UserType(className) =>
         val typeAParent = classAccessHelper.getClassParent(className)
         this.isASubtypeOfB(UserType(typeAParent), typeB, classAccessHelper) // check if A's parent is a subtype of B
+      case ArrayType(componentType) =>
+        typeB match
+          case arrayType: ArrayType =>
+            this.isASubtypeOfB(componentType, arrayType.baseType, classAccessHelper)
+          case _ =>
+            false
       case NoneType => typeB.equals(VoidType) || typeB.equals(NoneType)
       case _        => typeA == typeB // the trivial case: two primitive types are either equal or not
 
@@ -109,5 +115,9 @@ object UnionTypeFinder {
     } else {
       primitiveB
     }
+  }
+
+  def isPrimitive(givenType: Type): Boolean = {
+    !givenType.isInstanceOf[ArrayType] && !givenType.isInstanceOf[UserType]
   }
 }

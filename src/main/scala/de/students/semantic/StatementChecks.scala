@@ -35,10 +35,7 @@ object StatementChecks {
   }
 
   private def checkVarDeclarationStatement(varDecl: VarDecl, context: SemanticContext): TypedStatement = {
-    val evaluatedType = varDecl.varType match {
-      case UserType(clsName) => UserType(context.getFullyQualifiedClassName(clsName))
-      case _                 => varDecl.varType
-    }
+    val evaluatedType = context.simpleTypeToQualified(varDecl.varType)
     context.addTypeAssumption(varDecl.name, evaluatedType)
     TypedStatement(VarDecl(varDecl.name, evaluatedType, None), NoneType)
   }

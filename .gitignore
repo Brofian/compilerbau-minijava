@@ -35,3 +35,4 @@ metals.sbt
 
 # our generated out files
 out/
+*.class
