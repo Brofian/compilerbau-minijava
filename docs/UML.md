@@ -1,11 +1,12 @@
 ```mermaid
 classDiagram
-    %% Root Project (not an ASTNode)
+    %% Root Node
     class Project {
       +List~Package~ packages
     }
+    Project --> "*" Package : packages
 
-    %% AST Node Base Class
+    %% AST Base
     class ASTNode {
       <<abstract>>
     }
@@ -17,6 +18,8 @@ classDiagram
       +List~ClassDecl~ classes
     }
     Package --|> ASTNode
+    Package --> "1" Imports : imports
+    Package --> "*" ClassDecl : classes
 
     class Imports {
       +List~String~ names
@@ -33,6 +36,9 @@ classDiagram
       +List~ConstructorDecl~ constructors
     }
     ClassDecl --|> ASTNode
+    ClassDecl --> "*" MethodDecl : methods
+    ClassDecl --> "*" FieldDecl : fields
+    ClassDecl --> "*" ConstructorDecl : constructors
 
     class MethodDecl {
       +Option~String~ accessModifier
@@ -45,6 +51,7 @@ classDiagram
       +Option~Statement~ body
     }
     MethodDecl --|> ASTNode
+    MethodDecl --> "*" VarDecl : params
 
     class ConstructorDecl {
       +Option~String~ accessModifier
@@ -53,6 +60,7 @@ classDiagram
       +Statement body
     }
     ConstructorDecl --|> ASTNode
+    ConstructorDecl --> "*" VarDecl : params
 
     class FieldDecl {
       +Option~String~ accessModifier
@@ -232,4 +240,5 @@ classDiagram
       +List~Type~ parameterTypes
     }
     FunctionType --|> Type
+
 ```
