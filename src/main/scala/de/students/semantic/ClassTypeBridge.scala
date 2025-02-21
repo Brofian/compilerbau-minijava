@@ -214,6 +214,7 @@ class ClassTypeBridge(baseAST: Project) {
 
               FieldDecl(
                 Some(accessModifier),
+                Modifier.isStatic(reflectionField.getModifiers),
                 Modifier.isFinal(reflectionField.getModifiers),
                 reflectionField.getName,
                 this.reflectionTypeToCustomType(reflectionField.getType),

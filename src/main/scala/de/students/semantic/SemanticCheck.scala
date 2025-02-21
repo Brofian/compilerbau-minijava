@@ -152,7 +152,7 @@ object SemanticCheck {
         case Some(initializer) => Some(ExpressionChecks.checkExpression(field.initializer.get, context))
         case None              => None
       }
-      FieldDecl(field.accessModifier, field.isFinal, field.name, fieldType, typedInitializer)
+      FieldDecl(field.accessModifier, field.isStatic, field.isFinal, field.name, fieldType, typedInitializer)
     })
 
     val fullyQualifiedParentName = context.getFullyQualifiedClassName(cls.parent)
