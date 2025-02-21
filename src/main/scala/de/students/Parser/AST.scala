@@ -43,6 +43,7 @@ case class ConstructorDecl(
 // Field declaration
 case class FieldDecl(
   accessModifier: Option[String],
+  isStatic: Boolean,
   isFinal: Boolean,
   name: String,
   varType: Type,

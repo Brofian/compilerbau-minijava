@@ -418,11 +418,12 @@ object ASTBuilder {
     override def visitAttribute(ctx: AttributeContext): FieldDecl = {
       Logger.debug(s"Visiting attribute: ${ctx.IDENTIFIER().getText}")
       val accessModifiers = visitModifiers(ctx.accessModifier())
+      val isStatic = ctx.STATIC() != null
       val isFinal = ctx.FINAL() != null
       val varType = visitType(ctx.`type`())
       val name = ctx.IDENTIFIER().getText
       val initializer = Option(ctx.expression()).map(visitExpression)
-      FieldDecl(accessModifiers, isFinal, name, varType, initializer)
+      FieldDecl(accessModifiers, isStatic, isFinal, name, varType, initializer)
     }
 
     // Visit an access modifier (PRIVATE, PUBLIC, PROTECTED)

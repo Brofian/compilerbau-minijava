@@ -15,7 +15,7 @@ classbody: '{' (method | attribute | constructor | class)* '}';
 method: accessModifier? STATIC? FINAL? ABSTRACT?  returntype IDENTIFIER '(' parameterList? ')' block?;
 
 // Attributes
-attribute: accessModifier? FINAL? type IDENTIFIER ('=' expression)? SC;
+attribute: accessModifier? STATIC? FINAL? type IDENTIFIER ('=' expression)? SC;
 
 // Constructors
 constructor: accessModifier? id '(' parameterList? ')' block;
