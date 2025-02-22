@@ -140,7 +140,8 @@ private object Instructions {
    * @param state
    */
   def loadField(name: String, fieldType: Type, state: MethodGeneratorState) = {
-    state.methodVisitor.visitFieldInsn(GETFIELD, javaifyClass(state.className), name, javaSignature(fieldType))
+    val insn = if name == "length" then ARRAYLENGTH else GETFIELD
+    state.methodVisitor.visitFieldInsn(insn, javaifyClass(state.className), name, javaSignature(fieldType))
     // object is popped and field is pushed
   }
 

@@ -377,7 +377,7 @@ object ASTBuilder {
       if (ctx.INTEGER_LITERAL() != null) {
         Literal(ctx.INTEGER_LITERAL().getText.toInt)
       } else if (ctx.STRING_LITERAL() != null) {
-        Literal(ctx.STRING_LITERAL().getText)
+        Literal(ctx.STRING_LITERAL().getText.drop(1).dropRight(1))
       } else if (ctx.BOOLEAN_LITERAL() != null) {
         ctx.BOOLEAN_LITERAL().getText match {
           case "true"  => Literal(true)
@@ -395,7 +395,7 @@ object ASTBuilder {
       } else if (ctx.DOUBLE_LITERAL() != null) {
         Literal(ctx.DOUBLE_LITERAL().getText.toDouble)
       } else if (ctx.CHAR_LITERAL() != null) {
-        Literal(ctx.CHAR_LITERAL().getText)
+        Literal(ctx.CHAR_LITERAL().getText.charAt(1))
       } else {
         throw new UnsupportedOperationException(s"Unsupported literal: ${ctx.getText}")
       }
