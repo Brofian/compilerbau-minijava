@@ -46,7 +46,7 @@ private def javaifyClass(fullName: String) = makeObjectClassName(fullName.replac
 private def makeObjectClassName(name: String) =
   if name.contains("Object") then "java/lang/Object" else name // TODO temporary, make issue for type check
 
-private def javaSignature(t: Type): String = t match {
+def javaSignature(t: Type): String = t match {
   case IntType             => "I"
   case BoolType            => "Z"
   case VoidType            => "V"

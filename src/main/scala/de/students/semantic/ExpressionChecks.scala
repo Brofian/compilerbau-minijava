@@ -134,6 +134,10 @@ object ExpressionChecks {
         val memberType =
           context.getClassAccessHelper.getClassMemberType(qualifiedClassName, memberAccess.memberName, None)
         TypedExpression(MemberAccess(typedTarget, memberAccess.memberName), memberType)
+      case ArrayType(baseType) =>
+        val memberType =
+          context.getClassAccessHelper.getArrayMemberType(ArrayType(baseType), memberAccess.memberName, None)
+        TypedExpression(MemberAccess(typedTarget, memberAccess.memberName), memberType)
       case _ =>
         val iName = if isStatic then "static instance" else "instance"
         throw new SemanticException(

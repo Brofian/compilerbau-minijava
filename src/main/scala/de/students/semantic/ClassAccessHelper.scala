@@ -1,5 +1,6 @@
 package de.students.semantic
 
+import de.students.ByteCodeGenerator.javaSignature
 import de.students.Parser.*
 
 class ClassAccessHelper(bridge: ClassTypeBridge) {
@@ -137,6 +138,27 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
             )
         }
     }
+  }
+
+  /**
+   * Run the member type check for implicit array classes
+   *
+   * @param arrayType   The ArrayType for determining types
+   * @param memberName  The member that should be accessed
+   * @param methodParams  The parameters (if any) to call a method
+   * @return
+   */
+  def getArrayMemberType(
+    arrayType: ArrayType,
+    memberName: String,
+    methodParams: Option[List[Type]]
+  ): Type = {
+    // length is a special property, that does not exist in the reflection and is only supported by the JVM directly
+    if (memberName == "length" && methodParams.isEmpty) {
+      return IntType
+    }
+    val arrayClassName = javaSignature(arrayType).replace('/', '.')
+    this.getClassMemberType(arrayClassName, memberName, methodParams)
   }
 
   /**

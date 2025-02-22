@@ -99,6 +99,10 @@ class ClassTypeBridge(baseAST: Project) {
    * @return
    */
   private def getLocalClass(fullyQualifiedClassName: String): Option[ClassDecl] = {
+    if (fullyQualifiedClassName.startsWith("[")) {
+      return None // we are searching for an array. These are always handled by the reflection classes
+    }
+
     val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
 
     val searchResults: List[(ClassDecl, Package)] = baseAST.packages
