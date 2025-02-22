@@ -64,10 +64,9 @@ object SemanticCheck {
       val classContext = context.createChildContext(None, Some(context.getFullyQualifiedClassName(cls.name)))
       // remove syntactic sugar and typeCheck the class
       this.checkClass(
-        SyntacticSugarHandler.handleSyntacticSugar(cls, context),
+        SyntacticSugarHandler.handleSyntacticSugar(cls, classContext),
         classContext
       )
-
     })
     Package(pckg.name, pckg.imports, typedClasses)
   }

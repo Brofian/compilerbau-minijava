@@ -103,7 +103,7 @@ object ExpressionChecks {
       stackedArrayType = ArrayType(stackedArrayType)
     }
 
-    TypedExpression(NewArray(newArr.arrayType, typedDimensions), stackedArrayType)
+    TypedExpression(NewArray(stackedArrayType, typedDimensions), stackedArrayType)
   }
 
   private def checkNewObjectExpression(newObj: NewObject, context: SemanticContext): TypedExpression = {
