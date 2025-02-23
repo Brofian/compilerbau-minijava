@@ -7,17 +7,17 @@ object ExpressionChecks {
 
   def checkExpression(expr: Expression, context: SemanticContext): TypedExpression = {
     expr match {
-      case m @ MethodCall(_, _, _) => this.checkMethodCallExpression(m, context)
-      case a @ ArrayAccess(_, _)   => this.checkArrayAccessExpression(a, context)
-      case a @ NewArray(_, _)      => this.checkNewArrayExpression(a, context)
-      case n @ NewObject(_, _)     => this.checkNewObjectExpression(n, context)
-      case m @ MemberAccess(_, _)  => this.checkMemberAccessExpression(m, context)
-      case t @ ThisAccess(_)       => this.checkThisAccessExpression(t, context)
-      case u @ UnaryOp(_, _)       => this.checkUnaryOpExpression(u, context)
-      case b @ BinaryOp(_, _, _)   => this.checkBinaryOpExpression(b, context)
-      case v @ VarRef(_)           => this.checkVarRefExpression(v, context)
-      case l @ Literal(_)          => this.checkLiteralExpression(l, context)
-      case _                       => throw new SemanticException(s"Could not match expression $expr")
+      case m @ MethodCall(_, _, _, _) => this.checkMethodCallExpression(m, context)
+      case a @ ArrayAccess(_, _)      => this.checkArrayAccessExpression(a, context)
+      case a @ NewArray(_, _)         => this.checkNewArrayExpression(a, context)
+      case n @ NewObject(_, _)        => this.checkNewObjectExpression(n, context)
+      case m @ MemberAccess(_, _)     => this.checkMemberAccessExpression(m, context)
+      case t @ ThisAccess(_)          => this.checkThisAccessExpression(t, context)
+      case u @ UnaryOp(_, _)          => this.checkUnaryOpExpression(u, context)
+      case b @ BinaryOp(_, _, _)      => this.checkBinaryOpExpression(b, context)
+      case v @ VarRef(_)              => this.checkVarRefExpression(v, context)
+      case l @ Literal(_)             => this.checkLiteralExpression(l, context)
+      case _                          => throw new SemanticException(s"Could not match expression $expr")
     }
   }
 
@@ -64,7 +64,16 @@ object ExpressionChecks {
         }
       })
 
-    TypedExpression(MethodCall(typedTarget, methodCall.methodName, typedArguments), methodTypeF.returnType)
+    // TODO remove expensive method call and do correct None handling
+    val isStatic = context.getClassAccessHelper
+      .getClassMethodDecl(fqClassName, methodCall.methodName, Some(argTypes)) match
+      case Some(methodDecl) => methodDecl.static
+      case None             => false
+
+    TypedExpression(
+      MethodCall(typedTarget, methodCall.methodName, typedArguments, isStatic),
+      methodTypeF.returnType
+    )
   }
 
   private def checkArrayAccessExpression(arrayAccess: ArrayAccess, context: SemanticContext): TypedExpression = {

@@ -81,16 +81,17 @@ private def generateLValueStaticClassMemberReference(
 
 // STATIC METHOD CALL
 private def generateStaticMethodCall(
-  staticClass: StaticClassRef,
-  classType: Type,
   methodCall: MethodCall,
   returnType: Type,
   state: MethodGeneratorState
 ): Unit = {
+
   val parameterTypes = methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
   val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
+  // val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
+  val classType = methodCall.target.asInstanceOf[TypedExpression].exprType
   Instructions.callStaticMethod(
-    javaifyClass(staticClass.className),
+    asmUserType(classType),
     methodCall.methodName,
     methodCall.args.size,
     methodDescriptor,
@@ -234,24 +235,23 @@ private def generateTypedExpression(expression: TypedExpression, state: MethodGe
 
 // METHOD CALL
 private def generateMethodCall(methodCall: MethodCall, returnType: Type, state: MethodGeneratorState): Unit = {
-  // TODO refactor _ case into own function
-  methodCall.target match {
-    case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
-      generateStaticMethodCall(staticClassRef, classType, methodCall, returnType, state)
-    case _ => {
-      val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
-      val parameterTypes =
-        methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
-      val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
-      Instructions.callMethod(
-        asmUserType(classType),
-        methodCall.methodName,
-        methodCall.args.size,
-        methodDescriptor,
-        state
-      )
-    }
+  // TODO refactor else case into own function
+  if (methodCall.isStatic) {
+    generateStaticMethodCall(methodCall, returnType, state)
+  } else {
+    val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
+    val parameterTypes =
+      methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
+    val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
+    Instructions.callMethod(
+      asmUserType(classType),
+      methodCall.methodName,
+      methodCall.args.size,
+      methodDescriptor,
+      state
+    )
   }
+
   // virtual element
   Instructions.pushConstant(0, IntType, state)
 }

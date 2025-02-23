@@ -50,6 +50,45 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
   }
 
   /**
+   * Find the method declaration in the given class with the given names and parameters
+   * @param fullyQualifiedClassName
+   * @param memberName
+   * @param methodParams
+   * @return
+   */
+  def getClassMethodDecl(
+    fullyQualifiedClassName: String,
+    memberName: String,
+    methodParams: Option[List[Type]]
+  ): Option[MethodDecl] = {
+    // TODO: check access modifiers
+
+    val classDecl = bridge.getClass(fullyQualifiedClassName)
+
+    // search method
+    val matchingMethods: List[MethodDecl] = classDecl.methods.filter(methodDecl => {
+      methodDecl.name == memberName && // method has the correct name
+      methodParams.nonEmpty && // we are searching for a method
+      methodDecl.params.size == methodParams.get.size && // number of parameters matches number of arguments
+      methodParams.get.zipWithIndex.forall((providedParam, index) => {
+        val requiredParam = methodDecl.params.apply(index).varType
+        UnionTypeFinder.isASubtypeOfB(requiredParam, providedParam, this)
+      })
+    })
+
+    val matchingMethod: Option[MethodDecl] = matchingMethods.size match {
+      case 0 => None
+      case 1 => Some(matchingMethods.head)
+      case _ =>
+        throw new SemanticException(
+          s"Encountered multiple possible overloaded methods for member $memberName of class $fullyQualifiedClassName with parameter types $methodParams"
+        )
+    }
+
+    matchingMethod
+  }
+
+  /**
    * Retrieve the type of specific member of the given class. This method does work for fields and methods
    * at the same time. ClassNames in the retrieved type will already be fully qualified
    *
@@ -64,8 +103,6 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
     memberName: String,
     methodParams: Option[List[Type]]
   ): Type = {
-    // TODO: check access modifiers
-
     val classDecl = bridge.getClass(fullyQualifiedClassName)
 
     var matchingMemberType: Option[Type] = None
@@ -82,29 +119,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       case None => None
     }
 
-    // search method
-    val matchingMethods: List[MethodDecl] = classDecl.methods.filter(methodDecl => {
-      methodDecl.name == memberName && // method has the correct name
-      methodParams.nonEmpty && // we are searching for a method
-      methodDecl.params.size == methodParams.get.size && // number of parameters matches number of arguments
-      methodParams.get.zipWithIndex.forall((providedParam, index) => {
-        val requiredParam = methodDecl.params.apply(index).varType
-        UnionTypeFinder.isASubtypeOfB(requiredParam, providedParam, this)
-      })
-    })
-
-    if (matchingMethods.nonEmpty && matchingMemberType.nonEmpty) {
-      throw new SemanticException(s"Duplicate definition for member name $memberName in class $fullyQualifiedClassName")
-    }
-
-    val matchingMethod: Option[MethodDecl] = matchingMethods.size match {
-      case 0 => None
-      case 1 => Some(matchingMethods.head)
-      case _ =>
-        throw new SemanticException(
-          s"Encountered multiple possible overloaded methods for member $memberName of class $fullyQualifiedClassName with parameter types $methodParams"
-        )
-    }
+    val matchingMethod = getClassMethodDecl(fullyQualifiedClassName, memberName, methodParams)
 
     matchingMemberType = matchingMethod match {
       case Some(method) =>

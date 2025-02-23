@@ -113,6 +113,7 @@ case class NewArray(arrayType: Type, dimensions: List[Expression]) extends Expre
 case class ArrayAccess(array: Expression, index: Expression) extends Expression
 
 // Method calls (member access with parentheses)
-case class MethodCall(target: Expression, methodName: String, args: List[Expression]) extends Expression
+case class MethodCall(target: Expression, methodName: String, args: List[Expression], isStatic: Boolean)
+    extends Expression
 
 case class TypedExpression(expr: Expression, exprType: Type) extends Expression

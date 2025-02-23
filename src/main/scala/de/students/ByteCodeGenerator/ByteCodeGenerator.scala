@@ -133,7 +133,6 @@ private def generateMethodBody(
   state.localVariableCount = (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
 
   methodDecl.params.foreach(param => state.addVariable(param.name, param.varType))
-  println(f"locals: ${state.localVariableCount}")
 
   methodVisitor.visitCode()
 
@@ -141,7 +140,6 @@ private def generateMethodBody(
   if (methodDecl.body.isDefined) {
     generateStatement(methodDecl.body.get, state)
   }
-  println(f"locals: ${state.localVariableCount}")
 
   methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
   methodVisitor.visitEnd()
