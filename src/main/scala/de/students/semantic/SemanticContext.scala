@@ -100,5 +100,36 @@ class SemanticContext(
       case _                   => simpleType
     }
   }
+}
 
+/**
+ * Shortcut for creating a new context in stacked type checks
+ *
+ * @param pckgDecl    The surrounding package
+ * @param classDecl   The surrounding class
+ * @param project     The whole AST for class reference
+ * @return
+ */
+def createContext(pckgDecl: Package, classDecl: ClassDecl, project: Project): SemanticContext = {
+  val context = SemanticContext(
+    classAccessHelper = ClassAccessHelper(ClassTypeBridge(project)),
+    typeAssumptions = mutable.Map[String, Type](),
+    imports = mutable.Map[String, String](),
+    importWildcards = ListBuffer(),
+    packageName = pckgDecl.name,
+    className = classDecl.name
+  )
+
+  var hasExplicitJavaLangImport = false
+  pckgDecl.imports.names.foreach(importName =>
+    val parts = importName.split("""\.""")
+    context.addImport(parts.last, importName)
+    hasExplicitJavaLangImport ||= importName == "java.lang."
+  )
+  if (!hasExplicitJavaLangImport) {
+    // add implicit java.lang.* import
+    context.addImport("", "java.lang.")
+  }
+
+  context
 }
