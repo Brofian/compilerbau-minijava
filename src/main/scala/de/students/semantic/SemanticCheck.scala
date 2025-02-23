@@ -62,12 +62,11 @@ object SemanticCheck {
 
       // create a new class-level-context
       val classContext = context.createChildContext(None, Some(context.getFullyQualifiedClassName(cls.name)))
-      // typeCheck the class
+      // remove syntactic sugar and typeCheck the class
       this.checkClass(
-        SyntacticSugarHandler.handleSyntacticSugar(cls, context),
+        SyntacticSugarHandler.handleSyntacticSugar(cls, classContext),
         classContext
       )
-
     })
     Package(pckg.name, pckg.imports, typedClasses)
   }
@@ -84,13 +83,26 @@ object SemanticCheck {
     val typedMethods: List[MethodDecl] = cls.methods.map((method: MethodDecl) => {
       val methodContext = context.createChildContext()
 
+      val typedParams = method.params.map(param => {
+        val evaluatedType = context.simpleTypeToQualified(param.varType)
+        val evaluatedInitializer = param.initializer match {
+          case Some(initializer) =>
+            val typedInitializer = ExpressionChecks.checkExpression(initializer, context)
+            if (
+              !UnionTypeFinder.isASubtypeOfB(evaluatedType, typedInitializer.exprType, context.getClassAccessHelper)
+            ) {
+              throw new SemanticException(
+                s"Cannot initialize parameter ${param.name} with value of type ${typedInitializer.exprType}"
+              )
+            }
+            Some(typedInitializer)
+          case None => None
+        }
+        VarDecl(param.name, evaluatedType, evaluatedInitializer)
+      })
+
       // add parameters to the list of known variables
-      method.params.foreach(param =>
-        methodContext.addTypeAssumption(
-          param.name,
-          context.simpleTypeToQualified(param.varType)
-        )
-      )
+      typedParams.foreach(param => methodContext.addTypeAssumption(param.name, param.varType))
 
       val evaluatedReturnType = context.simpleTypeToQualified(method.returnType)
 
@@ -123,7 +135,7 @@ object SemanticCheck {
         method.static,
         method.isFinal,
         evaluatedReturnType,
-        method.params,
+        typedParams,
         typedBody
       )
     })

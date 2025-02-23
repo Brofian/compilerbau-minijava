@@ -64,8 +64,7 @@ private def javaSignature(t: Type): String = t match {
     val parameters = parameterTypes.map(javaSignature).fold("")((a, b) => a + b)
     f"($parameters)${javaSignature(returnType)}"
   }
-  case NoneType => "" // NOTE should not happen
-  case _        => throw ByteCodeGeneratorException(s"Unknown type $t cannot be converted to ASM-type")
+  case _ => throw ByteCodeGeneratorException(s"Unknown type $t cannot be converted to ASM-type")
 }
 
 private def asmUserType(t: Type): String = t match {

@@ -41,7 +41,6 @@ object InputOutput {
     fileContents
   }
 
-  private val OUT_DIR = Paths.get(".", "out")
   private val CLASS_FILE_ENDING = ".class"
 
   private def writeToBinFile(bytecode: Array[Byte], fullFilepath: String): Unit = {
@@ -52,8 +51,11 @@ object InputOutput {
 
   def writeClassFile(bytecode: ClassBytecode): Unit = {
     val folders = bytecode.className.split('.')
-    val fullFolderPath = folders.reverse.tail.reverse.foldLeft(OUT_DIR)((a, b) => Paths.get(a.toString, b))
+    val outputDirectory = Paths.get(ArgParser.outputDirectory)
+    val fullFolderPath = folders.reverse.tail.reverse.foldLeft(outputDirectory)((a, b) => Paths.get(a.toString, b))
     Files.createDirectories(fullFolderPath)
-    writeToBinFile(bytecode.bytecode, Paths.get(fullFolderPath.toString, folders.last + CLASS_FILE_ENDING).toString)
+    val filePath = Paths.get(fullFolderPath.toString, folders.last + CLASS_FILE_ENDING)
+    Logger.info(s"Writing file: ${filePath.normalize()}")
+    writeToBinFile(bytecode.bytecode, filePath.toString)
   }
 }
