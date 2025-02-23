@@ -62,6 +62,7 @@ object SemanticCheck {
 
       // create a new class-level-context
       val classContext = context.createChildContext(None, Some(context.getFullyQualifiedClassName(cls.name)))
+      classContext.addTypeAssumption("this", UserType(classContext.getClassName))
       // remove syntactic sugar and typeCheck the class
       this.checkClass(
         SyntacticSugarHandler.handleSyntacticSugar(cls, classContext),

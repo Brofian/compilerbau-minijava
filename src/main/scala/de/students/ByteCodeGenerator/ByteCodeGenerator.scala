@@ -223,6 +223,9 @@ private case class MethodGeneratorState(
       res.get
     } else if (field.isDefined) {
       VariableInfo(0, 0, field.get.varType, true)
+    } else if (name == "this") {
+      // TODO
+      throw ByteCodeGeneratorException(f"reference to this is not implemented")
     } else {
       throw ByteCodeGeneratorException(f"variable $name does not exist")
     }

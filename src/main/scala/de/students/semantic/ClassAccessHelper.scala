@@ -4,6 +4,8 @@ import de.students.Parser.*
 
 class ClassAccessHelper(bridge: ClassTypeBridge) {
 
+  def getBridge: ClassTypeBridge = bridge
+
   /**
    * Check if a class with the specified class name exists
    *
