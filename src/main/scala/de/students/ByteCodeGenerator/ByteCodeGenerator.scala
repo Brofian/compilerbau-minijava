@@ -51,7 +51,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     generateConstructor(
       classDecl,
       classWriter,
-      ConstructorDecl(Some("public"), "", List(), EMPTY_STATEMENT)
+      ConstructorDecl(Some("public"), "", List(), ReturnStatement(None))
     )
   }
 
@@ -89,34 +89,35 @@ private def generateConstructor(
     ACC_PUBLIC,
     "<init>",
     javaSignature(constructorType(constructorDecl)),
-    null,
-    null
+    null, // signature
+    null // exceptions
   )
   val state = defaultMethodGeneratorState(
     classDecl,
     methodVisitor,
     VoidType
   )
+  state.localVariableCount = 1 // this
+
+  constructorDecl.params.foreach(param => state.addVariable(param.name, param.varType))
+
+  state.stackDepth = state.localVariableCount
+
   methodVisitor.visitCode()
 
-  methodVisitor.visitVarInsn(ALOAD, 0) // load this
-  methodVisitor.visitMethodInsn(
-    INVOKESPECIAL,
-    javaifyClass(classDecl.parent),
-    "<init>",
-    "()V",
-    false
-  ) // call Object constructor
+  Instructions.callSuper(classDecl.parent, state)
 
   generateStatement(constructorDecl.body, state)
 
-  methodVisitor.visitInsn(RETURN)
-
-  methodVisitor.visitMaxs(1, 1) // TODO real sizes
+  methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
   methodVisitor.visitEnd()
 }
 
-private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, classWriter: ClassWriter): Unit = {
+private def generateMethodBody(
+  classDecl: ClassDecl,
+  methodDecl: MethodDecl,
+  classWriter: ClassWriter
+): Unit = {
   val methodVisitor = classWriter.visitMethod(
     visibilityModifier(methodDecl),
     methodDecl.name,

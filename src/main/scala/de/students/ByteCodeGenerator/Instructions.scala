@@ -209,4 +209,19 @@ private object Instructions {
   def storeArray(arrayType: Type, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(asmArrayStoreInsn(arrayType))
   }
+
+  def callSuper(parentName: String, state: MethodGeneratorState): Unit = {
+    state.pushStack(UserType(parentName))
+
+    state.methodVisitor.visitVarInsn(ALOAD, 0) // load this
+    state.methodVisitor.visitMethodInsn( // super()
+      INVOKESPECIAL,
+      javaifyClass(parentName),
+      "<init>",
+      "()V",
+      false
+    )
+
+    state.popStack()
+  }
 }
