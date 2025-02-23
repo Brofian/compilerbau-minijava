@@ -97,7 +97,9 @@ class SemanticContext(
     simpleType match {
       case UserType(clsName)   => UserType(this.getFullyQualifiedClassName(clsName))
       case ArrayType(baseType) => ArrayType(simpleTypeToQualified(baseType))
-      case _                   => simpleType
+      case FunctionType(returnType, parameterTypes) =>
+        FunctionType(simpleTypeToQualified(returnType), parameterTypes.map(p => simpleTypeToQualified(p)))
+      case _ => simpleType
     }
   }
 }
