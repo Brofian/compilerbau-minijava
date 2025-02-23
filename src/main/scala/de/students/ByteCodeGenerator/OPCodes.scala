@@ -112,3 +112,17 @@ private def stringToOpcode(name: String): Int = name match {
 
   case _ => throw ByteCodeGeneratorException(f"opcode $name not recognized")
 }
+
+private def primitiveArrayOperand(t: Type): Int = {
+  t match
+    case IntType    => T_INT
+    case ShortType  => T_SHORT
+    case LongType   => T_LONG
+    case ByteType   => T_BYTE
+    case FloatType  => T_FLOAT
+    case DoubleType => T_DOUBLE
+    case CharType   => T_CHAR
+    case BoolType   => T_BOOLEAN
+
+    case _ => throw ByteCodeGeneratorException(f"type $t is not allowed for primitive array")
+}

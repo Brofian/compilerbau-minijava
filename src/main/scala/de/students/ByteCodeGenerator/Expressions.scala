@@ -96,7 +96,6 @@ private def generateStaticMethodCall(
     methodDescriptor,
     state
   )
-  Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, methodDescriptor, state)
 }
 
 // LITERAL
@@ -364,6 +363,7 @@ private def generateClassLValue(
  */
 private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
   // TODO refactor _ case into own function
+  debugLogStack(state, f"generate class R value: $memberAccess")
   memberAccess.target match {
     case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
       generateRValueStaticClassMemberReference(staticClassRef, classType, memberAccess.memberName, fieldType, state)
@@ -372,12 +372,12 @@ private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, sta
       Instructions.loadField(memberAccess.memberName, fieldType, state)
     }
   }
+  debugLogStack(state, f"end class R value: $memberAccess")
 }
 
 private def generateNewArray(array: NewArray, state: MethodGeneratorState): Unit = {
-
   generateExpression(array.dimensions.head, state)
-  Instructions.newArray(javaSignature(array.arrayType), state)
+  Instructions.newArray(array.arrayType.asInstanceOf[ArrayType].baseType, state)
 }
 
 private def generateArrayLValue(
