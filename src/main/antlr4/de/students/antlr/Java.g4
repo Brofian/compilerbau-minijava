@@ -17,9 +17,9 @@ method: accessModifier? STATIC? FINAL? ABSTRACT?  returntype IDENTIFIER '(' para
 // Attributes
 attribute: accessModifier? STATIC? FINAL? type IDENTIFIER ('=' expression)? SC;
 
-// Constructors
-constructor: accessModifier? id '(' parameterList? ')' block;
+constructor: accessModifier? id '(' parameterList? ')' '{' superCall? statement* '}';
 
+superCall: SUPER '(' argumentList? ')' SC;  // Allows calling superclass constructor
 // Modifiers
 accessModifier: PRIVATE | PUBLIC | PROTECTED;  // Only one allowed
 
@@ -97,6 +97,7 @@ postfixExpression
 simplePrimary
     : IDENTIFIER ('(' argumentList? ')')?    // Implicit method call: e.g. calc(10) Variable reference or class name
     | THIS
+    | SUPER  // super.methodName() or super.fieldName
     | literal
     | '(' expression ')'
     | objectCreation
@@ -147,6 +148,8 @@ VOID: 'void';
 RETURN: 'return';
 IMPORT: 'import';
 THIS : 'this';
+SUPER: 'super';
+
 // Primitive Types
 PRIMITIVE_TYPE: 'int' | 'char' | 'boolean' | 'byte' | 'double' | 'float' | 'short' | 'long';
 

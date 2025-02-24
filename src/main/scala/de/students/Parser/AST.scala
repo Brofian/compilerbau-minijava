@@ -35,6 +35,7 @@ case class MethodDecl(
 // Constructor declaration
 case class ConstructorDecl(
   accessModifier: Option[String],
+  superConstructor: Option[SuperConstructorCall],
   name: String,
   params: List[VarDecl],
   body: Statement
@@ -108,11 +109,19 @@ case class MemberAccess(target: Expression, memberName: String) extends Expressi
 // Represents `this.member`
 case class ThisAccess(name: String) extends Expression
 
+case class SuperAccess(member: Option[String]) extends Expression
+
 case class NewObject(className: String, arguments: List[Expression]) extends Expression
 case class NewArray(arrayType: Type, dimensions: List[Expression]) extends Expression
 case class ArrayAccess(array: Expression, index: Expression) extends Expression
 
 // Method calls (member access with parentheses)
 case class MethodCall(target: Expression, methodName: String, args: List[Expression]) extends Expression
+
+// Represents `super.method(args...)`
+case class SuperMethodCall(methodName: String, args: List[Expression]) extends Expression
+
+// Represents `super(arguments...)` in constructors
+case class SuperConstructorCall(args: List[Expression]) extends Statement
 
 case class TypedExpression(expr: Expression, exprType: Type) extends Expression
