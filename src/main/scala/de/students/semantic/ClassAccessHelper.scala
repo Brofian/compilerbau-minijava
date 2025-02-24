@@ -61,10 +61,9 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
   def getClassMemberType(
     fullyQualifiedClassName: String,
     memberName: String,
-    methodParams: Option[List[Type]]
+    methodParams: Option[List[Type]],
+    callSource: CallSource
   ): Type = {
-    // TODO: check access modifiers
-
     val classDecl = bridge.getClass(fullyQualifiedClassName)
 
     var matchingMemberType: Option[Type] = None
@@ -76,6 +75,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
         if (methodParams.nonEmpty) {
           throw new SemanticException(s"Cannot call field ${field.name} of class $fullyQualifiedClassName as a method")
         } else {
+          callSource.assertCanCall(field, fullyQualifiedClassName)
           Some(field.varType)
         }
       case None => None
@@ -112,6 +112,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
             s"Cannot access method ${method.name} of class $fullyQualifiedClassName as a field"
           )
         } else {
+          callSource.assertCanCall(method, fullyQualifiedClassName)
           Some(FunctionType(method.returnType, method.params.map(p => p.varType)))
         }
       case None => matchingMemberType
@@ -123,7 +124,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
         this.getClassParentOrNone(fullyQualifiedClassName) match {
           case Some(parentClassName) =>
             try {
-              this.getClassMemberType(parentClassName, memberName, methodParams)
+              this.getClassMemberType(parentClassName, memberName, methodParams, callSource)
             } catch
               case e: Exception => // if no parent has this member either, let the exception bubble back up
                 throw new SemanticException(
