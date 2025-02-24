@@ -82,4 +82,90 @@ class SemanticTest extends FunSuite {
       SemanticCheck.runCheck(program)
     }
   }
+
+  /**
+   * Ensure an error is thrown if a non-accessible member is called
+   */
+  test("Respecting access modifiers") {
+
+    def sampleWithAccessModifier(accessModifier: Option[String], useSamePackage: Boolean): Project = {
+      val secondPackage = if useSamePackage then "first" else "second"
+      Project(
+        List(
+          Package(
+            name = "first",
+            imports = Imports(List()),
+            classes = List(
+              ClassDecl(
+                name = "A",
+                parent = "Object",
+                isAbstract = false,
+                methods = List(),
+                fields = List(
+                  FieldDecl(accessModifier, false, false, "prop", IntType, None)
+                ),
+                constructors = List()
+              )
+            )
+          ),
+          Package(
+            name = secondPackage,
+            imports = Imports(List("first.A")),
+            classes = List(
+              ClassDecl(
+                name = "B",
+                parent = "Object",
+                isAbstract = false,
+                methods = List(
+                  MethodDecl(
+                    accessModifier = None,
+                    name = "main",
+                    isAbstract = false,
+                    static = false,
+                    isFinal = false,
+                    returnType = VoidType,
+                    params = List(),
+                    body = Some(
+                      BlockStatement(
+                        List(
+                          VarDecl("a", UserType("A"), None),
+                          StatementExpression(MemberAccess(VarRef("a"), "prop"))
+                        )
+                      )
+                    )
+                  )
+                ),
+                fields = List(),
+                constructors = List()
+              )
+            )
+          )
+        )
+      )
+    }
+
+    val configs: List[(Option[String], Boolean, Boolean)] = List(
+      // (accessModifier, useSamePackage,   expectException)
+      (Some("private"), false, true),
+      (Some("protected"), false, true),
+      (Some("public"), false, false),
+      (None, false, true),
+      (Some("private"), true, true),
+      (Some("protected"), true, false),
+      (Some("public"), true, false),
+      (None, true, false)
+    );
+
+    configs.foreach(config => {
+      val (accessModifier, useSamePackage, expectException) = config
+      val testProgram = sampleWithAccessModifier(accessModifier, useSamePackage)
+      if (expectException) {
+        intercept[SemanticException] {
+          SemanticCheck.runCheck(testProgram)
+        }
+      } else {
+        SemanticCheck.runCheck(testProgram)
+      }
+    })
+  }
 }
