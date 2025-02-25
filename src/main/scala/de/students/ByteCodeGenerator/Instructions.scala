@@ -10,17 +10,21 @@ import de.students.util.Logger
 private object Instructions {
   def pushConstant(constant: Any, constantType: Type, state: MethodGeneratorState): Unit = {
     state.pushStack(constantType)
-    state.methodVisitor.visitLdcInsn(constant)
+    if (constant == null) {
+      state.methodVisitor.visitInsn(ACONST_NULL)
+    } else {
+      state.methodVisitor.visitLdcInsn(constant)
+    }
 
     LogInsn(f"ldc $constant")
   }
 
   def pushTrue(state: MethodGeneratorState): Unit = {
-    pushConstant(1, BoolType, state)
+    pushConstant(true, BoolType, state)
   }
 
   def pushFalse(state: MethodGeneratorState): Unit = {
-    pushConstant(0, BoolType, state)
+    pushConstant(false, BoolType, state)
   }
 
   def goto(label: Label, state: MethodGeneratorState): Unit = {
@@ -301,10 +305,12 @@ private object Instructions {
 
   def pushDefault(t: Type, state: MethodGeneratorState): Unit = {
     t match {
-      case IntType | ShortType | ByteType | CharType | BoolType => pushConstant(0, t, state)
-      case LongType                                             => pushConstant(0L, t, state)
-      case FloatType                                            => pushConstant(0f, t, state)
-      case DoubleType                                           => pushConstant(0d, t, state)
+      case IntType | ShortType | ByteType | CharType => pushConstant(0, t, state)
+      case BoolType                                  => pushConstant(false, t, state)
+      case LongType                                  => pushConstant(0L, t, state)
+      case FloatType                                 => pushConstant(0f, t, state)
+      case DoubleType                                => pushConstant(0d, t, state)
+      case UserType(_)                               => pushConstant(null, t, state)
       case _ => throw ByteCodeGeneratorException(f"Type $t has no default value")
     }
   }

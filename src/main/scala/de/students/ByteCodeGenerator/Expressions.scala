@@ -257,8 +257,10 @@ private def generateMethodCall(methodCall: MethodCall, returnType: Type, state: 
     )
   }
 
-  // virtual element
-  Instructions.pushConstant(0, IntType, state)
+  if (returnType != VoidType) {
+    // Instructions.pushConstant(0, IntType, state)
+    state.pushStack(returnType)
+  }
 }
 
 // NEW OBJECT
