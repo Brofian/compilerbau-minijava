@@ -4,7 +4,7 @@
 
 Meine Hauptaufgabe bestand darin, die Grammatik für das Java-Subset mithilfe von ANTLR v4 korrekt zu definieren und zu implementieren. ANTLR übernahm das Tokenisieren (Lexing) und das Erstellen des Parse-Trees. Diese Implementierung ist in den Dateien `Parser.scala` und `Java.g4` zu finden.
 
-Ein wesentlicher Bestandteil meiner Arbeit war die Verarbeitung des Parse-Trees mithilfe des Visitor-Systems. In `ASTBuilder.scala` traversierte ich den Parse-Tree und wandelte ihn in eine abstrakte Syntaxdarstellung (AST) um. Dies stellte den umfangreichsten Teil meiner Arbeit dar. Der AST, implementiert in `AST.scala`, war die Schnittstelle für den Semantic-Check und die Bytecode-Generierung. Daher war eine enge Abstimmung im Team wichtig, um sicherzustellen, dass alle Änderungen konsistent in allen Komponenten reflektiert wurden.
+Ein wesentlicher Bestandteil meiner Arbeit war die Verarbeitung des Parse-Trees mithilfe des Visitor-Systems. In `ASTBuilder.scala` traversiert das Programm den Parse-Tree und wandelt ihn in eine abstrakte Syntaxdarstellung (AST) um. Dies stellte den umfangreichsten Teil meiner Arbeit dar. Der AST, implementiert in `AST.scala`, ist die Schnittstelle für den Semantic-Check und die Bytecode-Generierung. Daher war eine enge Abstimmung im Team wichtig, um sicherzustellen, dass alle Änderungen konsistent in allen Komponenten reflektiert wurden.
 
 Zusätzlich zu meiner Hauptaufgabe beteiligte ich mich bei:
 - Implementierung der Input-Output-Utilities,
