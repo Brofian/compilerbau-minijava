@@ -299,6 +299,16 @@ private object Instructions {
     state.popStack()
   }
 
+  def pushDefault(t: Type, state: MethodGeneratorState): Unit = {
+    t match {
+      case IntType | ShortType | ByteType | CharType | BoolType => pushConstant(0, t, state)
+      case LongType                                             => pushConstant(0L, t, state)
+      case FloatType                                            => pushConstant(0f, t, state)
+      case DoubleType                                           => pushConstant(0d, t, state)
+      case _ => throw ByteCodeGeneratorException(f"Type $t has no default value")
+    }
+  }
+
   private def LogInsn(insn: String): Unit = {
     Logger.debug(f"OUTPUT >> $insn")
   }

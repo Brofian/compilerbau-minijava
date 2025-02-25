@@ -163,6 +163,9 @@ private def generateVariableDeclaration(varDecl: VarDecl, state: MethodGenerator
   if (varDecl.initializer.isDefined) {
     generateExpression(varDecl.initializer.get, state)
     Instructions.storeVar(varId, varDecl.varType, state)
+  } else {
+    Instructions.pushDefault(varDecl.varType, state)
+    Instructions.storeVar(varId, varDecl.varType, state)
   }
 }
 
