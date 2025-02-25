@@ -21,6 +21,7 @@ object SemanticCheck {
     val globalContext = SemanticContext(
       classAccessHelper = ClassAccessHelper(ClassTypeBridge(project)),
       typeAssumptions = mutable.Map[String, Type](),
+      staticAssumptions = mutable.Map[String, Boolean](),
       imports = mutable.Map[String, String](),
       importWildcards = ListBuffer(),
       packageName = "",

@@ -21,6 +21,26 @@ object ExpressionChecks {
     }
   }
 
+  /* unused for now
+  private def isStaticTarget(expression: Expression, context: SemanticContext): Boolean = {
+    expression match {
+      case Literal(value) => false
+      case BinaryOp(left, op, right) => false
+      case UnaryOp(op, expr) => false
+      case NewObject(className, arguments) => false
+      case NewArray(arrayType, dimensions) => false
+
+      case MemberAccess(target, memberName) => context.getClassAccessHelper.getClassField(context.getClassAccessHelper.getClass(target.asInstanceOf[TypedExpression].exprType.asInstanceOf[UserType].name), memberName).get.isStatic
+      case ThisAccess(name) => context.getClassAccessHelper.getClassField(context.getClassAccessHelper.getClass(context.getClassName), name).get.isStatic
+      case VarRef(name) => context.getStaticAssumption(name)
+      case StaticClassRef(className) => true
+      case ArrayAccess(array, index) => isStaticTarget(array, context)
+      case MethodCall(target, methodName, args, isStatic) => isStatic
+      case TypedExpression(expr, exprType) => isStaticTarget(expr, context)
+    }
+  }
+   */
+
   private def checkMethodCallExpression(methodCall: MethodCall, context: SemanticContext): TypedExpression = {
     // determine the type, that the method is called on
     val typedTarget = ExpressionChecks.checkExpression(methodCall.target, context)
@@ -29,7 +49,6 @@ object ExpressionChecks {
         s"Cannot call method ${methodCall.methodName} on value of type ${typedTarget.exprType}"
       )
     }
-    val isStaticTarget = typedTarget.expr.isInstanceOf[StaticClassRef]
 
     // validate arguments
     val typedArguments = methodCall.args.map(argument => ExpressionChecks.checkExpression(argument, context))
@@ -65,10 +84,14 @@ object ExpressionChecks {
       })
 
     // TODO remove expensive method call and do correct None handling
-    val isStatic = context.getClassAccessHelper
-      .getClassMethodDecl(fqClassName, methodCall.methodName, Some(argTypes)) match
+    val isStatic = (context.getClassAccessHelper.getClassMethodDecl(
+      context.getClassAccessHelper.getClass(fqClassName),
+      methodCall.methodName,
+      Some(argTypes)
+    ) match {
       case Some(methodDecl) => methodDecl.static
       case None             => false
+    })
 
     TypedExpression(
       MethodCall(typedTarget, methodCall.methodName, typedArguments, isStatic),
@@ -135,7 +158,15 @@ object ExpressionChecks {
 
   private def checkMemberAccessExpression(memberAccess: MemberAccess, context: SemanticContext): TypedExpression = {
     val typedTarget = ExpressionChecks.checkExpression(memberAccess.target, context)
-    val isStatic = typedTarget.expr.isInstanceOf[StaticClassRef]
+
+    val isStatic = typedTarget.exprType match {
+      case UserType(name) =>
+        context.getClassAccessHelper
+          .getClassField(context.getClassAccessHelper.getClass(name), memberAccess.memberName)
+          .get
+          .isStatic
+      case _ => false
+    }
 
     typedTarget.exprType match {
       case UserType(qualifiedClassName) =>

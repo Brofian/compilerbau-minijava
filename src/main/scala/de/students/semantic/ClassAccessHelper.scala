@@ -57,13 +57,11 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
    * @return
    */
   def getClassMethodDecl(
-    fullyQualifiedClassName: String,
+    classDecl: ClassDecl,
     memberName: String,
     methodParams: Option[List[Type]]
   ): Option[MethodDecl] = {
     // TODO: check access modifiers
-
-    val classDecl = bridge.getClass(fullyQualifiedClassName)
 
     // search method
     val matchingMethods: List[MethodDecl] = classDecl.methods.filter(methodDecl => {
@@ -81,12 +79,21 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       case 1 => Some(matchingMethods.head)
       case _ =>
         throw new SemanticException(
-          s"Encountered multiple possible overloaded methods for member $memberName of class $fullyQualifiedClassName with parameter types $methodParams"
+          s"Encountered multiple possible overloaded methods for member $memberName of class ${classDecl.name} with parameter types $methodParams"
         )
     }
 
     matchingMethod
   }
+
+  def getClassField(
+    classDecl: ClassDecl,
+    memberName: String
+  ): Option[FieldDecl] = {
+    classDecl.fields.find(fieldDecl => fieldDecl.name == memberName)
+  }
+
+  def getClass(fullyQualifiedName: String): ClassDecl = bridge.getClass(fullyQualifiedName)
 
   /**
    * Retrieve the type of specific member of the given class. This method does work for fields and methods
@@ -103,55 +110,45 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
     memberName: String,
     methodParams: Option[List[Type]]
   ): Type = {
-    val classDecl = bridge.getClass(fullyQualifiedClassName)
+    val classDecl = getClass(fullyQualifiedClassName)
 
     var matchingMemberType: Option[Type] = None
 
-    // search fields
-    val matchingField: Option[FieldDecl] = classDecl.fields.find(fieldDecl => fieldDecl.name == memberName)
-    matchingMemberType = matchingField match {
-      case Some(field) =>
-        if (methodParams.nonEmpty) {
-          throw new SemanticException(s"Cannot call field ${field.name} of class $fullyQualifiedClassName as a method")
-        } else {
-          Some(field.varType)
-        }
-      case None => None
+    val matchingField = getClassField(classDecl, memberName)
+
+    if (matchingField.isDefined && methodParams.isDefined) {
+      throw new SemanticException(
+        s"Cannot call field ${matchingField.get.name} of class $fullyQualifiedClassName as a method"
+      )
     }
 
-    val matchingMethod = getClassMethodDecl(fullyQualifiedClassName, memberName, methodParams)
+    val matchingMethod = getClassMethodDecl(classDecl, memberName, methodParams)
 
-    matchingMemberType = matchingMethod match {
-      case Some(method) =>
-        if (methodParams.isEmpty) {
-          throw new SemanticException(
-            s"Cannot access method ${method.name} of class $fullyQualifiedClassName as a field"
-          )
-        } else {
-          Some(FunctionType(method.returnType, method.params.map(p => p.varType)))
-        }
-      case None => matchingMemberType
+    if (matchingMethod.isDefined && methodParams.isEmpty) {
+      throw new SemanticException(
+        s"Cannot access method ${matchingMethod.get.name} of class $fullyQualifiedClassName as a field"
+      )
     }
 
-    matchingMemberType match {
-      case Some(memberType) => memberType
-      case None => // if this class has a parent, check there for a matching member
-        this.getClassParentOrNone(fullyQualifiedClassName) match {
-          case Some(parentClassName) =>
-            try {
-              this.getClassMemberType(parentClassName, memberName, methodParams)
-            } catch
-              case e: Exception => // if no parent has this member either, let the exception bubble back up
-                throw new SemanticException(
-                  s"No matching member with name \"$memberName\" found in class $fullyQualifiedClassName " +
-                    (if methodParams.nonEmpty then s"with parameters of type ${methodParams.get}" else "")
-                )
-          case None =>
+    (matchingMethod, matchingField) match {
+      case (Some(method), None) => FunctionType(method.returnType, method.params.map(_.varType))
+      case (None, Some(field))  => field.varType
+      case (None, None) => {
+        val parent = this.getClassParentOrNone(fullyQualifiedClassName)
+        try {
+          this.getClassMemberType(parent.getOrElse(throw Exception()), memberName, methodParams)
+        } catch {
+          case e: Exception =>
             throw new SemanticException(
               s"No matching member with name \"$memberName\" found in class $fullyQualifiedClassName " +
                 (if methodParams.nonEmpty then s"with parameters of type ${methodParams.get}" else "")
             )
         }
+      }
+      case (Some(method), Some(field)) =>
+        throw new SemanticException(
+          s"Field \"$field\" has the same name as \"$method\" in class $fullyQualifiedClassName"
+        )
     }
   }
 
