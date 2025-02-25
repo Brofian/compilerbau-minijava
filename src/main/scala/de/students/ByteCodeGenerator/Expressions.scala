@@ -398,6 +398,8 @@ private def generateArrayLValue(
   generateExpression(rvalue, state)
 
   Instructions.storeArray(arrayType, state)
+
+  generateExpression(rvalue, state)
 }
 
 private def generateArrayRValue(

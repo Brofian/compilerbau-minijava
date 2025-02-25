@@ -178,5 +178,7 @@ private def generateExpressionStatement(statement: StatementExpression, state: M
   val t = generateTypedExpression(statement.expr.asInstanceOf[TypedExpression], state)
 
   // expression result is not used, so the stack must be popped
-  Instructions.popType(state)
+  if (t != VoidType) {
+    Instructions.popType(state)
+  }
 }

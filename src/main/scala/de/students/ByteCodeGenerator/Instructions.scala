@@ -267,22 +267,29 @@ private object Instructions {
    */
   def newArray(arrayType: Type, state: MethodGeneratorState): Unit = {
     arrayType match {
-      case userType: UserType => state.methodVisitor.visitTypeInsn(ANEWARRAY, javaSignature(userType))
+      case userType: UserType => state.methodVisitor.visitTypeInsn(ANEWARRAY, javaifyClass(userType.name))
       case baseType           => state.methodVisitor.visitIntInsn(NEWARRAY, primitiveArrayOperand(baseType))
     }
     LogInsn(f"(A)NEWARRAY $arrayType")
+
+    state.pushStack(ArrayType(arrayType))
   }
 
   def accessArray(arrayType: Type, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(asmArrayLoadInsn(arrayType))
 
     LogInsn(f"access array $arrayType")
+
+    state.popStack(2)
+    state.pushStack(arrayType)
   }
 
   def storeArray(arrayType: Type, state: MethodGeneratorState): Unit = {
     state.methodVisitor.visitInsn(asmArrayStoreInsn(arrayType))
 
     LogInsn(f"store in array $arrayType")
+
+    state.popStack(3)
   }
 
   def callSuper(parentName: String, state: MethodGeneratorState): Unit = {
@@ -310,7 +317,7 @@ private object Instructions {
       case LongType                                  => pushConstant(0L, t, state)
       case FloatType                                 => pushConstant(0f, t, state)
       case DoubleType                                => pushConstant(0d, t, state)
-      case UserType(_)                               => pushConstant(null, t, state)
+      case UserType(_) | ArrayType(_)                => pushConstant(null, t, state)
       case _ => throw ByteCodeGeneratorException(f"Type $t has no default value")
     }
   }
