@@ -100,8 +100,8 @@ private def generateForStatement(forStatement: ForStatement, state: MethodGenera
           forStatement.cond.getOrElse(TRUE_EXPRESSION),
           BlockStatement(
             List(
-              StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION)),
-              forStatement.body
+              forStatement.body,
+              StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION))
             )
           )
         )
@@ -178,7 +178,5 @@ private def generateExpressionStatement(statement: StatementExpression, state: M
   val t = generateTypedExpression(statement.expr.asInstanceOf[TypedExpression], state)
 
   // expression result is not used, so the stack must be popped
-  if (t != VoidType) {
-    Instructions.popType(state)
-  }
+  Instructions.popType(state)
 }

@@ -177,8 +177,13 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
     val truePush = Label()
     val end = Label()
 
-    generateExpression(operation.left, state)
-    generateExpression(operation.right, state)
+    generateExpression(
+      TypedExpression(
+        BinaryOp(operation.left, "-", operation.right),
+        operation.left.asInstanceOf[TypedExpression].exprType
+      ),
+      state
+    )
     Instructions.condJump(ifInsn, truePush, state)
     Instructions.pushFalse(state)
     Instructions.goto(end, state)
