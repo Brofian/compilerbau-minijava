@@ -1,3 +1,4 @@
+\* Every Node implements the shared ASTNode interface
 ```mermaid
 classDiagram
     %% Root Node
@@ -6,38 +7,30 @@ classDiagram
     }
     Project --> "*" Package : packages
 
-    %% AST Base
-    class ASTNode {
-      <<abstract>>
-    }
-
     %% Package & Imports
     class Package {
       +String name
       +Imports imports
       +List~ClassDecl~ classes
     }
-    Package --|> ASTNode
     Package --> "1" Imports : imports
     Package --> "*" ClassDecl : classes
 
     class Imports {
       +List~String~ names
     }
-    Imports --|> ASTNode
 
     %% Class Declaration and Members
     class ClassDecl {
       +String name
       +String parent
       +Boolean isAbstract
-      +List~MethodDecl~ methods
       +List~FieldDecl~ fields
+      +List~MethodDecl~ methods
       +List~ConstructorDecl~ constructors
     }
-    ClassDecl --|> ASTNode
-    ClassDecl --> "*" MethodDecl : methods
     ClassDecl --> "*" FieldDecl : fields
+    ClassDecl --> "*" MethodDecl : methods
     ClassDecl --> "*" ConstructorDecl : constructors
 
     class MethodDecl {
@@ -50,8 +43,8 @@ classDiagram
       +List~VarDecl~ params
       +Option~Statement~ body
     }
-    MethodDecl --|> ASTNode
     MethodDecl --> "*" VarDecl : params
+    MethodDecl --> BlockStatement : body
 
     class ConstructorDecl {
       +Option~String~ accessModifier
@@ -59,7 +52,6 @@ classDiagram
       +List~VarDecl~ params
       +Statement body
     }
-    ConstructorDecl --|> ASTNode
     ConstructorDecl --> "*" VarDecl : params
 
     class FieldDecl {
@@ -70,13 +62,16 @@ classDiagram
       +Type varType
       +Option~Expression~ initializer
     }
-    FieldDecl --|> ASTNode
 
     %% Statements Hierarchy (all extend ASTNode via Statement)
     class Statement {
       <<abstract>>
     }
-    Statement --|> ASTNode
+
+    class BlockStatement {
+      +List~Statement~ stmts
+    }
+    BlockStatement --|> Statement
 
     class VarDecl {
       +String name
@@ -84,11 +79,6 @@ classDiagram
       +Option~Expression~ initializer
     }
     VarDecl --|> Statement
-
-    class BlockStatement {
-      +List~Statement~ stmts
-    }
-    BlockStatement --|> Statement
 
     class ReturnStatement {
       +Option~Expression~ expr
@@ -127,11 +117,14 @@ classDiagram
     }
     PrintStatement --|> Statement
 
+```
+```mermaid
+classDiagram
+
     %% Expression Hierarchy (all extend ASTNode via Expression)
     class Expression {
       <<abstract>>
     }
-    Expression --|> ASTNode
 
     class VarRef {
       +String name
@@ -179,11 +172,14 @@ classDiagram
     }
     MethodCall --|> Expression
 
+```
+```mermaid
+classDiagram
+
     %% Types Hierarchy
     class Type {
       <<abstract>>
     }
-    Type --|> ASTNode
 
     class NoneType {
     }
@@ -240,5 +236,4 @@ classDiagram
       +List~Type~ parameterTypes
     }
     FunctionType --|> Type
-
 ```
