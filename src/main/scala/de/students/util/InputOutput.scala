@@ -45,7 +45,7 @@ object InputOutput {
 
   private def writeToBinFile(bytecode: Array[Byte], fullFilepath: String): Unit = {
     val outStream = DataOutputStream(new FileOutputStream(fullFilepath))
-    bytecode.foreach(byte => outStream.writeByte(byte.asInstanceOf[Int]))
+    outStream.write(bytecode)
     outStream.close()
   }
 

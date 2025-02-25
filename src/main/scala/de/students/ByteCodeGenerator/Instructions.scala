@@ -178,13 +178,15 @@ private object Instructions {
    * @param state
    */
   def loadField(name: String, fieldType: Type, state: MethodGeneratorState) = {
-    val insn = if name == "length" then ARRAYLENGTH else GETFIELD
-    state.methodVisitor.visitFieldInsn(insn, javaifyClass(state.className), name, javaSignature(fieldType))
-    // object is popped and field is pushed
-
-    LogInsn(
-      f"${if name == "length" then "ARRAYLENGTH" else "GETFIELD"} ${javaifyClass(state.className)}, $name, ${javaSignature(fieldType)}"
-    )
+    if (name == "length") {
+      state.methodVisitor.visitInsn(ARRAYLENGTH)
+      LogInsn(f"ARRAYLENGTH")
+    } else {
+      state.methodVisitor.visitFieldInsn(GETFIELD, javaifyClass(state.className), name, javaSignature(fieldType))
+      LogInsn(
+        f"GETFIELD ${javaifyClass(state.className)}, $name, ${javaSignature(fieldType)}"
+      )
+    }
   }
 
   def binaryOperation(opcode: Int, state: MethodGeneratorState): Unit = {
