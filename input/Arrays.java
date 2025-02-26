@@ -1,4 +1,4 @@
-package pck;
+package de.arrays;
 
 class Arrays {
     public static void main(String[] args) {
