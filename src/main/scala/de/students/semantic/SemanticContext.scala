@@ -126,6 +126,7 @@ def createContext(pckgDecl: Package, classDecl: ClassDecl, project: Project): Se
   val context = SemanticContext(
     classAccessHelper = ClassAccessHelper(ClassTypeBridge(project)),
     typeAssumptions = mutable.Map[String, Type](),
+    staticAssumptions = mutable.Map[String, Boolean](),
     imports = mutable.Map[String, String](),
     importWildcards = ListBuffer(),
     packageName = pckgDecl.name,

@@ -51,19 +51,20 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
 
   /**
    * Find the method declaration in the given class with the given names and parameters
-   * @param classDecl               The class to search in
+   * @param qualifiedClassName      The class to search in
    * @param memberName              The name of the field or method to search
    * @param methodParams            When searching for a method, this contains the List of parameter types to match overloading.
    *
    * @return
    */
   def getClassMethodDecl(
-    classDecl: ClassDecl,
+    qualifiedClassName: String,
     memberName: String,
     methodParams: Option[List[Type]],
-    callSource: CallSource
+    callSource: Option[CallSource]
   ): Option[MethodDecl] = {
     // search method
+    val classDecl = this.bridge.getClass(qualifiedClassName)
     val matchingMethods: List[MethodDecl] = classDecl.methods.filter(methodDecl => {
       methodDecl.name == memberName && // method has the correct name
       methodParams.nonEmpty && // we are searching for a method
@@ -74,27 +75,35 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       })
     })
 
-    val matchingMethod: Option[MethodDecl] = matchingMethods.size match {
+    matchingMethods.size match {
       case 0 => None
-      case 1 => Some(matchingMethods.head)
+      case 1 =>
+        val matchingMethod = matchingMethods.head
+        if (callSource.nonEmpty) {
+          callSource.get.assertCanCall(matchingMethod, qualifiedClassName)
+        }
+        Some(matchingMethod)
       case _ =>
         throw new SemanticException(
           s"Encountered multiple possible overloaded methods for member $memberName of class ${classDecl.name} with parameter types $methodParams"
         )
     }
-
-    callSource.assertCanCall(matchingMethod, fullyQualifiedClassName)
-    matchingMethod
   }
 
   def getClassField(
-    classDecl: ClassDecl,
+    qualifiedClassName: String,
     memberName: String,
-    callSource: CallSource,
+    callSource: Option[CallSource]
   ): Option[FieldDecl] = {
-    val matchingField = classDecl.fields.find(fieldDecl => fieldDecl.name == memberName)
-    callSource.assertCanCall(matchingField, classDecl.name)
-    matchingField
+    val classDecl = this.bridge.getClass(qualifiedClassName)
+    classDecl.fields.find(fieldDecl => fieldDecl.name == memberName) match {
+      case matchingField: Some[FieldDecl] =>
+        if (callSource.nonEmpty) {
+          callSource.get.assertCanCall(matchingField.get, qualifiedClassName)
+        }
+        matchingField
+      case _ => None
+    }
   }
 
   def getClass(fullyQualifiedName: String): ClassDecl = bridge.getClass(fullyQualifiedName)
@@ -112,13 +121,12 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
   def getClassMemberType(
     fullyQualifiedClassName: String,
     memberName: String,
-    methodParams: Option[List[Type]]
+    methodParams: Option[List[Type]],
+    callSource: Option[CallSource]
   ): Type = {
-    val classDecl = getClass(fullyQualifiedClassName)
-
     var matchingMemberType: Option[Type] = None
 
-    val matchingField = getClassField(classDecl, memberName)
+    val matchingField = getClassField(fullyQualifiedClassName, memberName, callSource)
 
     if (matchingField.isDefined && methodParams.isDefined) {
       throw new SemanticException(
@@ -126,7 +134,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       )
     }
 
-    val matchingMethod = getClassMethodDecl(classDecl, memberName, methodParams)
+    val matchingMethod = getClassMethodDecl(fullyQualifiedClassName, memberName, methodParams, callSource)
 
     if (matchingMethod.isDefined && methodParams.isEmpty) {
       throw new SemanticException(
@@ -140,7 +148,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       case (None, None) => {
         val parent = this.getClassParentOrNone(fullyQualifiedClassName)
         try {
-          this.getClassMemberType(parent.getOrElse(throw Exception()), memberName, methodParams)
+          this.getClassMemberType(parent.getOrElse(throw Exception()), memberName, methodParams, callSource)
         } catch {
           case e: Exception =>
             throw new SemanticException(
@@ -174,7 +182,7 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       return IntType
     }
     val arrayClassName = javaSignature(arrayType).replace('/', '.')
-    this.getClassMemberType(arrayClassName, memberName, methodParams)
+    this.getClassMemberType(arrayClassName, memberName, methodParams, None)
   }
 
   /**

@@ -21,26 +21,6 @@ object ExpressionChecks {
     }
   }
 
-  /* unused for now
-  private def isStaticTarget(expression: Expression, context: SemanticContext): Boolean = {
-    expression match {
-      case Literal(value) => false
-      case BinaryOp(left, op, right) => false
-      case UnaryOp(op, expr) => false
-      case NewObject(className, arguments) => false
-      case NewArray(arrayType, dimensions) => false
-
-      case MemberAccess(target, memberName) => context.getClassAccessHelper.getClassField(context.getClassAccessHelper.getClass(target.asInstanceOf[TypedExpression].exprType.asInstanceOf[UserType].name), memberName).get.isStatic
-      case ThisAccess(name) => context.getClassAccessHelper.getClassField(context.getClassAccessHelper.getClass(context.getClassName), name).get.isStatic
-      case VarRef(name) => context.getStaticAssumption(name)
-      case StaticClassRef(className) => true
-      case ArrayAccess(array, index) => isStaticTarget(array, context)
-      case MethodCall(target, methodName, args, isStatic) => isStatic
-      case TypedExpression(expr, exprType) => isStaticTarget(expr, context)
-    }
-  }
-   */
-
   private def checkMethodCallExpression(methodCall: MethodCall, context: SemanticContext): TypedExpression = {
     // determine the type, that the method is called on
     val typedTarget = ExpressionChecks.checkExpression(methodCall.target, context)
@@ -61,7 +41,12 @@ object ExpressionChecks {
     val callSource = CallSource(isStaticTarget, context)
 
     val methodType =
-      context.getClassAccessHelper.getClassMemberType(fqClassName, methodCall.methodName, Some(argTypes), callSource)
+      context.getClassAccessHelper.getClassMemberType(
+        fqClassName,
+        methodCall.methodName,
+        Some(argTypes),
+        Some(callSource)
+      )
     if (!methodType.isInstanceOf[FunctionType]) {
       throw new SemanticException(
         s"Cannot call member ${methodCall.methodName} of type $methodType as method with parameters of types $argTypes"
@@ -88,14 +73,15 @@ object ExpressionChecks {
       })
 
     // TODO remove expensive method call and do correct None handling
-    val isStatic = (context.getClassAccessHelper.getClassMethodDecl(
-      context.getClassAccessHelper.getClass(fqClassName),
+    val isStatic = context.getClassAccessHelper.getClassMethodDecl(
+      fqClassName,
       methodCall.methodName,
-      Some(argTypes)
+      Some(argTypes),
+      Some(callSource)
     ) match {
-      case Some(methodDecl) => methodDecl.static
-      case None             => false
-    })
+      case methodDecl: Some[MethodDecl] => methodDecl.get.static
+      case None                         => false
+    }
 
     TypedExpression(
       MethodCall(typedTarget, methodCall.methodName, typedArguments, isStatic),
@@ -166,7 +152,7 @@ object ExpressionChecks {
     val isStatic = typedTarget.exprType match {
       case UserType(name) =>
         context.getClassAccessHelper
-          .getClassField(context.getClassAccessHelper.getClass(name), memberAccess.memberName)
+          .getClassField(context.getFullyQualifiedClassName(name), memberAccess.memberName, None)
           .get
           .isStatic
       case _ => false
@@ -176,7 +162,12 @@ object ExpressionChecks {
       case UserType(qualifiedClassName) =>
         val callSource = CallSource(isStatic, context)
         val memberType =
-          context.getClassAccessHelper.getClassMemberType(qualifiedClassName, memberAccess.memberName, None, callSource)
+          context.getClassAccessHelper.getClassMemberType(
+            qualifiedClassName,
+            memberAccess.memberName,
+            None,
+            Some(callSource)
+          )
         TypedExpression(MemberAccess(typedTarget, memberAccess.memberName), memberType)
       case ArrayType(baseType) =>
         val memberType =
@@ -193,7 +184,7 @@ object ExpressionChecks {
   private def checkThisAccessExpression(thisAccess: ThisAccess, context: SemanticContext): TypedExpression = {
     val callSource = CallSource(false, context)
     val memberType =
-      context.getClassAccessHelper.getClassMemberType(context.getClassName, thisAccess.name, None, callSource)
+      context.getClassAccessHelper.getClassMemberType(context.getClassName, thisAccess.name, None, Some(callSource))
     TypedExpression(thisAccess, memberType)
   }
 
