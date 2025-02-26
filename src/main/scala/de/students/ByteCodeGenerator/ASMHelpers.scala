@@ -15,7 +15,7 @@ private def accessModifier(varDecl: VarDecl): Int = 0
 private def accessModifier(fieldDecl: FieldDecl): Int =
   asmFinalModifier(fieldDecl.isFinal)
     + (fieldDecl.accessModifier match {
-      case None              => ACC_PRIVATE
+      case None              => 0
       case Some("public")    => ACC_PUBLIC
       case Some("private")   => ACC_PRIVATE
       case Some("protected") => ACC_PROTECTED
