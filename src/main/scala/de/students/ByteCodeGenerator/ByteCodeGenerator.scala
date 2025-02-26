@@ -27,7 +27,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   val classWriter = new ClassWriter(0)
 
   val javaClassName = javaifyClass(classDecl.name)
-  val parent = javaifyClass(classDecl.parent) // "java/lang/Object" // TODO use real parent
+  val parent = javaifyClass(classDecl.parent)
 
   // set class header
   classWriter.visit(
@@ -130,7 +130,7 @@ private def generateMethodBody(
     methodVisitor,
     methodDecl.returnType
   )
-  state.localVariableCount = (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
+  state.localVariableCount = if methodDecl.static then 0 else 1 // if method is not static`this` is param #0
 
   methodDecl.params.foreach(param => state.addVariable(param.name, param.varType))
 
