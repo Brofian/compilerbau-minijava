@@ -251,9 +251,13 @@ class ParserTest extends FunSuite {
                         update = Some(
                           // Updated expected AST for the update expression to match the parser output:
                           BinaryOp(
-                            left = BinaryOp(VarRef("i"), "=", VarRef("i")),
-                            op = "+",
-                            right = Literal(1)
+                            left = VarRef("i"),
+                            op = "=",
+                            right = BinaryOp(
+                              left = VarRef("i"),
+                              op = "+",
+                              right = Literal(1)
+                            )
                           )
                         ),
                         body = BlockStatement(

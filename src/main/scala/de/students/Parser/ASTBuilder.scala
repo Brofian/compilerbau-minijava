@@ -256,12 +256,17 @@ object ASTBuilder {
     override def visitExpression(ctx: ExpressionContext): Expression = {
       Logger.debug(s"Visiting expression: ${ctx.getText}")
       val unaryExprs = ctx.unaryExpression().asScala.toList
-      var expr = visitUnaryExpression(unaryExprs.head)
       val opList = ctx.operator().asScala.toList
-      for ((op, idx) <- opList.zipWithIndex) {
-        val right = visitUnaryExpression(unaryExprs(idx + 1))
-        expr = BinaryOp(expr, op.getText, right)
+
+      // Start from the rightmost unary expression
+      var expr = visitUnaryExpression(unaryExprs.last)
+
+      // Iterate from right to left
+      for (idx <- opList.indices.reverse) {
+        val left = visitUnaryExpression(unaryExprs(idx))
+        expr = BinaryOp(left, opList(idx).getText, expr)
       }
+
       expr
     }
 
