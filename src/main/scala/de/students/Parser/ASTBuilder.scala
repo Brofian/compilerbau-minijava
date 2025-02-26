@@ -14,27 +14,27 @@ object ASTBuilder {
   class ASTGenerator extends JavaBaseVisitor[ASTNode] {
 
     // Generate the AST from the parse tree root
-    def generateAST(tree: ParseTree): Package = {
+    def generateAST(tree: ParseTree): JavaFile = {
       Logger.info(s"Generating AST from parse tree root")
-      tree.accept(this).asInstanceOf[Package]
+      tree.accept(this).asInstanceOf[JavaFile]
     }
 
-    // Visit a package node and extract class declarations
-    override def visitPackage(ctx: PackageContext): Package = {
+    // Visit a file and extract class declarations
+    override def visitFile(ctx: FileContext): JavaFile = {
       val packageName = ctx.packageId().getText
-      Logger.debug(s"Visiting package: $packageName")
+      Logger.debug(s"Visiting file: $packageName")
 
       val classDecls = ctx
         .class_()
         .asScala
-        .map(visitClass) // Call visitClass for each class in the package
+        .map(visitClass) // Call visitClass for each class in the file
         .toList
 
       val imports = visitImports(ctx.imports())
       Logger.debug(
         s"Package: $packageName, Imports: ${imports.names.mkString(", ")}, Classes: ${classDecls.map(_.name).mkString(", ")}"
       )
-      Package(packageName, imports, classDecls)
+      JavaFile(packageName, imports, classDecls)
     }
 
     override def visitImports(ctx: ImportsContext): Imports = {

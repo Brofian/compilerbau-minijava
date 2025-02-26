@@ -28,9 +28,9 @@ object SemanticCheck {
       className = ""
     )
 
-    val typedPackages = project.packages.map((pckg: Package) => {
-      // run typeCheck for package
-      this.checkPackage(pckg, globalContext.createChildContext(Some(pckg.name)))
+    val typedPackages = project.files.map((file: JavaFile) => {
+      // run typeCheck for file
+      this.checkFile(file, globalContext.createChildContext(Some(file.packageName)))
     })
 
     Project(typedPackages)
@@ -39,15 +39,15 @@ object SemanticCheck {
   /**
    * TypeCheck each class in the package and return the package with typed classes
    *
-   * @param pckg    The package to check
+   * @param file    The file to check
    * @param context The current context to use
    * @return
    */
-  private def checkPackage(pckg: Package, context: SemanticContext): Package = {
+  private def checkFile(file: JavaFile, context: SemanticContext): JavaFile = {
 
     // add imports
     var hasExplicitJavaLangImport = false
-    pckg.imports.names.foreach(importName =>
+    file.imports.names.foreach(importName =>
       val parts = importName.split("""\.""")
       context.addImport(parts.last, importName)
       hasExplicitJavaLangImport ||= importName == "java.lang."
@@ -59,7 +59,7 @@ object SemanticCheck {
     }
 
     // run typeCheck for class and replace with typed class
-    val typedClasses = pckg.classes.map((cls: ClassDecl) => {
+    val typedClasses = file.classes.map((cls: ClassDecl) => {
 
       // create a new class-level-context
       val classContext = context.createChildContext(None, Some(context.getFullyQualifiedClassName(cls.name)))
@@ -69,7 +69,7 @@ object SemanticCheck {
         classContext
       )
     })
-    Package(pckg.name, pckg.imports, typedClasses)
+    JavaFile(file.packageName, file.imports, typedClasses)
   }
 
   /**

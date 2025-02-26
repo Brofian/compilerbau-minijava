@@ -11,7 +11,7 @@ class SemanticTest extends FunSuite {
 
     val program = Project(
       List(
-        Package(
+        JavaFile(
           "main",
           Imports(List()),
           List(
@@ -51,7 +51,7 @@ class SemanticTest extends FunSuite {
     intercept[SemanticException] { // Expect a SemanticException to occur
       val program = Project(
         List(
-          Package(
+          JavaFile(
             "main",
             Imports(List()),
             List(
@@ -92,8 +92,8 @@ class SemanticTest extends FunSuite {
       val secondPackage = if useSamePackage then "first" else "second"
       Project(
         List(
-          Package(
-            name = "first",
+          JavaFile(
+            packageName = "first",
             imports = Imports(List()),
             classes = List(
               ClassDecl(
@@ -108,8 +108,8 @@ class SemanticTest extends FunSuite {
               )
             )
           ),
-          Package(
-            name = secondPackage,
+          JavaFile(
+            packageName = secondPackage,
             imports = Imports(List("first.A")),
             classes = List(
               ClassDecl(

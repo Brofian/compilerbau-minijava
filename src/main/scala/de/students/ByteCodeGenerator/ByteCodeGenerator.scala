@@ -14,10 +14,10 @@ case class ClassBytecode(
 )
 
 def generateBytecode(project: Project): List[ClassBytecode] = {
-  project.packages.flatMap(p => generateBytecode(p))
+  project.files.flatMap(p => generateBytecode(p))
 }
 
-def generateBytecode(pack: Package): List[ClassBytecode] = {
+def generateBytecode(pack: JavaFile): List[ClassBytecode] = {
   pack.classes.map(generateClassBytecode)
 }
 

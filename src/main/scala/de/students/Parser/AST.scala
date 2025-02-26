@@ -1,12 +1,12 @@
 package de.students.Parser
 
-case class Project(packages: List[Package])
+case class Project(files: List[JavaFile])
 
 // basic node for all AST-trees
 sealed trait ASTNode
 
 // Program-node
-case class Package(name: String, imports: Imports, classes: List[ClassDecl]) extends ASTNode
+case class JavaFile(packageName: String, imports: Imports, classes: List[ClassDecl]) extends ASTNode
 
 case class Imports(names: List[String]) extends ASTNode
 

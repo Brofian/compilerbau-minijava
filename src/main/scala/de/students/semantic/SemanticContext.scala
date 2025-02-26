@@ -117,24 +117,24 @@ class SemanticContext(
 /**
  * Shortcut for creating a new context in stacked type checks
  *
- * @param pckgDecl    The surrounding package
+ * @param file        The surrounding file
  * @param classDecl   The surrounding class
  * @param project     The whole AST for class reference
  * @return
  */
-def createContext(pckgDecl: Package, classDecl: ClassDecl, project: Project): SemanticContext = {
+def createContext(file: JavaFile, classDecl: ClassDecl, project: Project): SemanticContext = {
   val context = SemanticContext(
     classAccessHelper = ClassAccessHelper(ClassTypeBridge(project)),
     typeAssumptions = mutable.Map[String, Type](),
     staticAssumptions = mutable.Map[String, Boolean](),
     imports = mutable.Map[String, String](),
     importWildcards = ListBuffer(),
-    packageName = pckgDecl.name,
+    packageName = file.packageName,
     className = classDecl.name
   )
 
   var hasExplicitJavaLangImport = false
-  pckgDecl.imports.names.foreach(importName =>
+  file.imports.names.foreach(importName =>
     val parts = importName.split("""\.""")
     context.addImport(parts.last, importName)
     hasExplicitJavaLangImport ||= importName == "java.lang."

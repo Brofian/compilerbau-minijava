@@ -1,7 +1,7 @@
 grammar Java;
 
 // Package Definition
-package: PACKAGE packageId SC imports class+ ;
+file: PACKAGE packageId SC imports class+ ;
 
 imports: (IMPORT importPackageId SC)* ;
 
