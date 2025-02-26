@@ -148,17 +148,17 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       case (None, None) => {
         val parent = this.getClassParentOrNone(fullyQualifiedClassName)
         try {
-          this.getClassMemberType(parent.getOrElse(throw Exception()), memberName, methodParams, callSource)
+          this.getClassMemberType(parent.getOrElse(throw SemanticException(s"Missing parent of class $fullyQualifiedClassName")), memberName, methodParams, callSource)
         } catch {
-          case e: Exception =>
-            throw new SemanticException(
+          case e: InheritedSemanticException =>
+            throw new InheritedSemanticException(
               s"No matching member with name \"$memberName\" found in class $fullyQualifiedClassName " +
                 (if methodParams.nonEmpty then s"with parameters of type ${methodParams.get}" else "")
             )
         }
       }
       case (Some(method), Some(field)) =>
-        throw new SemanticException(
+        throw new InheritedSemanticException(
           s"Field \"$field\" has the same name as \"$method\" in class $fullyQualifiedClassName"
         )
     }
