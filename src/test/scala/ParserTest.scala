@@ -21,8 +21,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test1")
     val expected =
-      Package(
-        name = "main",
+      JavaFile(
+        packageName = "main",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -68,8 +68,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 2")
     val expected =
-      Package(
-        name = "com.example",
+      JavaFile(
+        packageName = "com.example",
         imports = Imports(List("java.util.List", "java.io.File")),
         classes = List(
           ClassDecl(
@@ -118,8 +118,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 3")
     val expected =
-      Package(
-        name = "test",
+      JavaFile(
+        packageName = "test",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -190,8 +190,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 4")
     val expected =
-      Package(
-        name = "complex",
+      JavaFile(
+        packageName = "complex",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -251,9 +251,13 @@ class ParserTest extends FunSuite {
                         update = Some(
                           // Updated expected AST for the update expression to match the parser output:
                           BinaryOp(
-                            left = BinaryOp(VarRef("i"), "=", VarRef("i")),
-                            op = "+",
-                            right = Literal(1)
+                            left = VarRef("i"),
+                            op = "=",
+                            right = BinaryOp(
+                              left = VarRef("i"),
+                              op = "+",
+                              right = Literal(1)
+                            )
                           )
                         ),
                         body = BlockStatement(
@@ -304,8 +308,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 5")
     val expected =
-      Package(
-        name = "expr",
+      JavaFile(
+        packageName = "expr",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -440,8 +444,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 9")
     val expected =
-      Package(
-        name = "loops",
+      JavaFile(
+        packageName = "loops",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -496,8 +500,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 11")
     val expected =
-      Package(
-        name = "field",
+      JavaFile(
+        packageName = "field",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -539,8 +543,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 12")
     val expected =
-      Package(
-        name = "thisTest",
+      JavaFile(
+        packageName = "thisTest",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -598,8 +602,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 13")
     val expected =
-      Package(
-        name = "newObj",
+      JavaFile(
+        packageName = "newObj",
         imports = Imports(List()),
         classes = List(
           ClassDecl(
@@ -649,8 +653,8 @@ class ParserTest extends FunSuite {
 
     val result = parseTreeFromCode(source, "Test 14")
     val expected =
-      Package(
-        name = "array",
+      JavaFile(
+        packageName = "array",
         imports = Imports(List()),
         classes = List(
           ClassDecl(

@@ -17,7 +17,7 @@ object Parser {
     )
   }
 
-  def parseTreeFromCode(inputString: String, filePath: String): Package = {
+  def parseTreeFromCode(inputString: String, filePath: String): JavaFile = {
     // convert to CharStream
     val input = CharStreams.fromString(inputString)
     // generate Lexer
@@ -44,7 +44,7 @@ object Parser {
     })
 
     // generate parsetree
-    val tree = parser.package_()
+    val tree = parser.file()
 
     // print parsetree
     Logger.debug(tree.toStringTree(parser))

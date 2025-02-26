@@ -14,27 +14,27 @@ object ASTBuilder {
   class ASTGenerator extends JavaBaseVisitor[ASTNode] {
 
     // Generate the AST from the parse tree root
-    def generateAST(tree: ParseTree): Package = {
+    def generateAST(tree: ParseTree): JavaFile = {
       Logger.info(s"Generating AST from parse tree root")
-      tree.accept(this).asInstanceOf[Package]
+      tree.accept(this).asInstanceOf[JavaFile]
     }
 
-    // Visit a package node and extract class declarations
-    override def visitPackage(ctx: PackageContext): Package = {
+    // Visit a file and extract class declarations
+    override def visitFile(ctx: FileContext): JavaFile = {
       val packageName = ctx.packageId().getText
-      Logger.debug(s"Visiting package: $packageName")
+      Logger.debug(s"Visiting file: $packageName")
 
       val classDecls = ctx
         .class_()
         .asScala
-        .map(visitClass) // Call visitClass for each class in the package
+        .map(visitClass) // Call visitClass for each class in the file
         .toList
 
       val imports = visitImports(ctx.imports())
       Logger.debug(
         s"Package: $packageName, Imports: ${imports.names.mkString(", ")}, Classes: ${classDecls.map(_.name).mkString(", ")}"
       )
-      Package(packageName, imports, classDecls)
+      JavaFile(packageName, imports, classDecls)
     }
 
     override def visitImports(ctx: ImportsContext): Imports = {
@@ -216,8 +216,27 @@ object ASTBuilder {
       val condition = visitExpression(ctx.expression())
       val thenBranch = visitBlockStmt(ctx.block())
       Logger.debug(s"Visiting if statement, condition: $condition")
+
+      // Process else-if statements
+      val elseIfBranches =
+        if (ctx.elseifStatement() != null) Some(ctx.elseifStatement.asScala.toList.map(visitElseIf)) else None
+
+      // Process else statement (if present)
       val elseBranch = if (ctx.elseStatement() != null) Some(visitElse(ctx.elseStatement())) else None
-      IfStatement(condition, thenBranch, elseBranch)
+
+      // Process else-if cases into nested if-else cases
+      if (elseIfBranches.nonEmpty) {
+
+        var elseStmt: Option[Statement] = elseBranch
+        elseIfBranches.get.reverse.foreach(elseIfBranch => {
+          val elseIf = elseIfBranch.asInstanceOf[IfStatement]
+          elseStmt = Some(IfStatement(elseIf.cond, elseIf.thenBranch, elseStmt))
+        })
+
+        IfStatement(condition, thenBranch, elseStmt)
+      } else {
+        IfStatement(condition, thenBranch, elseBranch)
+      }
     }
 
     def visitElseIf(ctx: ElseifStatementContext): Statement = {
@@ -256,12 +275,17 @@ object ASTBuilder {
     override def visitExpression(ctx: ExpressionContext): Expression = {
       Logger.debug(s"Visiting expression: ${ctx.getText}")
       val unaryExprs = ctx.unaryExpression().asScala.toList
-      var expr = visitUnaryExpression(unaryExprs.head)
       val opList = ctx.operator().asScala.toList
-      for ((op, idx) <- opList.zipWithIndex) {
-        val right = visitUnaryExpression(unaryExprs(idx + 1))
-        expr = BinaryOp(expr, op.getText, right)
+
+      // Start from the rightmost unary expression
+      var expr = visitUnaryExpression(unaryExprs.last)
+
+      // Iterate from right to left
+      for (idx <- opList.indices.reverse) {
+        val left = visitUnaryExpression(unaryExprs(idx))
+        expr = BinaryOp(left, opList(idx).getText, expr)
       }
+
       expr
     }
 

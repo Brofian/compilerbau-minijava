@@ -69,8 +69,8 @@ class ClassTypeBridge(baseAST: Project) {
 
     val (packageName, simpleClassName) = this.splitFullyQualifiedClassName(fullyQualifiedClassName)
 
-    val searchResults: List[(ClassDecl, Package)] = baseAST.packages
-      .filter(pckg => pckg.name == packageName)
+    val searchResults: List[(ClassDecl, JavaFile)] = baseAST.files
+      .filter(pckg => pckg.packageName == packageName)
       .flatMap(pckg => pckg.classes.filter(cls => cls.name == simpleClassName).map(cls => (cls, pckg)))
 
     val searchResultOption = searchResults.size match {

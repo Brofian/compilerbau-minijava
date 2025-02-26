@@ -1,4 +1,4 @@
-package test;
+package de.arrayloop;
 
 public class ArrayLoop {
     public static void main(String[] args) {
