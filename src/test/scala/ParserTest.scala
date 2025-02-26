@@ -262,7 +262,8 @@ class ParserTest extends FunSuite {
                               MethodCall(
                                 target = MemberAccess(VarRef("System"), "out"),
                                 methodName = "println",
-                                args = List(VarRef("i"))
+                                args = List(VarRef("i")),
+                                isStatic = false
                               )
                             )
                           )
@@ -563,7 +564,8 @@ class ParserTest extends FunSuite {
                           // Representing "this.doSomethingElse()"
                           target = VarRef("this"),
                           methodName = "doSomethingElse",
-                          args = List()
+                          args = List(),
+                          isStatic = false
                         )
                       )
                     )
