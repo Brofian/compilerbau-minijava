@@ -46,7 +46,7 @@ private def javaifyClass(fullName: String) = makeObjectClassName(fullName.replac
 private def makeObjectClassName(name: String) =
   if name.contains("Object") then "java/lang/Object" else name // TODO temporary, make issue for type check
 
-private def javaSignature(t: Type): String = t match {
+def javaSignature(t: Type): String = t match {
   case IntType             => "I"
   case BoolType            => "Z"
   case VoidType            => "V"
@@ -114,7 +114,7 @@ private def stringifyExpression(expr: Expression): String = expr match {
     f"new $className(${arguments.foldLeft("")((acc, e) => acc + f", ${stringifyExpression(e)}")})"
   case NewArray(arrayType, dimensions) => f"new $arrayType[$dimensions]"
   case ArrayAccess(array, index)       => f"$array[$index]"
-  case MethodCall(target, methodName, args) =>
+  case MethodCall(target, methodName, args, isStatic) =>
     f"${stringifyExpression(target)}.$methodName(${args.foldLeft("")((acc, e) => acc + f", ${stringifyExpression(e)}")})"
   case TypedExpression(expr, exprType) => stringifyExpression(expr)
   case StaticClassRef(name)            => f"$name<static>"

@@ -81,22 +81,22 @@ private def generateLValueStaticClassMemberReference(
 
 // STATIC METHOD CALL
 private def generateStaticMethodCall(
-  staticClass: StaticClassRef,
-  classType: Type,
   methodCall: MethodCall,
   returnType: Type,
   state: MethodGeneratorState
 ): Unit = {
+
   val parameterTypes = methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
   val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
+  // val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
+  val classType = methodCall.target.asInstanceOf[TypedExpression].exprType
   Instructions.callStaticMethod(
-    javaifyClass(staticClass.className),
+    asmUserType(classType),
     methodCall.methodName,
     methodCall.args.size,
     methodDescriptor,
     state
   )
-  Instructions.callMethod(asmUserType(classType), methodCall.methodName, methodCall.args.size, methodDescriptor, state)
 }
 
 // LITERAL
@@ -177,8 +177,13 @@ private def generateBooleanOperation(operation: BinaryOp, state: MethodGenerator
     val truePush = Label()
     val end = Label()
 
-    generateExpression(operation.left, state)
-    generateExpression(operation.right, state)
+    generateExpression(
+      TypedExpression(
+        BinaryOp(operation.left, "-", operation.right),
+        operation.left.asInstanceOf[TypedExpression].exprType
+      ),
+      state
+    )
     Instructions.condJump(ifInsn, truePush, state)
     Instructions.pushFalse(state)
     Instructions.goto(end, state)
@@ -235,26 +240,27 @@ private def generateTypedExpression(expression: TypedExpression, state: MethodGe
 
 // METHOD CALL
 private def generateMethodCall(methodCall: MethodCall, returnType: Type, state: MethodGeneratorState): Unit = {
-  // TODO refactor _ case into own function
-  methodCall.target match {
-    case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
-      generateStaticMethodCall(staticClassRef, classType, methodCall, returnType, state)
-    case _ => {
-      val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
-      val parameterTypes =
-        methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
-      val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
-      Instructions.callMethod(
-        asmUserType(classType),
-        methodCall.methodName,
-        methodCall.args.size,
-        methodDescriptor,
-        state
-      )
-    }
+  // TODO refactor else case into own function
+  if (methodCall.isStatic) {
+    generateStaticMethodCall(methodCall, returnType, state)
+  } else {
+    val classType = generateTypedExpression(methodCall.target.asInstanceOf[TypedExpression], state)
+    val parameterTypes =
+      methodCall.args.map(expr => generateTypedExpression(expr.asInstanceOf[TypedExpression], state))
+    val methodDescriptor = javaSignature(FunctionType(returnType, parameterTypes))
+    Instructions.callMethod(
+      asmUserType(classType),
+      methodCall.methodName,
+      methodCall.args.size,
+      methodDescriptor,
+      state
+    )
   }
-  // virtual element
-  Instructions.pushConstant(0, IntType, state)
+
+  if (returnType != VoidType) {
+    // Instructions.pushConstant(0, IntType, state)
+    state.pushStack(returnType)
+  }
 }
 
 // NEW OBJECT
@@ -364,6 +370,7 @@ private def generateClassLValue(
  */
 private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, state: MethodGeneratorState): Unit = {
   // TODO refactor _ case into own function
+  debugLogStack(state, f"generate class R value: $memberAccess")
   memberAccess.target match {
     case TypedExpression(staticClassRef: StaticClassRef, classType: Type) =>
       generateRValueStaticClassMemberReference(staticClassRef, classType, memberAccess.memberName, fieldType, state)
@@ -372,12 +379,12 @@ private def generateClassRValue(memberAccess: MemberAccess, fieldType: Type, sta
       Instructions.loadField(memberAccess.memberName, fieldType, state)
     }
   }
+  debugLogStack(state, f"end class R value: $memberAccess")
 }
 
 private def generateNewArray(array: NewArray, state: MethodGeneratorState): Unit = {
-
   generateExpression(array.dimensions.head, state)
-  Instructions.newArray(javaSignature(array.arrayType), state)
+  Instructions.newArray(array.arrayType.asInstanceOf[ArrayType].baseType, state)
 }
 
 private def generateArrayLValue(
@@ -391,6 +398,8 @@ private def generateArrayLValue(
   generateExpression(rvalue, state)
 
   Instructions.storeArray(arrayType, state)
+
+  generateExpression(rvalue, state)
 }
 
 private def generateArrayRValue(

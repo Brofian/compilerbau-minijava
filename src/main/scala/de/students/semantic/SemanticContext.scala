@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 class SemanticContext(
   classAccessHelper: ClassAccessHelper,
   typeAssumptions: mutable.Map[String, Type],
+  staticAssumptions: mutable.Map[String, Boolean],
   imports: mutable.Map[String, String],
   importWildcards: ListBuffer[String],
   packageName: String,
@@ -18,6 +19,7 @@ class SemanticContext(
   def getPackageName: String = packageName
   def getClassName: String = className
   def getTypeAssumption(varName: String): Option[Type] = typeAssumptions.get(varName)
+  def getStaticAssumption(varName: String): Option[Boolean] = staticAssumptions.get(varName)
   def getClassAccessHelper: ClassAccessHelper = classAccessHelper
 
   /**
@@ -38,7 +40,8 @@ class SemanticContext(
         if newPackageName.isEmpty then imports else imports.clone(), // if we enter a new package (aka file) context
       importWildcards = if newPackageName.isEmpty then importWildcards else ListBuffer(),
       packageName = newPackageName.getOrElse(packageName),
-      className = newClassName.getOrElse(className)
+      className = newClassName.getOrElse(className),
+      staticAssumptions = staticAssumptions.clone()
     )
   }
 
@@ -55,6 +58,13 @@ class SemanticContext(
       throw SemanticException(s"Value of name $identifier is already declared and cannot be redeclared!")
     }
     typeAssumptions.addOne(identifier, varType)
+  }
+
+  def addStaticAssumption(identifier: String, isStatic: Boolean): Unit = {
+    if (staticAssumptions.contains(identifier)) {
+      throw SemanticException(s"Staticness of name $identifier is already set!")
+    }
+    staticAssumptions.addOne(identifier, isStatic)
   }
 
   def getFullyQualifiedClassName(className: String, usePackage: Option[String] = None): String = {
@@ -116,6 +126,7 @@ def createContext(pckgDecl: Package, classDecl: ClassDecl, project: Project): Se
   val context = SemanticContext(
     classAccessHelper = ClassAccessHelper(ClassTypeBridge(project)),
     typeAssumptions = mutable.Map[String, Type](),
+    staticAssumptions = mutable.Map[String, Boolean](),
     imports = mutable.Map[String, String](),
     importWildcards = ListBuffer(),
     packageName = pckgDecl.name,

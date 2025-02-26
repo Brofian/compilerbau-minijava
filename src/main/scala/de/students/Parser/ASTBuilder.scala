@@ -303,7 +303,7 @@ object ASTBuilder {
           // It's an implicit method call: e.g., calc(10) becomes MethodCall(this, "calc", args)
           val methodName = ctx.IDENTIFIER().getText
           val args = if (ctx.argumentList() != null) visitMyArgumentList(ctx.argumentList()) else List()
-          MethodCall(VarRef("this"), methodName, args)
+          MethodCall(VarRef("this"), methodName, args, false)
         } else {
           // It's just a variable reference or a class name
           VarRef(ctx.IDENTIFIER().getText)
@@ -333,7 +333,7 @@ object ASTBuilder {
           val memberName = ctx.IDENTIFIER().getText
           if (ctx.getChildCount > 2 && ctx.getChild(2).getText == "(") {
             val args = if (ctx.argumentList() != null) visitMyArgumentList(ctx.argumentList()) else List()
-            MethodCall(target, memberName, args)
+            MethodCall(target, memberName, args, false)
           } else {
             target match {
               case VarRef(name) =>
