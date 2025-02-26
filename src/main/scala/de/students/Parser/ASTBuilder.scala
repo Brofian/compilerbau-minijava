@@ -216,8 +216,27 @@ object ASTBuilder {
       val condition = visitExpression(ctx.expression())
       val thenBranch = visitBlockStmt(ctx.block())
       Logger.debug(s"Visiting if statement, condition: $condition")
+
+      // Process else-if statements
+      val elseIfBranches =
+        if (ctx.elseifStatement() != null) Some(ctx.elseifStatement.asScala.toList.map(visitElseIf)) else None
+
+      // Process else statement (if present)
       val elseBranch = if (ctx.elseStatement() != null) Some(visitElse(ctx.elseStatement())) else None
-      IfStatement(condition, thenBranch, elseBranch)
+
+      // Process else-if cases into nested if-else cases
+      if (elseIfBranches.nonEmpty) {
+
+        var elseStmt: Option[Statement] = elseBranch
+        elseIfBranches.get.reverse.foreach(elseIfBranch => {
+          val elseIf = elseIfBranch.asInstanceOf[IfStatement]
+          elseStmt = Some(IfStatement(elseIf.cond, elseIf.thenBranch, elseStmt))
+        })
+
+        IfStatement(condition, thenBranch, elseStmt)
+      } else {
+        IfStatement(condition, thenBranch, elseBranch)
+      }
     }
 
     def visitElseIf(ctx: ElseifStatementContext): Statement = {
