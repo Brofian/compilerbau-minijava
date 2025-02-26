@@ -16,42 +16,6 @@ import scala.util.matching.Regex
 class ClassTypeBridge(baseAST: Project) {
 
   /**
-   * Resolve simple class names to their fully qualified form
-   *
-   * @param rawType     The raw type, which should be made fully qualified
-   * @param classDecl   The current class we are in
-   * @param packageDecl The current package we are in
-   * @return
-   */
-  private def resolveTypeInClassContext(rawType: Type, classDecl: ClassDecl, packageDecl: Package): Type = {
-    // gather all mappings from simple class name to fully qualified names
-    val knownFullyQualifiedNames: mutable.Map[String, String] = mutable.Map[String, String]()
-    knownFullyQualifiedNames.addOne(classDecl.name, packageDecl.name + "." + classDecl.name) // current class
-    knownFullyQualifiedNames.addAll(
-      packageDecl.imports.names.map(importName => {
-        val splitImportName = this.splitFullyQualifiedClassName(importName)
-        (splitImportName._2, importName)
-      })
-    )
-
-    // resolve class names to fully qualified class names
-    def resolveClassTypes(rawType: Type): Type = rawType match {
-      case UserType(name) =>
-        // search imports, otherwise use current package prefix
-        UserType(knownFullyQualifiedNames.getOrElse(name, packageDecl.name + "." + name))
-      case FunctionType(returnType, paramTypes) =>
-        // recursively resolve parts of the function type (typically only one recursion step, as there are no function variables in our java)
-        FunctionType(
-          resolveClassTypes(returnType),
-          paramTypes.map(paramType => resolveClassTypes(paramType))
-        )
-      case _ => rawType
-    }
-
-    resolveClassTypes(rawType)
-  }
-
-  /**
    * Extract the package name and the simple class name from a fully qualified class name
    *
    * @param fqClassName The fully qualified class name that shall be split
@@ -120,10 +84,12 @@ class ClassTypeBridge(baseAST: Project) {
         // turn every type in classDecl into its fully qualified form
         val (classDecl, pckgDecl) = searchResult
 
+        val classContext = createContext(pckgDecl, classDecl, baseAST)
+
         Some(
           ClassDecl(
             classDecl.name,
-            this.resolveTypeInClassContext(UserType(classDecl.parent), classDecl, pckgDecl).asInstanceOf[UserType].name,
+            classContext.simpleTypeToQualified(UserType(classDecl.parent)).asInstanceOf[UserType].name,
             classDecl.isAbstract,
             classDecl.methods.map(method => {
               MethodDecl(
@@ -132,11 +98,11 @@ class ClassTypeBridge(baseAST: Project) {
                 method.isAbstract,
                 method.static,
                 method.isFinal,
-                this.resolveTypeInClassContext(method.returnType, classDecl, pckgDecl),
+                classContext.simpleTypeToQualified(method.returnType),
                 method.params.map(param => {
                   VarDecl(
                     param.name,
-                    this.resolveTypeInClassContext(param.varType, classDecl, pckgDecl),
+                    classContext.simpleTypeToQualified(param.varType),
                     param.initializer
                   )
                 }),

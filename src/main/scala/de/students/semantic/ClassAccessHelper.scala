@@ -51,18 +51,18 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
 
   /**
    * Find the method declaration in the given class with the given names and parameters
-   * @param fullyQualifiedClassName
-   * @param memberName
-   * @param methodParams
+   * @param classDecl               The class to search in
+   * @param memberName              The name of the field or method to search
+   * @param methodParams            When searching for a method, this contains the List of parameter types to match overloading.
+   *
    * @return
    */
   def getClassMethodDecl(
     classDecl: ClassDecl,
     memberName: String,
-    methodParams: Option[List[Type]]
+    methodParams: Option[List[Type]],
+    callSource: CallSource
   ): Option[MethodDecl] = {
-    // TODO: check access modifiers
-
     // search method
     val matchingMethods: List[MethodDecl] = classDecl.methods.filter(methodDecl => {
       methodDecl.name == memberName && // method has the correct name
@@ -83,14 +83,18 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
         )
     }
 
+    callSource.assertCanCall(matchingMethod, fullyQualifiedClassName)
     matchingMethod
   }
 
   def getClassField(
     classDecl: ClassDecl,
-    memberName: String
+    memberName: String,
+    callSource: CallSource,
   ): Option[FieldDecl] = {
-    classDecl.fields.find(fieldDecl => fieldDecl.name == memberName)
+    val matchingField = classDecl.fields.find(fieldDecl => fieldDecl.name == memberName)
+    callSource.assertCanCall(matchingField, classDecl.name)
+    matchingField
   }
 
   def getClass(fullyQualifiedName: String): ClassDecl = bridge.getClass(fullyQualifiedName)

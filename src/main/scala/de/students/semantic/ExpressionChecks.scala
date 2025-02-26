@@ -56,8 +56,12 @@ object ExpressionChecks {
 
     // determine method definition
     val fqClassName = typedTarget.exprType.asInstanceOf[UserType].name
-    // TODO: if isStaticTarget == true, then filter for static members only!
-    val methodType = context.getClassAccessHelper.getClassMemberType(fqClassName, methodCall.methodName, Some(argTypes))
+
+    val isStaticTarget = typedTarget.expr.isInstanceOf[StaticClassRef]
+    val callSource = CallSource(isStaticTarget, context)
+
+    val methodType =
+      context.getClassAccessHelper.getClassMemberType(fqClassName, methodCall.methodName, Some(argTypes), callSource)
     if (!methodType.isInstanceOf[FunctionType]) {
       throw new SemanticException(
         s"Cannot call member ${methodCall.methodName} of type $methodType as method with parameters of types $argTypes"
@@ -170,9 +174,9 @@ object ExpressionChecks {
 
     typedTarget.exprType match {
       case UserType(qualifiedClassName) =>
-        // TODO: filter for static class members, if isStatic
+        val callSource = CallSource(isStatic, context)
         val memberType =
-          context.getClassAccessHelper.getClassMemberType(qualifiedClassName, memberAccess.memberName, None)
+          context.getClassAccessHelper.getClassMemberType(qualifiedClassName, memberAccess.memberName, None, callSource)
         TypedExpression(MemberAccess(typedTarget, memberAccess.memberName), memberType)
       case ArrayType(baseType) =>
         val memberType =
@@ -187,7 +191,9 @@ object ExpressionChecks {
   }
 
   private def checkThisAccessExpression(thisAccess: ThisAccess, context: SemanticContext): TypedExpression = {
-    val memberType = context.getClassAccessHelper.getClassMemberType(context.getClassName, thisAccess.name, None)
+    val callSource = CallSource(false, context)
+    val memberType =
+      context.getClassAccessHelper.getClassMemberType(context.getClassName, thisAccess.name, None, callSource)
     TypedExpression(thisAccess, memberType)
   }
 
