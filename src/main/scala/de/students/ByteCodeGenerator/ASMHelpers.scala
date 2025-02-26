@@ -25,7 +25,14 @@ private def accessModifier(fieldDecl: FieldDecl): Int =
 private def visibilityModifier(methodDecl: MethodDecl): Int = {
   0
     + (if methodDecl.static then ACC_STATIC else 0)
-    + ACC_PUBLIC
+    + (if methodDecl.isFinal then ACC_FINAL else 0)
+    + (methodDecl.accessModifier match {
+      case None              => 0
+      case Some("public")    => ACC_PUBLIC
+      case Some("private")   => ACC_PRIVATE
+      case Some("protected") => ACC_PROTECTED
+      case Some(other)       => throw ByteCodeGeneratorException(f"access modifier $other is not recognized")
+    })
 }
 
 private def typeStackSize(t: Type): Int = t match {
