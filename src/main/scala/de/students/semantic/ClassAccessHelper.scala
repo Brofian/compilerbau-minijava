@@ -91,8 +91,8 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
           callSource.get.assertCanCall(matchingMethod, qualifiedClassName)
         }
         Some(matchingMethod)
-        // TODO: detect if two overloaded methods are equal in parameters and output an error
-        /*
+      // TODO: detect if two overloaded methods are equal in parameters and output an error
+      /*
         throw new SemanticException(
           s"Encountered multiple possible overloaded methods for member $memberName of class ${classDecl.name} with parameter types $methodParams"
         )
