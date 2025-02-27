@@ -15,7 +15,7 @@ private def accessModifier(varDecl: VarDecl): Int = 0
 private def accessModifier(fieldDecl: FieldDecl): Int =
   asmFinalModifier(fieldDecl.isFinal)
     + (fieldDecl.accessModifier match {
-      case None              => ACC_PRIVATE
+      case None              => 0
       case Some("public")    => ACC_PUBLIC
       case Some("private")   => ACC_PRIVATE
       case Some("protected") => ACC_PROTECTED
@@ -25,7 +25,14 @@ private def accessModifier(fieldDecl: FieldDecl): Int =
 private def visibilityModifier(methodDecl: MethodDecl): Int = {
   0
     + (if methodDecl.static then ACC_STATIC else 0)
-    + ACC_PUBLIC
+    + (if methodDecl.isFinal then ACC_FINAL else 0)
+    + (methodDecl.accessModifier match {
+      case None              => 0
+      case Some("public")    => ACC_PUBLIC
+      case Some("private")   => ACC_PRIVATE
+      case Some("protected") => ACC_PROTECTED
+      case Some(other)       => throw ByteCodeGeneratorException(f"access modifier $other is not recognized")
+    })
 }
 
 private def typeStackSize(t: Type): Int = t match {
@@ -46,7 +53,7 @@ private def javaifyClass(fullName: String) = makeObjectClassName(fullName.replac
 private def makeObjectClassName(name: String) =
   if name.contains("Object") then "java/lang/Object" else name // TODO temporary, make issue for type check
 
-private def javaSignature(t: Type): String = t match {
+def javaSignature(t: Type): String = t match {
   case IntType             => "I"
   case BoolType            => "Z"
   case VoidType            => "V"
@@ -114,7 +121,7 @@ private def stringifyExpression(expr: Expression): String = expr match {
     f"new $className(${arguments.foldLeft("")((acc, e) => acc + f", ${stringifyExpression(e)}")})"
   case NewArray(arrayType, dimensions) => f"new $arrayType[$dimensions]"
   case ArrayAccess(array, index)       => f"$array[$index]"
-  case MethodCall(target, methodName, args) =>
+  case MethodCall(target, methodName, args, isStatic) =>
     f"${stringifyExpression(target)}.$methodName(${args.foldLeft("")((acc, e) => acc + f", ${stringifyExpression(e)}")})"
   case TypedExpression(expr, exprType) => stringifyExpression(expr)
   case StaticClassRef(name)            => f"$name<static>"

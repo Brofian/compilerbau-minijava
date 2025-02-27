@@ -7,22 +7,23 @@ object ExpressionChecks {
 
   def checkExpression(expr: Expression, context: SemanticContext): TypedExpression = {
     expr match {
-      case m @ MethodCall(_, _, _) => this.checkMethodCallExpression(m, context)
-      case a @ ArrayAccess(_, _)   => this.checkArrayAccessExpression(a, context)
-      case a @ NewArray(_, _)      => this.checkNewArrayExpression(a, context)
-      case n @ NewObject(_, _)     => this.checkNewObjectExpression(n, context)
-      case m @ MemberAccess(_, _)  => this.checkMemberAccessExpression(m, context)
-      case t @ ThisAccess(_)       => this.checkThisAccessExpression(t, context)
-      case u @ UnaryOp(_, _)       => this.checkUnaryOpExpression(u, context)
-      case b @ BinaryOp(_, _, _)   => this.checkBinaryOpExpression(b, context)
-      case v @ VarRef(_)           => this.checkVarRefExpression(v, context)
-      case s @ StaticClassRef(_)   => this.checkStaticClassRefExpression(s, context)
-      case l @ Literal(_)          => this.checkLiteralExpression(l, context)
-      case _                       => throw new SemanticException(s"Could not match expression $expr")
+      case m @ MethodCall(_, _, _, _) => this.checkMethodCallExpression(m, context)
+      case a @ ArrayAccess(_, _)      => this.checkArrayAccessExpression(a, context)
+      case a @ NewArray(_, _)         => this.checkNewArrayExpression(a, context)
+      case n @ NewObject(_, _)        => this.checkNewObjectExpression(n, context)
+      case m @ MemberAccess(_, _)     => this.checkMemberAccessExpression(m, context)
+      case t @ ThisAccess(_)          => this.checkThisAccessExpression(t, context)
+      case u @ UnaryOp(_, _)          => this.checkUnaryOpExpression(u, context)
+      case b @ BinaryOp(_, _, _)      => this.checkBinaryOpExpression(b, context)
+      case v @ VarRef(_)              => this.checkVarRefExpression(v, context)
+      case s @ StaticClassRef(_)      => this.checkStaticClassRefExpression(s, context)
+      case l @ Literal(_)             => this.checkLiteralExpression(l, context)
+      case _                          => throw new SemanticException(s"Could not match expression $expr")
     }
   }
 
   private def checkMethodCallExpression(methodCall: MethodCall, context: SemanticContext): TypedExpression = {
+    // catch and convert static method calls
     methodCall.target match {
       case VarRef("this") =>
         val currentClass = context.getClassAccessHelper.getBridge.getClass(context.getClassName)
@@ -32,7 +33,8 @@ object ExpressionChecks {
             MethodCall(
               StaticClassRef(currentClass.name),
               methodCall.methodName,
-              methodCall.args
+              methodCall.args,
+              true
             ),
             context
           )
@@ -47,7 +49,6 @@ object ExpressionChecks {
         s"Cannot call method ${methodCall.methodName} on value of type ${typedTarget.exprType}"
       )
     }
-    val isStaticTarget = typedTarget.expr.isInstanceOf[StaticClassRef]
 
     // validate arguments
     val typedArguments = methodCall.args.map(argument => ExpressionChecks.checkExpression(argument, context))
@@ -55,8 +56,17 @@ object ExpressionChecks {
 
     // determine method definition
     val fqClassName = typedTarget.exprType.asInstanceOf[UserType].name
-    // TODO: if isStaticTarget == true, then filter for static members only!
-    val methodType = context.getClassAccessHelper.getClassMemberType(fqClassName, methodCall.methodName, Some(argTypes))
+
+    val isStaticTarget = typedTarget.expr.isInstanceOf[StaticClassRef]
+    val callSource = CallSource(isStaticTarget, context)
+
+    val methodType =
+      context.getClassAccessHelper.getClassMemberType(
+        fqClassName,
+        methodCall.methodName,
+        Some(argTypes),
+        Some(callSource)
+      )
     if (!methodType.isInstanceOf[FunctionType]) {
       throw new SemanticException(
         s"Cannot call member ${methodCall.methodName} of type $methodType as method with parameters of types $argTypes"
@@ -82,7 +92,21 @@ object ExpressionChecks {
         }
       })
 
-    TypedExpression(MethodCall(typedTarget, methodCall.methodName, typedArguments), methodTypeF.returnType)
+    // TODO remove expensive method call and do correct None handling
+    val isStatic = context.getClassAccessHelper.getClassMethodDecl(
+      fqClassName,
+      methodCall.methodName,
+      Some(argTypes),
+      Some(callSource)
+    ) match {
+      case methodDecl: Some[MethodDecl] => methodDecl.get.static
+      case None                         => false
+    }
+
+    TypedExpression(
+      MethodCall(typedTarget, methodCall.methodName, typedArguments, isStatic),
+      methodTypeF.returnType
+    )
   }
 
   private def checkArrayAccessExpression(arrayAccess: ArrayAccess, context: SemanticContext): TypedExpression = {
@@ -144,13 +168,30 @@ object ExpressionChecks {
 
   private def checkMemberAccessExpression(memberAccess: MemberAccess, context: SemanticContext): TypedExpression = {
     val typedTarget = ExpressionChecks.checkExpression(memberAccess.target, context)
-    val isStatic = typedTarget.expr.isInstanceOf[StaticClassRef]
+
+    val isStatic = typedTarget.exprType match {
+      case UserType(name) =>
+        context.getClassAccessHelper
+          .getClassField(context.getFullyQualifiedClassName(name), memberAccess.memberName, None)
+          .get
+          .isStatic
+      case _ => false
+    }
 
     typedTarget.exprType match {
       case UserType(qualifiedClassName) =>
-        // TODO: filter for static class members, if isStatic
+        val callSource = CallSource(isStatic, context)
         val memberType =
-          context.getClassAccessHelper.getClassMemberType(qualifiedClassName, memberAccess.memberName, None)
+          context.getClassAccessHelper.getClassMemberType(
+            qualifiedClassName,
+            memberAccess.memberName,
+            None,
+            Some(callSource)
+          )
+        TypedExpression(MemberAccess(typedTarget, memberAccess.memberName), memberType)
+      case ArrayType(baseType) =>
+        val memberType =
+          context.getClassAccessHelper.getArrayMemberType(ArrayType(baseType), memberAccess.memberName, None)
         TypedExpression(MemberAccess(typedTarget, memberAccess.memberName), memberType)
       case _ =>
         val iName = if isStatic then "static instance" else "instance"
@@ -161,7 +202,9 @@ object ExpressionChecks {
   }
 
   private def checkThisAccessExpression(thisAccess: ThisAccess, context: SemanticContext): TypedExpression = {
-    val memberType = context.getClassAccessHelper.getClassMemberType(context.getClassName, thisAccess.name, None)
+    val callSource = CallSource(false, context)
+    val memberType =
+      context.getClassAccessHelper.getClassMemberType(context.getClassName, thisAccess.name, None, Some(callSource))
     TypedExpression(thisAccess, memberType)
   }
 

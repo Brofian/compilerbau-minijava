@@ -1,12 +1,12 @@
 package de.students.Parser
 
-case class Project(packages: List[Package])
+case class Project(files: List[JavaFile])
 
 // basic node for all AST-trees
 sealed trait ASTNode
 
 // Program-node
-case class Package(name: String, imports: Imports, classes: List[ClassDecl]) extends ASTNode
+case class JavaFile(packageName: String, imports: Imports, classes: List[ClassDecl]) extends ASTNode
 
 case class Imports(names: List[String]) extends ASTNode
 
@@ -113,6 +113,7 @@ case class NewArray(arrayType: Type, dimensions: List[Expression]) extends Expre
 case class ArrayAccess(array: Expression, index: Expression) extends Expression
 
 // Method calls (member access with parentheses)
-case class MethodCall(target: Expression, methodName: String, args: List[Expression]) extends Expression
+case class MethodCall(target: Expression, methodName: String, args: List[Expression], isStatic: Boolean)
+    extends Expression
 
 case class TypedExpression(expr: Expression, exprType: Type) extends Expression

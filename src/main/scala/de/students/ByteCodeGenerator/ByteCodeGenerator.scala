@@ -14,10 +14,10 @@ case class ClassBytecode(
 )
 
 def generateBytecode(project: Project): List[ClassBytecode] = {
-  project.packages.flatMap(p => generateBytecode(p))
+  project.files.flatMap(p => generateBytecode(p))
 }
 
-def generateBytecode(pack: Package): List[ClassBytecode] = {
+def generateBytecode(pack: JavaFile): List[ClassBytecode] = {
   pack.classes.map(generateClassBytecode)
 }
 
@@ -27,7 +27,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
   val classWriter = new ClassWriter(0)
 
   val javaClassName = javaifyClass(classDecl.name)
-  val parent = javaifyClass(classDecl.parent) // "java/lang/Object" // TODO use real parent
+  val parent = javaifyClass(classDecl.parent)
 
   // set class header
   classWriter.visit(
@@ -51,7 +51,7 @@ private def generateClassBytecode(classDecl: ClassDecl): ClassBytecode = {
     generateConstructor(
       classDecl,
       classWriter,
-      ConstructorDecl(Some("public"), "", List(), EMPTY_STATEMENT)
+      ConstructorDecl(Some("public"), "", List(), ReturnStatement(None))
     )
   }
 
@@ -89,34 +89,35 @@ private def generateConstructor(
     ACC_PUBLIC,
     "<init>",
     javaSignature(constructorType(constructorDecl)),
-    null,
-    null
+    null, // signature
+    null // exceptions
   )
   val state = defaultMethodGeneratorState(
     classDecl,
     methodVisitor,
     VoidType
   )
+  state.localVariableCount = 1 // this
+
+  constructorDecl.params.foreach(param => state.addVariable(param.name, param.varType))
+
+  state.stackDepth = state.localVariableCount
+
   methodVisitor.visitCode()
 
-  methodVisitor.visitVarInsn(ALOAD, 0) // load this
-  methodVisitor.visitMethodInsn(
-    INVOKESPECIAL,
-    javaifyClass(classDecl.parent),
-    "<init>",
-    "()V",
-    false
-  ) // call Object constructor
+  Instructions.callSuper(classDecl.parent, state)
 
   generateStatement(constructorDecl.body, state)
 
-  methodVisitor.visitInsn(RETURN)
-
-  methodVisitor.visitMaxs(1, 1) // TODO real sizes
+  methodVisitor.visitMaxs(state.maxStackDepth, state.localVariableCount)
   methodVisitor.visitEnd()
 }
 
-private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, classWriter: ClassWriter): Unit = {
+private def generateMethodBody(
+  classDecl: ClassDecl,
+  methodDecl: MethodDecl,
+  classWriter: ClassWriter
+): Unit = {
   val methodVisitor = classWriter.visitMethod(
     visibilityModifier(methodDecl),
     methodDecl.name,
@@ -129,7 +130,7 @@ private def generateMethodBody(classDecl: ClassDecl, methodDecl: MethodDecl, cla
     methodVisitor,
     methodDecl.returnType
   )
-  state.localVariableCount = (if methodDecl.static then 0 else 1) // if method is not static`this` is param #0
+  state.localVariableCount = if methodDecl.static then 0 else 1 // if method is not static`this` is param #0
 
   methodDecl.params.foreach(param => state.addVariable(param.name, param.varType))
 

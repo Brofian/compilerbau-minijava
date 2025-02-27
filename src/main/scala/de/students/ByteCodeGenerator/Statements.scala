@@ -100,8 +100,8 @@ private def generateForStatement(forStatement: ForStatement, state: MethodGenera
           forStatement.cond.getOrElse(TRUE_EXPRESSION),
           BlockStatement(
             List(
-              StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION)),
-              forStatement.body
+              forStatement.body,
+              StatementExpression(forStatement.update.getOrElse(TRUE_EXPRESSION))
             )
           )
         )
@@ -162,6 +162,9 @@ private def generateVariableDeclaration(varDecl: VarDecl, state: MethodGenerator
   val varId = state.addVariable(varDecl.name, varDecl.varType)
   if (varDecl.initializer.isDefined) {
     generateExpression(varDecl.initializer.get, state)
+    Instructions.storeVar(varId, varDecl.varType, state)
+  } else {
+    Instructions.pushDefault(varDecl.varType, state)
     Instructions.storeVar(varId, varDecl.varType, state)
   }
 }
