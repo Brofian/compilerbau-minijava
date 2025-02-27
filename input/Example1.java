@@ -4,7 +4,7 @@ class Example1 {
 
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i += 1) {
-            System.out.println(args[0]);
+            System.out.println(args[i]);
         }
 
         Example1 e = new Example1();
