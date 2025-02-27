@@ -6,6 +6,7 @@ class Example3 {
 
         Example3Helper helper = new Example3Helper();
 
+        int fib;
 
         for (int n = 0; n < 10; n += 1) {
             fib = helper.fibonacci(n);
