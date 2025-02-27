@@ -42,12 +42,18 @@ private def generateExpression(expression: Expression, state: MethodGeneratorSta
 private def generateVariableReference(varRef: VarRef, state: MethodGeneratorState): Unit = {
   debugLogStack(state, "start var ref")
 
-  val variableInfo = state.getVariable(varRef.name)
-  if (variableInfo.isField) {
-    Instructions.loadField(varRef.name, variableInfo.t, state)
+  if (varRef.name == "this") {
+    Instructions.loadThis(state)
   } else {
-    val varInfo = state.getVariable(varRef.name)
-    Instructions.loadVar(varInfo.id, varInfo.t, state)
+
+    val variableInfo = state.getVariable(varRef.name)
+    if (variableInfo.isField) {
+      Instructions.loadField(varRef.name, variableInfo.t, state)
+    } else {
+      val varInfo = state.getVariable(varRef.name)
+      Instructions.loadVar(varInfo.id, varInfo.t, state)
+    }
+
   }
 
   debugLogStack(state, "end var ref")

@@ -18,7 +18,7 @@ object SyntacticSugarHandler {
     var updatedClass = cls
     updatedClass = this.addImplicitReturnsAtMethodEnd(updatedClass, classContext)
     updatedClass = this.moveFieldInitializers(updatedClass, classContext)
-    // updatedClass = this.splitVarInitializerFromDeclaration(updatedClass, classContext)
+    updatedClass = this.splitVarInitializerFromDeclaration(updatedClass, classContext)
     updatedClass
   }
 

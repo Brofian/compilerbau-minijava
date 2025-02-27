@@ -16,12 +16,32 @@ object ExpressionChecks {
       case u @ UnaryOp(_, _)          => this.checkUnaryOpExpression(u, context)
       case b @ BinaryOp(_, _, _)      => this.checkBinaryOpExpression(b, context)
       case v @ VarRef(_)              => this.checkVarRefExpression(v, context)
+      case s @ StaticClassRef(_)      => this.checkStaticClassRefExpression(s, context)
       case l @ Literal(_)             => this.checkLiteralExpression(l, context)
       case _                          => throw new SemanticException(s"Could not match expression $expr")
     }
   }
 
   private def checkMethodCallExpression(methodCall: MethodCall, context: SemanticContext): TypedExpression = {
+    // catch and convert static method calls
+    methodCall.target match {
+      case VarRef("this") =>
+        val currentClass = context.getClassAccessHelper.getBridge.getClass(context.getClassName)
+        val method = currentClass.methods.find(m => m.name == methodCall.methodName)
+        if (method.nonEmpty && method.get.static) {
+          return checkMethodCallExpression(
+            MethodCall(
+              StaticClassRef(currentClass.name),
+              methodCall.methodName,
+              methodCall.args,
+              true
+            ),
+            context
+          )
+        }
+      case _ =>
+    }
+
     // determine the type, that the method is called on
     val typedTarget = ExpressionChecks.checkExpression(methodCall.target, context)
     if (!typedTarget.exprType.isInstanceOf[UserType]) {
@@ -278,6 +298,14 @@ object ExpressionChecks {
     TypedExpression(expandedOp, opType)
   }
 
+  private def checkStaticClassRefExpression(
+    staticClassRef: StaticClassRef,
+    context: SemanticContext
+  ): TypedExpression = {
+    val qualifiedClassName = context.getFullyQualifiedClassName(staticClassRef.className);
+    TypedExpression(StaticClassRef(qualifiedClassName), UserType(qualifiedClassName))
+  }
+
   private def checkVarRefExpression(varRef: VarRef, context: SemanticContext): TypedExpression = {
     val qualifiedClass: Option[String] =
       try Some(context.getFullyQualifiedClassName(varRef.name))
@@ -287,10 +315,20 @@ object ExpressionChecks {
       // is reference to static class context
       TypedExpression(StaticClassRef(qualifiedClass.get), UserType(qualifiedClass.get))
     } else {
-      // is either a variable or unknown
-      context.getTypeAssumption(varRef.name) match {
-        case Some(varType) => TypedExpression(varRef, varType)
-        case None          => throw new SemanticException(s"Identifier ${varRef.name} is not defined")
+      val typeAssumption = context.getTypeAssumption(varRef.name)
+      if (typeAssumption.nonEmpty) {
+        TypedExpression(varRef, typeAssumption.get)
+      } else {
+        val currentClass = context.getClassAccessHelper.getBridge.getClass(context.getClassName)
+        // check if this var is an implicit this.<varName>
+        if (currentClass.fields.exists(f => f.name == varRef.name)) {
+          ExpressionChecks.checkExpression(
+            ThisAccess(varRef.name),
+            context
+          )
+        } else {
+          throw new SemanticException(s"Identifier ${varRef.name} is not defined")
+        }
       }
     }
   }

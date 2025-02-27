@@ -5,6 +5,8 @@ import de.students.Parser.*
 
 class ClassAccessHelper(bridge: ClassTypeBridge) {
 
+  def getBridge: ClassTypeBridge = bridge
+
   /**
    * Check if a class with the specified class name exists
    *
@@ -84,9 +86,17 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
         }
         Some(matchingMethod)
       case _ =>
+        val matchingMethod = matchingMethods.head
+        if (callSource.nonEmpty) {
+          callSource.get.assertCanCall(matchingMethod, qualifiedClassName)
+        }
+        Some(matchingMethod)
+      // TODO: detect if two overloaded methods are equal in parameters and output an error
+      /*
         throw new SemanticException(
           s"Encountered multiple possible overloaded methods for member $memberName of class ${classDecl.name} with parameter types $methodParams"
         )
+       */
     }
   }
 
@@ -148,7 +158,12 @@ class ClassAccessHelper(bridge: ClassTypeBridge) {
       case (None, None) => {
         val parent = this.getClassParentOrNone(fullyQualifiedClassName)
         try {
-          this.getClassMemberType(parent.getOrElse(throw SemanticException(s"Missing parent of class $fullyQualifiedClassName")), memberName, methodParams, callSource)
+          this.getClassMemberType(
+            parent.getOrElse(throw InheritedSemanticException(s"Missing parent of class $fullyQualifiedClassName")),
+            memberName,
+            methodParams,
+            callSource
+          )
         } catch {
           case e: InheritedSemanticException =>
             throw new InheritedSemanticException(
